@@ -10,10 +10,18 @@ export function generateId(): string {
 }
 
 export function formatDate(dateString: string): string {
+  if (!dateString) return "-"
+
   const date = new Date(dateString)
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  })
+  return date
+    .toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    })
+    .replace(/\//g, ".")
+}
+
+export function formatCurrency(amount: number): string {
+  return `$ ${amount.toLocaleString()}`
 }
