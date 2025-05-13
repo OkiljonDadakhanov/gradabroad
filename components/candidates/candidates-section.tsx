@@ -22,8 +22,8 @@ export function CandidatesSection() {
       country: "United States",
       program: "Master of Science in Data Science",
       documents: {
-        passport: true,
         diploma: true,
+        passport: true,
         transcript: true,
         motivationLetter: false,
       },
@@ -40,8 +40,8 @@ export function CandidatesSection() {
       country: "United Kingdom",
       program: "Master of Business Administration",
       documents: {
-        passport: true,
         diploma: true,
+        passport: true,
         transcript: true,
         motivationLetter: true,
       },
@@ -58,8 +58,8 @@ export function CandidatesSection() {
       country: "Saudi Arabia",
       program: "Bachelor of Engineering",
       documents: {
-        passport: true,
         diploma: false,
+        passport: true,
         transcript: true,
         motivationLetter: true,
       },
@@ -76,8 +76,8 @@ export function CandidatesSection() {
       country: "Japan",
       program: "Medicine",
       documents: {
-        passport: true,
         diploma: true,
+        passport: true,
         transcript: true,
         motivationLetter: true,
       },
@@ -94,8 +94,8 @@ export function CandidatesSection() {
       country: "Russia",
       program: "English Literature",
       documents: {
-        passport: true,
         diploma: true,
+        passport: true,
         transcript: true,
         motivationLetter: true,
       },
