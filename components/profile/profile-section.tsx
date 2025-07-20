@@ -14,19 +14,24 @@ export function ProfileSection() {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // ✅ Step 1: Extract and store token, clean URL
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const queryToken = searchParams.get("token");
+
+    if (queryToken) {
+      localStorage.setItem("accessToken", queryToken);
+
+      // ✅ Clean the URL immediately
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+  }, []);
+
+  // ✅ Step 2: Fetch profile using token
   useEffect(() => {
     const fetchProfile = async () => {
-      // Try to get token from query param (first-time redirect)
-      const queryToken = new URLSearchParams(window.location.search).get(
-        "token"
-      );
-      const localToken = localStorage.getItem("accessToken");
-
-      if (queryToken) {
-        localStorage.setItem("accessToken", queryToken);
-      }
-
-      const token = queryToken || localToken;
+      const token = localStorage.getItem("accessToken");
 
       if (!token) {
         router.push("/login");
