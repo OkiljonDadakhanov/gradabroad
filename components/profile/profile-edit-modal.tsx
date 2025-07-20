@@ -171,7 +171,7 @@ export function ProfileEditModal({ isOpen, onClose, initialData, onSave }: Profi
                 <Input
                   id="telephone"
                   name="telephone"
-                  value={values.telephone.replace("+", "")}
+                  value={(values.telephone ?? "").replace("+", "")}
                   onChange={(e) =>
                     setValues({
                       ...values,

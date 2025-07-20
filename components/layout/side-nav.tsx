@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { usePathname, useRouter } from "next/navigation"
-import { cn } from "@/lib/utils"
+import { usePathname, useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 import {
   LogOut,
   Home,
@@ -17,23 +17,23 @@ import {
   BarChart,
   Settings,
   User,
-} from "lucide-react"
+} from "lucide-react";
 
 interface NavItem {
-  icon: React.ReactNode
-  label: string
-  path: string
+  icon: React.ReactNode;
+  label: string;
+  path: string;
 }
 
 export function SideNav() {
-  const router = useRouter()
-  const pathname = usePathname()
+  const router = useRouter();
+  const pathname = usePathname();
 
   const navItems: NavItem[] = [
     {
       icon: <User size={20} />,
       label: "Profile",
-      path: "/",
+      path: "/profile",
     },
     {
       icon: <Home size={20} />,
@@ -85,32 +85,43 @@ export function SideNav() {
       label: "Settings",
       path: "/settings",
     },
-  ]
+  ];
 
   const handleNavigation = (path: string) => {
-    router.push(path)
-  }
+    router.push(path);
+  };
 
   return (
     <aside className="w-60 p-4 bg-gray-50 min-h-[calc(100vh-64px)] relative">
       <nav className="space-y-2">
         {navItems.map((item, index) => {
-          const isActive = pathname === item.path
+          const isActive = pathname === item.path;
           return (
             <div
               key={index}
               className={cn(
                 "p-3 rounded-md flex items-center gap-3 cursor-pointer",
-                isActive ? "bg-purple-100" : "hover:bg-gray-100",
+                isActive ? "bg-purple-100" : "hover:bg-gray-100"
               )}
               onClick={() => handleNavigation(item.path)}
             >
-              <div className={cn("p-1 rounded", isActive ? "bg-purple-800 text-white" : "text-gray-500")}>
+              <div
+                className={cn(
+                  "p-1 rounded",
+                  isActive ? "bg-purple-800 text-white" : "text-gray-500"
+                )}
+              >
                 {item.icon}
               </div>
-              <span className={cn(isActive ? "font-medium text-purple-900" : "text-gray-600")}>{item.label}</span>
+              <span
+                className={cn(
+                  isActive ? "font-medium text-purple-900" : "text-gray-600"
+                )}
+              >
+                {item.label}
+              </span>
             </div>
-          )
+          );
         })}
       </nav>
 
@@ -119,6 +130,5 @@ export function SideNav() {
         <span>Logout</span>
       </div>
     </aside>
-  )
+  );
 }
-
