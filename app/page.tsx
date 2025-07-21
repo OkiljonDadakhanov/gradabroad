@@ -7,8 +7,6 @@ export default function HomePage() {
       <h1 className="text-2xl font-bold mb-4">Welcome to Graduate in Korea</h1>
       <p className="text-lg mb-6">Your university application starts here.</p>
 
-      {/* The ProfileSection component is not used here, but you can include it if needed */}
-      {/* <ProfileSection /> */}
     </div>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -11,8 +10,6 @@ import {
   Award,
   Image,
   Users,
-  Megaphone,
-  CreditCard,
   FileText,
   BarChart,
   Settings,
@@ -22,12 +19,18 @@ import {
 interface NavItem {
   icon: React.ReactNode;
   label: string;
-  path: string;
+  path?: string;
+  onClick?: () => void;
 }
 
 export function SideNav() {
   const router = useRouter();
   const pathname = usePathname();
+
+  const handleNavigation = (path?: string, onClick?: () => void) => {
+    if (onClick) return onClick();
+    if (path) router.push(path);
+  };
 
   const navItems: NavItem[] = [
     {
@@ -60,16 +63,6 @@ export function SideNav() {
       label: "Candidates",
       path: "/candidates",
     },
-    // {
-    //   icon: <Megaphone size={20} />,
-    //   label: "Sponsored content",
-    //   path: "/sponsored-content",
-    // },
-    // {
-    //   icon: <CreditCard size={20} />,
-    //   label: "Billing and Payments",
-    //   path: "/billing",
-    // },
     {
       icon: <FileText size={20} />,
       label: "Document types",
@@ -85,25 +78,29 @@ export function SideNav() {
       label: "Settings",
       path: "/settings",
     },
+    {
+      icon: <LogOut size={20} />,
+      label: "Logout",
+      onClick: () => {
+        // Replace with actual logout logic
+        console.log("Logout clicked");
+      },
+    },
   ];
 
-  const handleNavigation = (path: string) => {
-    router.push(path);
-  };
-
   return (
-    <aside className="w-60 p-4 bg-gray-50 min-h-[calc(100vh-64px)] relative">
-      <nav className="space-y-2">
+    <aside className="fixed left-0 top-[64px] w-60 h-[calc(100vh-64px)] overflow-y-auto bg-gray-50 border-r shadow-sm z-30">
+      <nav className="p-4 space-y-2">
         {navItems.map((item, index) => {
           const isActive = pathname === item.path;
           return (
             <div
               key={index}
               className={cn(
-                "p-3 rounded-md flex items-center gap-3 cursor-pointer",
-                isActive ? "bg-purple-100" : "hover:bg-gray-100"
+                "p-3 rounded-md flex items-center gap-3 cursor-pointer transition-colors",
+                isActive ? "bg-purple-100" : "hover:bg-red-100"
               )}
-              onClick={() => handleNavigation(item.path)}
+              onClick={() => handleNavigation(item.path, item.onClick)}
             >
               <div
                 className={cn(
@@ -124,11 +121,6 @@ export function SideNav() {
           );
         })}
       </nav>
-
-      <div className="absolute bottom-4 left-4 text-red-500 flex items-center gap-2 cursor-pointer">
-        <LogOut size={20} />
-        <span>Logout</span>
-      </div>
     </aside>
   );
 }
