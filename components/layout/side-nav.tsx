@@ -60,16 +60,16 @@ export function SideNav() {
       label: "Candidates",
       path: "/candidates",
     },
-    {
-      icon: <Megaphone size={20} />,
-      label: "Sponsored content",
-      path: "/sponsored-content",
-    },
-    {
-      icon: <CreditCard size={20} />,
-      label: "Billing and Payments",
-      path: "/billing",
-    },
+    // {
+    //   icon: <Megaphone size={20} />,
+    //   label: "Sponsored content",
+    //   path: "/sponsored-content",
+    // },
+    // {
+    //   icon: <CreditCard size={20} />,
+    //   label: "Billing and Payments",
+    //   path: "/billing",
+    // },
     {
       icon: <FileText size={20} />,
       label: "Document types",
