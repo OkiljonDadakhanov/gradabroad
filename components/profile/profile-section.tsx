@@ -7,6 +7,9 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { InfoCard } from "@/components/ui/info-card";
 import { ProfileEditModal } from "./profile-edit-modal";
 import type { ProfileData } from "@/types/profile";
+export const metadata = {
+  title: "GradAbroad – University Application",
+};
 
 export function ProfileSection() {
   const router = useRouter();
@@ -24,6 +27,7 @@ export function ProfileSection() {
 
       // ✅ Clean the URL immediately
       const cleanUrl = window.location.origin + window.location.pathname;
+      document.title = "GradAbroad – University Application";
       window.history.replaceState({}, document.title, cleanUrl);
     }
   }, []);
@@ -113,16 +117,6 @@ export function ProfileSection() {
           { label: "Address", value: profileData.address, highlight: true },
           { label: "City", value: profileData.city },
           { label: "Zip code", value: profileData.zipCode },
-        ]}
-      />
-
-      <InfoCard
-        className="mb-6"
-        items={[
-          {
-            label: "Latitude/Longitude",
-            value: `${profileData.latitude} - ${profileData.longitude}`,
-          },
         ]}
       />
 

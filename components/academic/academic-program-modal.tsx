@@ -1,33 +1,48 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { MultiSelect } from "@/components/ui/multi-select"
-import { RichTextEditor } from "@/components/ui/rich-text-editor"
-import { useForm } from "@/hooks/use-form"
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { useForm } from "@/hooks/use-form";
 import {
   type AcademicProgram,
   type AcademicProgramFormData,
   CATEGORIES,
   DEGREE_TYPES,
   DOCUMENT_TYPES,
-} from "@/types/academic"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon } from "lucide-react"
-import { format } from "date-fns"
+} from "@/types/academic";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 
 interface AcademicProgramModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onSave: (data: AcademicProgram | AcademicProgramFormData) => void
-  initialData?: AcademicProgram
-  title: string
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (data: AcademicProgram | AcademicProgramFormData) => void;
+  initialData?: AcademicProgram;
+  title: string;
 }
 
 const defaultFormData: AcademicProgramFormData = {
@@ -37,7 +52,10 @@ const defaultFormData: AcademicProgramFormData = {
   languageRequirement: "English",
   contractPrice: "",
   admissionStart: format(new Date(), "dd/MM/yyyy"),
-  admissionEnd: format(new Date(new Date().setMonth(new Date().getMonth() + 1)), "dd/MM/yyyy"),
+  admissionEnd: format(
+    new Date(new Date().setMonth(new Date().getMonth() + 1)),
+    "dd/MM/yyyy"
+  ),
   documentTypes: [],
   description: {
     english: "",
@@ -45,53 +63,108 @@ const defaultFormData: AcademicProgramFormData = {
     russian: "",
     uzbek: "",
   },
-}
+};
 
-export function AcademicProgramModal({ isOpen, onClose, onSave, initialData, title }: AcademicProgramModalProps) {
-  const [activeTab, setActiveTab] = useState("english")
+export function AcademicProgramModal({
+  isOpen,
+  onClose,
+  onSave,
+  initialData,
+  title,
+}: AcademicProgramModalProps) {
+  const [activeTab, setActiveTab] = useState("english");
 
-  const { values, setValues, handleChange, handleSelectChange, handleNestedChange, reset } =
-    useForm<AcademicProgramFormData>(initialData || defaultFormData)
+  const {
+    values,
+    setValues,
+    handleChange,
+    handleSelectChange,
+    handleNestedChange,
+    reset,
+  } = useForm<AcademicProgramFormData>(initialData || defaultFormData);
 
-  const handleSubmit = () => {
-    if (initialData) {
+  const handleSubmit = async () => {
+    // const token = localStorage.getItem("accessToken");
+    const token =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzUzMDQxOTM1LCJpYXQiOjE3NTMwMzgzMzUsImp0aSI6IjM4MjgwYzJhNzZkMTQ2M2E5YWRjYjY4NDRmMWRhZGYyIiwidXNlcl9pZCI6Mzh9.8JAMBEj6W7-8yqzLVfRVMagwGdRDZ5sS0L5Zpxny-iI";
+
+    if (!token) {
+      alert("You are not authenticated.");
+      return;
+    }
+
+    const payload = {
+      university: 36,
+      code: values.category || "UNKNOWN", // fallback if not selected
+      degree_level: values.degreeType,
+      major: values.name,
+      duration_years: 4, // static or map from somewhere
+      tuition_fee: values.contractPrice,
+      platform_application_fee: "0.00", // or add field
+      active: true,
+      translations: [], // optionally map from `values.description`
+    };
+
+    try {
+      const res = await fetch("https://api.gradabroad.net/api/programmes/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        console.error("Failed to create program", error);
+        alert(error.detail || "Something went wrong");
+        return;
+      }
+
+      const newProgram = await res.json();
       onSave({
         ...values,
-        id: initialData.id,
-      })
-    } else {
-      onSave(values)
+        id: `api-${newProgram.id}`,
+      });
+      onClose();
+    } catch (err) {
+      console.error("POST error", err);
+      alert("An error occurred while saving the program.");
     }
-  }
+  };
 
   const handleCancel = () => {
-    reset()
-    onClose()
-  }
+    reset();
+    onClose();
+  };
 
   const handleRichTextChange = (lang: string, content: string) => {
-    handleNestedChange("description", lang, content)
-  }
+    handleNestedChange("description", lang, content);
+  };
 
-  const handleDateChange = (field: "admissionStart" | "admissionEnd", date: Date | undefined) => {
+  const handleDateChange = (
+    field: "admissionStart" | "admissionEnd",
+    date: Date | undefined
+  ) => {
     if (date) {
       setValues({
         ...values,
         [field]: format(date, "dd/MM/yyyy"),
-      })
+      });
     }
-  }
+  };
 
   const parseDate = (dateString: string): Date => {
-    const [day, month, year] = dateString.split("/").map(Number)
-    return new Date(year, month - 1, day)
-  }
+    const [day, month, year] = dateString.split("/").map(Number);
+    return new Date(year, month - 1, day);
+  };
 
   return (
     <Dialog
       open={isOpen}
       onOpenChange={(open) => {
-        if (!open) handleCancel()
+        if (!open) handleCancel();
       }}
     >
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -99,18 +172,34 @@ export function AcademicProgramModal({ isOpen, onClose, onSave, initialData, tit
           <DialogTitle className="text-xl font-bold">{title}</DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="english" className="mt-2" onValueChange={setActiveTab}>
+        <Tabs
+          defaultValue="english"
+          className="mt-2"
+          onValueChange={setActiveTab}
+        >
           <TabsList className="bg-purple-100">
-            <TabsTrigger value="english" className="data-[state=active]:bg-purple-700 data-[state=active]:text-white">
+            <TabsTrigger
+              value="english"
+              className="data-[state=active]:bg-purple-700 data-[state=active]:text-white"
+            >
               English
             </TabsTrigger>
-            <TabsTrigger value="korean" className="data-[state=active]:bg-purple-700 data-[state=active]:text-white">
+            <TabsTrigger
+              value="korean"
+              className="data-[state=active]:bg-purple-700 data-[state=active]:text-white"
+            >
               한국어
             </TabsTrigger>
-            <TabsTrigger value="russian" className="data-[state=active]:bg-purple-700 data-[state=active]:text-white">
+            <TabsTrigger
+              value="russian"
+              className="data-[state=active]:bg-purple-700 data-[state=active]:text-white"
+            >
               Русский
             </TabsTrigger>
-            <TabsTrigger value="uzbek" className="data-[state=active]:bg-purple-700 data-[state=active]:text-white">
+            <TabsTrigger
+              value="uzbek"
+              className="data-[state=active]:bg-purple-700 data-[state=active]:text-white"
+            >
               O'zbek
             </TabsTrigger>
           </TabsList>
@@ -119,13 +208,23 @@ export function AcademicProgramModal({ isOpen, onClose, onSave, initialData, tit
         <div className="space-y-6 mt-4">
           <div>
             <Label htmlFor="name">Name of the academic program *</Label>
-            <Input id="name" name="name" value={values.name} onChange={handleChange} className="mt-1" required />
+            <Input
+              id="name"
+              name="name"
+              value={values.name}
+              onChange={handleChange}
+              className="mt-1"
+              required
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="category">Category</Label>
-              <Select value={values.category} onValueChange={(value) => handleSelectChange("category", value)}>
+              <Select
+                value={values.category}
+                onValueChange={(value) => handleSelectChange("category", value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -140,7 +239,12 @@ export function AcademicProgramModal({ isOpen, onClose, onSave, initialData, tit
             </div>
             <div>
               <Label htmlFor="degreeType">Degree type</Label>
-              <Select value={values.degreeType} onValueChange={(value) => handleSelectChange("degreeType", value)}>
+              <Select
+                value={values.degreeType}
+                onValueChange={(value) =>
+                  handleSelectChange("degreeType", value)
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select degree type" />
                 </SelectTrigger>
@@ -167,9 +271,13 @@ export function AcademicProgramModal({ isOpen, onClose, onSave, initialData, tit
               />
             </div>
             <div>
-              <Label htmlFor="contractPrice">Contract price per semester($) *</Label>
+              <Label htmlFor="contractPrice">
+                Contract price per semester($) *
+              </Label>
               <div className="flex items-center mt-1">
-                <span className="bg-gray-100 border border-r-0 rounded-l px-3 py-2">$</span>
+                <span className="bg-gray-100 border border-r-0 rounded-l px-3 py-2">
+                  $
+                </span>
                 <Input
                   id="contractPrice"
                   name="contractPrice"
@@ -187,12 +295,18 @@ export function AcademicProgramModal({ isOpen, onClose, onSave, initialData, tit
             <Label>Admission period</Label>
             <div className="grid grid-cols-2 gap-4 mt-1">
               <div>
-                <Label htmlFor="admissionStart" className="text-sm text-gray-500">
+                <Label
+                  htmlFor="admissionStart"
+                  className="text-sm text-gray-500"
+                >
                   From
                 </Label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal mt-1">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal mt-1"
+                    >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {values.admissionStart}
                     </Button>
@@ -201,7 +315,9 @@ export function AcademicProgramModal({ isOpen, onClose, onSave, initialData, tit
                     <Calendar
                       mode="single"
                       selected={parseDate(values.admissionStart)}
-                      onSelect={(date) => handleDateChange("admissionStart", date)}
+                      onSelect={(date) =>
+                        handleDateChange("admissionStart", date)
+                      }
                       initialFocus
                     />
                   </PopoverContent>
@@ -213,7 +329,10 @@ export function AcademicProgramModal({ isOpen, onClose, onSave, initialData, tit
                 </Label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal mt-1">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal mt-1"
+                    >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {values.admissionEnd}
                     </Button>
@@ -222,7 +341,9 @@ export function AcademicProgramModal({ isOpen, onClose, onSave, initialData, tit
                     <Calendar
                       mode="single"
                       selected={parseDate(values.admissionEnd)}
-                      onSelect={(date) => handleDateChange("admissionEnd", date)}
+                      onSelect={(date) =>
+                        handleDateChange("admissionEnd", date)
+                      }
                       initialFocus
                     />
                   </PopoverContent>
@@ -234,9 +355,14 @@ export function AcademicProgramModal({ isOpen, onClose, onSave, initialData, tit
           <div>
             <Label htmlFor="documentTypes">Document types</Label>
             <MultiSelect
-              options={DOCUMENT_TYPES.map((type) => ({ label: type, value: type }))}
+              options={DOCUMENT_TYPES.map((type) => ({
+                label: type,
+                value: type,
+              }))}
               selected={values.documentTypes}
-              onChange={(selected) => setValues({ ...values, documentTypes: selected })}
+              onChange={(selected) =>
+                setValues({ ...values, documentTypes: selected })
+              }
               placeholder="Select required documents"
               className="mt-1"
             />
@@ -244,7 +370,10 @@ export function AcademicProgramModal({ isOpen, onClose, onSave, initialData, tit
 
           <div>
             <Label>About the program</Label>
-            <RichTextEditor value={values.description} onChange={handleRichTextChange} />
+            <RichTextEditor
+              value={values.description}
+              onChange={handleRichTextChange}
+            />
           </div>
 
           {/* Action Buttons */}
@@ -252,13 +381,15 @@ export function AcademicProgramModal({ isOpen, onClose, onSave, initialData, tit
             <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit} className="bg-purple-900 hover:bg-purple-800">
+            <Button
+              onClick={handleSubmit}
+              className="bg-purple-900 hover:bg-purple-800"
+            >
               Save
             </Button>
           </div>
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-
