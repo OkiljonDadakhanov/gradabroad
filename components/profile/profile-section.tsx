@@ -7,9 +7,6 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { InfoCard } from "@/components/ui/info-card";
 import { ProfileEditModal } from "./profile-edit-modal";
 import type { ProfileData } from "@/types/profile";
-export const metadata = {
-  title: "GradAbroad – University Application",
-};
 
 export function ProfileSection() {
   const router = useRouter();
@@ -17,22 +14,22 @@ export function ProfileSection() {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Step 1: Extract and store token, clean URL
+  // Step 1: Extract and store token, clean URL
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const queryToken = searchParams.get("token");
 
     if (queryToken) {
       localStorage.setItem("accessToken", queryToken);
-
-      // ✅ Clean the URL immediately
       const cleanUrl = window.location.origin + window.location.pathname;
       document.title = "GradAbroad – University Application";
       window.history.replaceState({}, document.title, cleanUrl);
+    } else {
+      document.title = "GradAbroad – University Application";
     }
   }, []);
 
-  // ✅ Step 2: Fetch profile using token
+  // Step 2: Fetch and map profile data
   useEffect(() => {
     const fetchProfile = async () => {
       const token = localStorage.getItem("accessToken");
@@ -64,7 +61,23 @@ export function ProfileSection() {
           return;
         }
 
-        const data = await res.json();
+        const raw = await res.json();
+
+        // ✅ Map raw backend fields to frontend ProfileData
+        const data: ProfileData = {
+          name: raw.university_name,
+          type: raw.types_of_schools,
+          classification: raw.classification,
+          address: raw.address,
+          city: raw.city,
+          zipCode: raw.zip_code,
+          telephone: raw.university_office_phone,
+          email: raw.university_admission_email_address,
+          accreditationNumber: raw.accreditation_number,
+          accreditationDocument: raw.accreditation_document,
+          avatar: raw.logo || null,
+        };
+
         setProfileData(data);
       } catch (error) {
         console.error("Fetch error:", error);
@@ -136,9 +149,14 @@ export function ProfileSection() {
           {
             label: "Accreditation document",
             value: (
-              <span className="text-blue-500">
-                {profileData.accreditationDocument}
-              </span>
+              <a
+                href={profileData.accreditationDocument}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 underline"
+              >
+                View document
+              </a>
             ),
           },
         ]}

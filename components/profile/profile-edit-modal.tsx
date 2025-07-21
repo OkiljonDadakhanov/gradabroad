@@ -20,6 +20,8 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { useForm } from "@/hooks/use-form";
 import type { ProfileData } from "@/types/profile";
 import { Check } from "lucide-react";
+import { toast } from "sonner";
+import { useRef } from "react";
 
 interface ProfileEditModalProps {
   isOpen: boolean;
@@ -37,8 +39,70 @@ export function ProfileEditModal({
   const { values, handleChange, handleSelectChange, setValues, reset } =
     useForm<ProfileData>(initialData);
 
-  const handleSubmit = () => {
-    onSave(values);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSubmit = async () => {
+    const formData = new FormData();
+
+    formData.append("university_name", values.name);
+    formData.append("types_of_schools", values.type);
+    formData.append("classification", values.classification);
+    formData.append("address", values.address);
+    formData.append("city", values.city);
+    formData.append("zip_code", values.zipCode);
+    formData.append("university_admission_email_address", values.email);
+    formData.append("university_office_phone", values.telephone);
+    formData.append("accreditation_number", values.accreditationNumber);
+
+    if (values.accreditationDocument instanceof File) {
+      formData.append("accreditation_document", values.accreditationDocument);
+    }
+
+    if (values.avatar instanceof File) {
+      formData.append("logo", values.avatar);
+    }
+
+    try {
+      const response = await fetch(
+        "https://api.gradabroad.net/api/auth/universities/me/",
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        const err = await response.json();
+        console.error(err);
+        toast.error("Failed to update profile.");
+        return;
+      }
+
+      const raw = await response.json();
+      const mapped: ProfileData = {
+        name: raw.university_name,
+        type: raw.types_of_schools,
+        classification: raw.classification,
+        address: raw.address,
+        city: raw.city,
+        zipCode: raw.zip_code,
+        telephone: raw.university_office_phone,
+        email: raw.university_admission_email_address,
+        accreditationNumber: raw.accreditation_number,
+        accreditationDocument: raw.accreditation_document,
+        avatar: raw.logo || null,
+      };
+
+      onSave(mapped);
+      toast.success("Profile updated successfully!");
+      onClose();
+    } catch (error) {
+      console.error(error);
+      toast.error("An error occurred while saving changes.");
+    }
   };
 
   const handleCancel = () => {
@@ -66,7 +130,11 @@ export function ProfileEditModal({
               className="cursor-pointer w-24 h-24 rounded-full overflow-hidden border-2 border-gray-300 hover:border-purple-700 transition-all"
             >
               <img
-                src={values.avatar || "/placeholder.svg"}
+                src={
+                  values.avatar instanceof File
+                    ? URL.createObjectURL(values.avatar)
+                    : values.avatar || "/placeholder.svg"
+                }
                 alt="University Avatar"
                 className="w-full h-full object-cover"
               />
@@ -75,31 +143,22 @@ export function ProfileEditModal({
                 type="file"
                 accept="image/*"
                 className="hidden"
+                ref={avatarInputRef}
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      const base64data = reader.result as string;
-                      setValues({
-                        ...values,
-                        avatar: base64data,
-                      });
-                    };
-                    reader.readAsDataURL(file);
+                    setValues({
+                      ...values,
+                      avatar: file,
+                    });
                   }
                 }}
               />
             </label>
-
-            <div className="text-center">
-              <p className="text-sm text-gray-500">
-                Click the image to upload a new avatar.
-              </p>
-              <p className="text-xs text-gray-500">
-                288x288 px PNG or JPG recommended.
-              </p>
-            </div>
+            <p className="text-sm text-gray-500 text-center">
+              Click the image to upload a new avatar. <br />
+              288x288 px PNG or JPG recommended.
+            </p>
           </div>
 
           {/* University Info */}
@@ -113,7 +172,6 @@ export function ProfileEditModal({
                 name="name"
                 value={values.name}
                 onChange={handleChange}
-                className="mt-1"
               />
             </div>
 
@@ -128,9 +186,16 @@ export function ProfileEditModal({
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Public">Public</SelectItem>
-                    <SelectItem value="Private">Private</SelectItem>
-                    <SelectItem value="Charter">Charter</SelectItem>
+                    <SelectItem value="University">University</SelectItem>
+                    <SelectItem value="College">College</SelectItem>
+                    <SelectItem value="Institute">Institute</SelectItem>
+                    <SelectItem value="Academy">Academy</SelectItem>
+                    <SelectItem value="Graduate School">
+                      Graduate School
+                    </SelectItem>
+                    <SelectItem value="Foreign Branch Campus">
+                      Foreign Branch Campus
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -146,25 +211,21 @@ export function ProfileEditModal({
                     <SelectValue placeholder="Select classification" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="University">University</SelectItem>
-                    <SelectItem value="College">College</SelectItem>
-                    <SelectItem value="Institute">Institute</SelectItem>
+                    <SelectItem value="National">National</SelectItem>
+                    <SelectItem value="Public">Public</SelectItem>
+                    <SelectItem value="Private">Private</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
-            {/* Address Info */}
-            <div>
-              <Label htmlFor="address">Address *</Label>
-              <Input
-                id="address"
-                name="address"
-                value={values.address}
-                onChange={handleChange}
-                className="mt-1"
-              />
-            </div>
+            <Label htmlFor="address">Address *</Label>
+            <Input
+              id="address"
+              name="address"
+              value={values.address}
+              onChange={handleChange}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -174,7 +235,6 @@ export function ProfileEditModal({
                   name="city"
                   value={values.city}
                   onChange={handleChange}
-                  className="mt-1"
                 />
               </div>
               <div>
@@ -184,128 +244,64 @@ export function ProfileEditModal({
                   name="zipCode"
                   value={values.zipCode}
                   onChange={handleChange}
-                  className="mt-1"
                 />
               </div>
             </div>
 
-            {/* Contact Info */}
-            <div>
-              <Label htmlFor="email">Email address *</Label>
-              <div className="relative">
-                <Input
-                  id="email"
-                  name="email"
-                  value={values.email}
-                  onChange={handleChange}
-                  className="mt-1"
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <Check className="text-green-500" size={20} />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="telephone">Telephone number *</Label>
-              <div className="flex">
-                <div className="flex items-center border rounded-l px-3 bg-white">
-                  <span className="text-green-600 mr-1">🇺🇿</span>
-                  <span>+</span>
-                </div>
-                <Input
-                  id="telephone"
-                  name="telephone"
-                  value={(values.telephone ?? "").replace("+", "")}
-                  onChange={(e) =>
-                    setValues({
-                      ...values,
-                      telephone: "+" + e.target.value,
-                    })
-                  }
-                  className="rounded-l-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="accreditationNumber">
-                Accreditation number *
-              </Label>
+            <Label htmlFor="email">Email address *</Label>
+            <div className="relative">
               <Input
-                id="accreditationNumber"
-                name="accreditationNumber"
-                value={values.accreditationNumber}
+                id="email"
+                name="email"
+                value={values.email}
                 onChange={handleChange}
-                className="mt-1"
+              />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <Check className="text-green-500" size={20} />
+              </div>
+            </div>
+
+            <Label htmlFor="telephone">Telephone number *</Label>
+            <div className="flex">
+              <div className="flex items-center border rounded-l px-3 bg-white">
+                <span className="text-green-600 mr-1">🇺🇿</span>
+                <span>+</span>
+              </div>
+              <Input
+                id="telephone"
+                name="telephone"
+                value={(values.telephone ?? "").replace("+", "")}
+                onChange={(e) =>
+                  setValues({
+                    ...values,
+                    telephone: "+" + e.target.value,
+                  })
+                }
+                className="rounded-l-none"
               />
             </div>
 
-            {/* Document Upload */}
+            <Label htmlFor="accreditationNumber">Accreditation number *</Label>
+            <Input
+              id="accreditationNumber"
+              name="accreditationNumber"
+              value={values.accreditationNumber}
+              onChange={handleChange}
+            />
+
             <FileUpload
               label="Accreditation document *"
               value={values.accreditationDocument}
-              onChange={(fileName) =>
+              onChange={(file: File) =>
                 setValues({
                   ...values,
-                  accreditationDocument: fileName,
+                  accreditationDocument: file,
                 })
               }
             />
-
-            {/* Social Media Links */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="telegramLink">Telegram link</Label>
-                <Input
-                  id="telegramLink"
-                  name="telegramLink"
-                  value={values.telegramLink}
-                  onChange={handleChange}
-                  className="mt-1"
-                  placeholder="https://t.me/username"
-                />
-              </div>
-              <div>
-                <Label htmlFor="instagramLink">Instagram link</Label>
-                <Input
-                  id="instagramLink"
-                  name="instagramLink"
-                  value={values.instagramLink}
-                  onChange={handleChange}
-                  className="mt-1"
-                  placeholder="Instagram link"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="youtubeLink">Youtube link</Label>
-                <Input
-                  id="youtubeLink"
-                  name="youtubeLink"
-                  value={values.youtubeLink}
-                  onChange={handleChange}
-                  className="mt-1"
-                  placeholder="Youtube link"
-                />
-              </div>
-              <div>
-                <Label htmlFor="facebookLink">Facebook link</Label>
-                <Input
-                  id="facebookLink"
-                  name="facebookLink"
-                  value={values.facebookLink}
-                  onChange={handleChange}
-                  className="mt-1"
-                  placeholder="Facebook link"
-                />
-              </div>
-            </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Actions */}
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={handleCancel}>
               Cancel
