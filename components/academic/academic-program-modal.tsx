@@ -36,6 +36,8 @@ import {
 } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { LanguageRequirementInput } from "@/components/academic/LanguageRequirementInput";
+import { DocumentTypeInput } from "@/components/academic/DocumentTypeInput";
 
 interface AcademicProgramModalProps {
   isOpen: boolean;
@@ -49,7 +51,7 @@ const defaultFormData: AcademicProgramFormData = {
   name: "",
   category: "",
   degreeType: "",
-  languageRequirement: "English",
+  languageRequirement: [],
   contractPrice: "",
   admissionStart: format(new Date(), "dd/MM/yyyy"),
   admissionEnd: format(
@@ -261,13 +263,12 @@ export function AcademicProgramModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="languageRequirement">Language requirement</Label>
-              <Input
-                id="languageRequirement"
-                name="languageRequirement"
+              <Label>Language Requirements</Label>
+              <LanguageRequirementInput
                 value={values.languageRequirement}
-                onChange={handleChange}
-                className="mt-1"
+                onChange={(updated) =>
+                  setValues({ ...values, languageRequirement: updated })
+                }
               />
             </div>
             <div>
@@ -354,17 +355,12 @@ export function AcademicProgramModal({
 
           <div>
             <Label htmlFor="documentTypes">Document types</Label>
-            <MultiSelect
-              options={DOCUMENT_TYPES.map((type) => ({
-                label: type,
-                value: type,
-              }))}
-              selected={values.documentTypes}
-              onChange={(selected) =>
-                setValues({ ...values, documentTypes: selected })
+
+            <DocumentTypeInput
+              value={values.documentTypes}
+              onChange={(updated) =>
+                setValues({ ...values, documentTypes: updated })
               }
-              placeholder="Select required documents"
-              className="mt-1"
             />
           </div>
 

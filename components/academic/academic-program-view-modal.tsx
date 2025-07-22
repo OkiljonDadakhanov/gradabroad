@@ -1,23 +1,34 @@
-"use client"
+"use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import type { AcademicProgram } from "@/types/academic"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import type { AcademicProgram } from "@/types/academic";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
 
 interface AcademicProgramViewModalProps {
-  isOpen: boolean
-  onClose: () => void
-  program: AcademicProgram
+  isOpen: boolean;
+  onClose: () => void;
+  program: AcademicProgram;
 }
 
-export function AcademicProgramViewModal({ isOpen, onClose, program }: AcademicProgramViewModalProps) {
+export function AcademicProgramViewModal({
+  isOpen,
+  onClose,
+  program,
+}: AcademicProgramViewModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">{program.name}</DialogTitle>
+          <DialogTitle className="text-xl font-bold">
+            {program.name}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
@@ -38,11 +49,19 @@ export function AcademicProgramViewModal({ isOpen, onClose, program }: AcademicP
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-500">Language requirement</p>
-                <p className="font-medium">{program.languageRequirement}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Contract price per semester</p>
-                <p className="font-medium">${program.contractPrice}</p>
+                {program.languageRequirement.length > 0 ? (
+                  <ul className="list-disc list-inside text-sm text-purple-800 mt-1">
+                    {program.languageRequirement.map((req, i) => (
+                      <li key={i}>
+                        <strong>{req.name}</strong>: {req.requirement}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500">
+                    No language requirements listed
+                  </p>
+                )}
               </div>
             </div>
           </Card>
@@ -64,11 +83,16 @@ export function AcademicProgramViewModal({ isOpen, onClose, program }: AcademicP
             <p className="text-sm text-gray-500">Required documents</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {program.documentTypes.map((doc, index) => (
-                <span key={index} className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
+                <span
+                  key={index}
+                  className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm"
+                >
                   {doc}
                 </span>
               ))}
-              {program.documentTypes.length === 0 && <p className="text-gray-500">No documents specified</p>}
+              {program.documentTypes.length === 0 && (
+                <p className="text-gray-500">No documents specified</p>
+              )}
             </div>
           </Card>
 
@@ -94,49 +118,87 @@ export function AcademicProgramViewModal({ isOpen, onClose, program }: AcademicP
                 >
                   Русский
                 </TabsTrigger>
-                <TabsTrigger value="uzbek" className="data-[state=active]:bg-purple-700 data-[state=active]:text-white">
+                <TabsTrigger
+                  value="uzbek"
+                  className="data-[state=active]:bg-purple-700 data-[state=active]:text-white"
+                >
                   O'zbek
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="english" className="mt-4">
                 {program.description.english ? (
-                  <div dangerouslySetInnerHTML={{ __html: program.description.english.replace(/\n/g, "<br/>") }} />
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: program.description.english.replace(
+                        /\n/g,
+                        "<br/>"
+                      ),
+                    }}
+                  />
                 ) : (
-                  <p className="text-gray-500">No description available in English</p>
+                  <p className="text-gray-500">
+                    No description available in English
+                  </p>
                 )}
               </TabsContent>
               <TabsContent value="korean" className="mt-4">
                 {program.description.korean ? (
-                  <div dangerouslySetInnerHTML={{ __html: program.description.korean.replace(/\n/g, "<br/>") }} />
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: program.description.korean.replace(
+                        /\n/g,
+                        "<br/>"
+                      ),
+                    }}
+                  />
                 ) : (
-                  <p className="text-gray-500">No description available in Korean</p>
+                  <p className="text-gray-500">
+                    No description available in Korean
+                  </p>
                 )}
               </TabsContent>
               <TabsContent value="russian" className="mt-4">
                 {program.description.russian ? (
-                  <div dangerouslySetInnerHTML={{ __html: program.description.russian.replace(/\n/g, "<br/>") }} />
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: program.description.russian.replace(
+                        /\n/g,
+                        "<br/>"
+                      ),
+                    }}
+                  />
                 ) : (
-                  <p className="text-gray-500">No description available in Russian</p>
+                  <p className="text-gray-500">
+                    No description available in Russian
+                  </p>
                 )}
               </TabsContent>
               <TabsContent value="uzbek" className="mt-4">
                 {program.description.uzbek ? (
-                  <div dangerouslySetInnerHTML={{ __html: program.description.uzbek.replace(/\n/g, "<br/>") }} />
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: program.description.uzbek.replace(/\n/g, "<br/>"),
+                    }}
+                  />
                 ) : (
-                  <p className="text-gray-500">No description available in Uzbek</p>
+                  <p className="text-gray-500">
+                    No description available in Uzbek
+                  </p>
                 )}
               </TabsContent>
             </Tabs>
           </Card>
 
           <div className="flex justify-end">
-            <Button onClick={onClose} className="bg-purple-900 hover:bg-purple-800">
+            <Button
+              onClick={onClose}
+              className="bg-purple-900 hover:bg-purple-800"
+            >
               Close
             </Button>
           </div>
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

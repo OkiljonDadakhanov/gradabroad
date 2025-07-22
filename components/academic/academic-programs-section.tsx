@@ -61,7 +61,7 @@ export function AcademicProgramsSection() {
           name: p.major,
           category: p.code,
           degreeType: p.degree_level,
-          languageRequirement: "English", // default/fallback
+          languageRequirement: [], // default/fallback
           contractPrice: p.tuition_fee,
           admissionStart: "Soon",
           admissionEnd: "Soon",

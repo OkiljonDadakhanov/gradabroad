@@ -1,22 +1,27 @@
 export interface AcademicProgram {
-  id: string
-  name: string
-  category: string
-  degreeType: string
-  languageRequirement: string
-  contractPrice: string
-  admissionStart: string
-  admissionEnd: string
-  documentTypes: string[]
+  id: string;
+  name: string;
+  category: string;
+  degreeType: string;
+  languageRequirement: LanguageRequirement[];
+  contractPrice: string;
+  admissionStart: string;
+  admissionEnd: string;
+  documentTypes: string[];
   description: {
-    english: string
-    korean: string
-    russian: string
-    uzbek: string
-  }
+    english: string;
+    korean: string;
+    russian: string;
+    uzbek: string;
+  };
 }
 
-export type AcademicProgramFormData = Omit<AcademicProgram, "id">
+export interface LanguageRequirement {
+  name: string; // e.g., "IELTS"
+  requirement: string; // e.g., "Minimum Score: 6.5"
+}
+
+export type AcademicProgramFormData = Omit<AcademicProgram, "id">;
 
 export const CATEGORIES = [
   "Languages",
@@ -28,9 +33,16 @@ export const CATEGORIES = [
   "Social Sciences",
   "Natural Sciences",
   "Mathematics",
-]
+];
 
-export const DEGREE_TYPES = ["Bachelor", "Master", "PhD", "Certificate", "Diploma"]
+export const DEGREE_TYPES = [
+  "Vocational or Professional",
+  "Bachelor",
+  "Master",
+  "PhD",
+  "Certificate",
+  "Diploma",
+];
 
 export const DOCUMENT_TYPES = [
   "Passport",
@@ -41,5 +53,4 @@ export const DOCUMENT_TYPES = [
   "Recommendation Letter",
   "Language Certificate",
   "Medical Certificate",
-]
-
+];
