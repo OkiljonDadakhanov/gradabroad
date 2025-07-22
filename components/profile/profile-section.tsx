@@ -76,6 +76,12 @@ export function ProfileSection() {
           accreditationNumber: raw.accreditation_number,
           accreditationDocument: raw.accreditation_document,
           avatar: raw.logo || null,
+          latitude: "",
+          longitude: "",
+          telegramLink: "",
+          instagramLink: "",
+          youtubeLink: "",
+          facebookLink: ""
         };
 
         setProfileData(data);

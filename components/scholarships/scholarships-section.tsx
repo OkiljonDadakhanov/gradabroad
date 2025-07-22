@@ -115,7 +115,7 @@ The following 15% of the announced quota | 50% scholarship`,
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 ">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 ml-2">
         <h2 className="text-2xl font-bold text-purple-900">Scholarships</h2>
         <Button
           onClick={() => setIsAddModalOpen(true)}

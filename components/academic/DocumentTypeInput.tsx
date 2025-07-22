@@ -11,12 +11,22 @@ interface Props {
 }
 
 const BUILTIN_DOCUMENTS = [
+  "Personal Statement or Statement of Purpose",
+  "Study Plan",
+  "Recommendation Letters",
   "Passport Copy",
-  "High School Transcript",
-  "English Proficiency Certificate",
-  "Personal Statement",
-  "Recommendation Letter",
-  "Medical Certificate",
+  "Passport-size Photos",
+  "High School Diploma and Transcript",
+  "Bachelor’s Degree Certificate and Transcript",
+  "Master’s Degree Certificate and Transcript",
+  "Proof of English or Korean Language Proficiency",
+  "Certificate of Bank Balance",
+  "Letter of Financial Support",
+  "Copy of Parents’ Passports or National IDs",
+  "Certificate of Family Relationship",
+  "Medical Examination Report",
+  "Copy of National ID Card or Birth Certificate",
+  "Application Fee Payment Receipt",
   "Portfolio (for Art/Design programs)",
 ];
 
