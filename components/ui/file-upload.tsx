@@ -1,18 +1,17 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState, useRef } from "react"
-import { Label } from "@/components/ui/label"
-import { X, Upload } from "lucide-react"
+import type React from "react";
+import { useState, useRef } from "react";
+import { Label } from "@/components/ui/label";
+import { X, Upload } from "lucide-react";
 
 interface FileUploadProps {
-  label: string
-  value: string
-  onChange: (fileName: string) => void
-  accept?: string
-  maxSize?: number // in bytes
-  className?: string
+  label: string;
+  value: string | File | null;
+  onChange: (file: File | null) => void;
+  accept?: string;
+  maxSize?: number; // in bytes
+  className?: string;
 }
 
 export function FileUpload({
@@ -23,68 +22,85 @@ export function FileUpload({
   maxSize = 26214400, // 25MB default
   className = "",
 }: FileUploadProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [error, setError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click()
-    }
-  }
+    fileInputRef.current?.click();
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setError(null)
+    setError(null);
 
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-      // Check file size
-      if (file.size > maxSize) {
-        setError(`File is too large. Maximum size is ${maxSize / 1048576}MB.`)
-        return
-      }
-
-      onChange(file.name)
+    if (file.size > maxSize) {
+      setError(`File is too large. Max size is ${maxSize / 1048576}MB.`);
+      return;
     }
-  }
+
+    onChange(file); // ✅ fixed here
+  };
 
   const handleRemoveFile = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    onChange("")
-    setError(null)
+    e.stopPropagation();
+    onChange(null);
+    setError(null);
 
-    // Reset the file input
     if (fileInputRef.current) {
-      fileInputRef.current.value = ""
+      fileInputRef.current.value = "";
     }
-  }
+  };
+
+  const fileName =
+    typeof value === "string"
+      ? value.split("/").pop()
+      : value instanceof File
+      ? value.name
+      : null;
 
   return (
     <div className={className}>
       <Label>{label}</Label>
-      <div className="border-2 border-dashed rounded-md p-6 mt-1 cursor-pointer" onClick={handleClick}>
+
+      <div
+        className="border-2 border-dashed rounded-md p-6 mt-1 cursor-pointer"
+        onClick={handleClick}
+      >
         <div className="flex flex-col items-center justify-center">
           <div className="bg-purple-700 text-white p-3 rounded-full mb-2">
             <Upload size={24} />
           </div>
           <p className="text-sm font-medium">Click to upload</p>
-          <p className="text-xs text-gray-500">{`(Max file size: ${maxSize / 1048576} MB)`}</p>
+          <p className="text-xs text-gray-500">{`(Max: ${
+            maxSize / 1048576
+          } MB)`}</p>
         </div>
       </div>
 
-      <input ref={fileInputRef} type="file" accept={accept} className="hidden" onChange={handleFileChange} />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={accept}
+        className="hidden"
+        onChange={handleFileChange}
+      />
 
       {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
 
-      {value && !error && (
+      {fileName && !error && (
         <div className="mt-2 bg-purple-100 rounded-md p-2 flex justify-between items-center">
-          <span className="text-sm">{value}</span>
-          <button type="button" onClick={handleRemoveFile} className="text-gray-500 hover:text-gray-700">
+          <span className="text-sm truncate max-w-[80%]">{fileName}</span>
+          <button
+            type="button"
+            onClick={handleRemoveFile}
+            className="text-gray-500 hover:text-gray-700"
+          >
             <X size={18} />
           </button>
         </div>
       )}
     </div>
-  )
+  );
 }
-

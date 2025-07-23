@@ -53,20 +53,32 @@ export function ProfileEditModal({
     formData.append("university_admission_email_address", values.email);
     formData.append("university_office_phone", values.telephone);
     formData.append("accreditation_number", values.accreditationNumber);
+    formData.append("website", values.website);
+    formData.append(
+      "university_admission_representetive_name",
+      values.representativeName
+    );
+    formData.append(
+      "university_admission_representetive_email",
+      values.representativeEmail
+    );
 
-    if (values.accreditationDocument instanceof File) {
-      formData.append("accreditation_document", values.accreditationDocument);
+    if (values.signed_accreditation_document_url instanceof File) {
+      formData.append(
+        "accreditation_document",
+        values.signed_accreditation_document_url
+      );
     }
 
-    if (values.avatar instanceof File) {
-      formData.append("logo", values.avatar);
+    if (values.logo_url instanceof File) {
+      formData.append("logo", values.logo_url);
     }
 
     try {
       const response = await fetch(
         "https://api.gradabroad.net/api/auth/universities/me/",
         {
-          method: "PATCH",
+          method: "PUT",
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
@@ -82,6 +94,7 @@ export function ProfileEditModal({
       }
 
       const raw = await response.json();
+
       const mapped: ProfileData = {
         name: raw.university_name,
         type: raw.types_of_schools,
@@ -92,8 +105,15 @@ export function ProfileEditModal({
         telephone: raw.university_office_phone,
         email: raw.university_admission_email_address,
         accreditationNumber: raw.accreditation_number,
-        accreditationDocument: raw.accreditation_document,
-        avatar: raw.logo || null,
+        signed_accreditation_document_url: raw.accreditation_document,
+        logo_url: raw.logo_url ?? raw.logo ?? null,
+        website: raw.website,
+        representativeName: raw.university_admission_representetive_name,
+        representativeEmail: raw.university_admission_representetive_email,
+        telegramLink: "",
+        instagramLink: "",
+        youtubeLink: "",
+        facebookLink: "",
       };
 
       onSave(mapped);
@@ -123,7 +143,7 @@ export function ProfileEditModal({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Avatar Upload Section */}
+          {/* Avatar */}
           <div className="flex flex-col items-center space-y-2">
             <label
               htmlFor="avatar-upload"
@@ -131,9 +151,9 @@ export function ProfileEditModal({
             >
               <img
                 src={
-                  values.avatar instanceof File
-                    ? URL.createObjectURL(values.avatar)
-                    : values.avatar || "/placeholder.svg"
+                  values.logo_url instanceof File
+                    ? URL.createObjectURL(values.logo_url)
+                    : values.logo_url || "/placeholder.svg"
                 }
                 alt="University Avatar"
                 className="w-full h-full object-cover"
@@ -147,10 +167,7 @@ export function ProfileEditModal({
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
-                    setValues({
-                      ...values,
-                      avatar: file,
-                    });
+                    setValues({ ...values, logo_url: file });
                   }
                 }}
               />
@@ -161,23 +178,16 @@ export function ProfileEditModal({
             </p>
           </div>
 
-          {/* University Info */}
+          {/* Fields */}
           <div className="space-y-4">
             <div>
-              <Label htmlFor="name">
-                Name of the university or institution *
-              </Label>
-              <Input
-                id="name"
-                name="name"
-                value={values.name}
-                onChange={handleChange}
-              />
+              <Label>Name of the university or institution *</Label>
+              <Input name="name" value={values.name} onChange={handleChange} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="type">Type *</Label>
+                <Label>Type *</Label>
                 <Select
                   value={values.type}
                   onValueChange={(value) => handleSelectChange("type", value)}
@@ -200,7 +210,7 @@ export function ProfileEditModal({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="classification">Classification *</Label>
+                <Label>Classification *</Label>
                 <Select
                   value={values.classification}
                   onValueChange={(value) =>
@@ -219,9 +229,8 @@ export function ProfileEditModal({
               </div>
             </div>
 
-            <Label htmlFor="address">Address *</Label>
+            <Label>Address *</Label>
             <Input
-              id="address"
               name="address"
               value={values.address}
               onChange={handleChange}
@@ -229,18 +238,16 @@ export function ProfileEditModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="city">City</Label>
+                <Label>City</Label>
                 <Input
-                  id="city"
                   name="city"
                   value={values.city}
                   onChange={handleChange}
                 />
               </div>
               <div>
-                <Label htmlFor="zipCode">Zip code</Label>
+                <Label>Zip code</Label>
                 <Input
-                  id="zipCode"
                   name="zipCode"
                   value={values.zipCode}
                   onChange={handleChange}
@@ -248,10 +255,9 @@ export function ProfileEditModal({
               </div>
             </div>
 
-            <Label htmlFor="email">Email address *</Label>
+            <Label>Email address *</Label>
             <div className="relative">
               <Input
-                id="email"
                 name="email"
                 value={values.email}
                 onChange={handleChange}
@@ -261,29 +267,24 @@ export function ProfileEditModal({
               </div>
             </div>
 
-            <Label htmlFor="telephone">Telephone number *</Label>
+            <Label>Telephone number *</Label>
             <div className="flex">
               <div className="flex items-center border rounded-l px-3 bg-white">
                 <span className="text-green-600 mr-1">🇺🇿</span>
                 <span>+</span>
               </div>
               <Input
-                id="telephone"
                 name="telephone"
                 value={(values.telephone ?? "").replace("+", "")}
                 onChange={(e) =>
-                  setValues({
-                    ...values,
-                    telephone: "+" + e.target.value,
-                  })
+                  setValues({ ...values, telephone: "+" + e.target.value })
                 }
                 className="rounded-l-none"
               />
             </div>
 
-            <Label htmlFor="accreditationNumber">Accreditation number *</Label>
+            <Label>Accreditation number *</Label>
             <Input
-              id="accreditationNumber"
               name="accreditationNumber"
               value={values.accreditationNumber}
               onChange={handleChange}
@@ -291,17 +292,38 @@ export function ProfileEditModal({
 
             <FileUpload
               label="Accreditation document *"
-              value={values.accreditationDocument}
+              value={values.signed_accreditation_document_url}
               onChange={(file: File) =>
                 setValues({
                   ...values,
-                  accreditationDocument: file,
+                  signed_accreditation_document_url: file,
                 })
               }
             />
+
+            {/* 🔹 NEW FIELDS */}
+            <Label>University Website</Label>
+            <Input
+              name="website"
+              value={values.website}
+              onChange={handleChange}
+            />
+
+            <Label>Representative Name</Label>
+            <Input
+              name="representativeName"
+              value={values.representativeName}
+              onChange={handleChange}
+            />
+
+            <Label>Representative Email</Label>
+            <Input
+              name="representativeEmail"
+              value={values.representativeEmail}
+              onChange={handleChange}
+            />
           </div>
 
-          {/* Actions */}
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={handleCancel}>
               Cancel

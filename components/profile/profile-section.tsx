@@ -78,9 +78,11 @@ export function ProfileSection() {
           telephone: raw.university_office_phone,
           email: raw.university_admission_email_address,
           accreditationNumber: raw.accreditation_number,
-          accreditationDocument: raw.accreditation_document,
-          avatar: raw.logo || null,
-
+          signed_accreditation_document_url: raw.signed_accreditation_document_url,
+          logo_url: raw.logo_url || null,
+          representativeName: raw.university_admission_representetive_name,
+          representativeEmail: raw.university_admission_representetive_email,
+          website: raw.website,
           telegramLink: "",
           instagramLink: "",
           youtubeLink: "",
@@ -115,7 +117,7 @@ export function ProfileSection() {
       <div className="mb-6">
         <div className="w-24 h-24 rounded-full overflow-hidden">
           <img
-            src={profileData.avatar || "/placeholder.svg"}
+            src={profileData.logo_url || "/placeholder.svg"}
             alt="University Avatar"
             className="w-full h-full object-cover"
           />
@@ -159,7 +161,7 @@ export function ProfileSection() {
             label: "Accreditation document",
             value: (
               <a
-                href={profileData.accreditationDocument}
+                href={profileData.signed_accreditation_document_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-500 underline"
@@ -167,6 +169,32 @@ export function ProfileSection() {
                 View document
               </a>
             ),
+          },
+        ]}
+      />
+
+      <InfoCard
+        items={[
+          {
+            label: "University website",
+            value: (
+              <a
+                href={profileData.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 underline"
+              >
+                {profileData.website}
+              </a>
+            ),
+          },
+          {
+            label: "Representative name",
+            value: profileData.representativeName,
+          },
+          {
+            label: "Representative email",
+            value: profileData.representativeEmail,
           },
         ]}
       />
