@@ -43,9 +43,9 @@ export function AcademicProgramsSection() {
 
       try {
         const res = await fetch("https://api.gradabroad.net/api/programmes/", {
-          // headers: {
-          //   Authorization: `Bearer ${token}`,
-          // },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
 
         if (!res.ok) {

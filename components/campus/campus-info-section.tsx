@@ -1,93 +1,233 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { SectionHeader } from "@/components/ui/section-header"
-import { InfoCard } from "@/components/ui/info-card"
-import { Card } from "@/components/ui/card"
-import { CampusEditModal } from "./campus-edit-modal"
-import type { CampusInfoData } from "@/types/profile"
+import { useEffect, useState } from "react";
+import { SectionHeader } from "@/components/ui/section-header";
+import { InfoCard } from "@/components/ui/info-card";
+import { Card } from "@/components/ui/card";
+import { CampusEditModal } from "./campus-edit-modal";
+import { CampusAddModal } from "./CampusAddModal";
+import type { CampusInfoData } from "@/types/profile";
+import { Button } from "@/components/ui/button";
+import { Loader } from "lucide-react";
 
 export function CampusInfoSection() {
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [campusData, setCampusData] = useState<CampusInfoData>({
-    yearOfEstablishment: "01.01.2020",
-    numberOfGraduates: "600",
-    proportionOfEmployedGraduates: "350",
-    rankingWithinCountry: "10",
-    globalRankingPosition: "-",
-    hasDormitories: true,
-    dormitoryFeeRangeMin: "50",
-    dormitoryFeeRangeMax: "100",
-    websiteLink: "https://newuu.uz/",
-    aboutUniversity: {
-      english: `New Uzbekistan University (NewUU) is Uzbekistan's first comprehensive research university where research and education are integrated. Located at the heart of greater Central Asia, we are building the nation's premier institution as the country embarks to conclude its first decade of political and market economy reforms. NewUU aims to become Central Asia's flagship university through an official partnership with the Massachusetts Institute of Technology's (MIT) Jameel Abdul Latif-World Education Lab (J-WEL) and Technical University of Munich (TUM) International.
+  const [universityId, setUniversityId] = useState<number | null>(null);
+  const [campusData, setCampusData] = useState<CampusInfoData | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-Offering a diverse range of programs, including 9 undergraduate, 2 graduate, 9 PhD and 2 DSc degrees across the schools of Engineering, Computing, Humanities, Natural & Social Sciences, and Management, the university is tailored to meet the evolving demands of the modern world. By fostering a multidisciplinary approach, NewUU is educating the next generation of leaders and innovators who will lay out the groundwork for significant contributions to the local & global knowledge economy.
+  useEffect(() => {
+    const storedId = localStorage.getItem("universityId");
+    if (storedId) {
+      setUniversityId(Number(storedId));
+    } else {
+      setError("University ID not found in localStorage.");
+      setLoading(false);
+    }
+  }, []);
 
-Beyond its academic offerings, New Uzbekistan University is committed to becoming a local and regional hub for the dissemination of knowledge and best practices in higher education. Through organizing a variety of events such as local and regional forums, conferences, hackathons, and festivals, NewUU actively cultivates a culture of innovation, entrepreneurship, engineering, and research. This commitment to outreach and collaboration underscores NewUU's vision of contribution to the broader educational and research community in Uzbekistan and Central Asia.`,
-      korean: "",
-      russian: "",
-      uzbek: "",
-    },
-  })
+  const fetchCampusData = async (id: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `https://api.gradabroad.net/api/information-about-campus/?university_id=${id}`
+      );
+      if (!res.ok) throw new Error("Failed to fetch campus information");
 
-  const handleEditClick = () => {
-    setIsEditModalOpen(true)
+      const data = await res.json();
+      if (!data || Object.keys(data).length === 0) {
+        setCampusData(null);
+        return;
+      }
+
+      const transformedData: CampusInfoData = {
+        id: data.id,
+        yearOfEstablishment: String(data.year_established ?? ""),
+        numberOfGraduates: String(data.graduates_total ?? ""),
+        proportionOfEmployedGraduates: String(data.graduates_employed ?? ""),
+        rankingWithinCountry: String(data.ranking_local ?? ""),
+        globalRankingPosition: String(data.ranking_global ?? ""),
+        hasDormitories: !!data.dormitory_available,
+        dormitoryFeeRangeMin: data.dormitory_info?.split(" - ")[0] ?? "",
+        dormitoryFeeRangeMax: data.dormitory_info?.split(" - ")[1] ?? "",
+        aboutUniversity: {
+          english: data.description ?? "",
+        },
+      };
+
+      setCampusData(transformedData);
+    } catch (err: any) {
+      setError(err.message || "Unknown error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (universityId !== null) {
+      fetchCampusData(universityId);
+    }
+  }, [universityId]);
+
+  const handleEditClick = () => setIsEditModalOpen(true);
+
+  const handleEditSave = async (updatedData: CampusInfoData) => {
+    if (!universityId) return;
+
+    const payload = {
+      id: updatedData.id,
+      university_id: universityId,
+      year_established: Number(updatedData.yearOfEstablishment),
+      graduates_total: Number(updatedData.numberOfGraduates),
+      graduates_employed: Number(updatedData.proportionOfEmployedGraduates),
+      ranking_local: Number(updatedData.rankingWithinCountry),
+      ranking_global: Number(updatedData.globalRankingPosition),
+      dormitory_info: `${updatedData.dormitoryFeeRangeMin} - ${updatedData.dormitoryFeeRangeMax}`,
+      description: updatedData.aboutUniversity.english,
+    };
+
+    await fetch("https://api.gradabroad.net/api/information-about-campus/", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    await fetchCampusData(universityId);
+    setIsEditModalOpen(false);
+  };
+
+  const handleAddSave = async (newData: CampusInfoData) => {
+    if (!universityId) return;
+
+    const payload = {
+      university_id: universityId,
+      year_established: Number(newData.yearOfEstablishment),
+      graduates_total: Number(newData.numberOfGraduates),
+      graduates_employed: Number(newData.proportionOfEmployedGraduates),
+      ranking_local: Number(newData.rankingWithinCountry),
+      ranking_global: Number(newData.globalRankingPosition),
+      dormitory_info: `${newData.dormitoryFeeRangeMin} - ${newData.dormitoryFeeRangeMax}`,
+      description: newData.aboutUniversity.english,
+    };
+
+    await fetch("https://api.gradabroad.net/api/information-about-campus/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    await fetchCampusData(universityId);
+    setIsAddModalOpen(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-40 text-gray-600">
+        <Loader className="animate-spin mr-2" /> Loading campus information...
+      </div>
+    );
   }
 
-  const handleSave = (updatedData: CampusInfoData) => {
-    setCampusData(updatedData)
-    setIsEditModalOpen(false)
+  if (error) {
+    return <div className="text-red-500 text-center py-4">Error: {error}</div>;
   }
 
   return (
     <>
-      <SectionHeader title="Information about campus" onEdit={handleEditClick} />
-
-      <InfoCard
-        items={[
-          { label: "Year of establishment", value: campusData.yearOfEstablishment, highlight: true },
-          { label: "Number of graduates", value: campusData.numberOfGraduates },
-          { label: "Proportion of employed graduates", value: campusData.proportionOfEmployedGraduates },
-        ]}
+      <SectionHeader
+        title="Information about campus"
+        onEdit={campusData ? handleEditClick : undefined}
       />
 
-      <InfoCard
-        items={[
-          { label: "Ranking within the country", value: campusData.rankingWithinCountry, highlight: true },
-          { label: "Global ranking position", value: campusData.globalRankingPosition },
-          { label: "Does the university have dormitories", value: campusData.hasDormitories ? "Yes" : "No" },
-        ]}
-      />
-
-      <InfoCard
-        items={[
-          {
-            label: "Dormitory fee range",
-            value: `${campusData.dormitoryFeeRangeMin} - ${campusData.dormitoryFeeRangeMax}`,
-          },
-        ]}
-      />
-
-      <Card className="overflow-hidden">
-        <div className="p-4">
-          <div className="prose max-w-none">
-            <div
-              dangerouslySetInnerHTML={{
-                __html: campusData.aboutUniversity.english.replace(/\n/g, "<br/>"),
-              }}
-            />
-          </div>
+      {!campusData ? (
+        <div className="text-center mt-6">
+          <p className="text-gray-600 mb-4">No campus information available.</p>
+          <Button onClick={() => setIsAddModalOpen(true)}>
+            Add Information
+          </Button>
         </div>
-      </Card>
+      ) : (
+        <>
+          <InfoCard
+            items={[
+              {
+                label: "Year of establishment",
+                value: campusData.yearOfEstablishment,
+                highlight: true,
+              },
+              {
+                label: "Number of graduates",
+                value: campusData.numberOfGraduates,
+              },
+              {
+                label: "Proportion of employed graduates",
+                value: campusData.proportionOfEmployedGraduates,
+              },
+            ]}
+          />
+          <InfoCard
+            items={[
+              {
+                label: "Ranking within the country",
+                value: campusData.rankingWithinCountry,
+                highlight: true,
+              },
+              {
+                label: "Global ranking position",
+                value: campusData.globalRankingPosition,
+              },
+              {
+                label: "Does the university have dormitories",
+                value: campusData.hasDormitories ? "Yes" : "No",
+              },
+            ]}
+          />
+          <InfoCard
+            items={[
+              {
+                label: "Dormitory fee range",
+                value: `${campusData.dormitoryFeeRangeMin} - ${campusData.dormitoryFeeRangeMax}`,
+              },
+            ]}
+          />
+          <Card className="overflow-hidden">
+            <h3 className="">About the university</h3>
+            <div className="p-4">
+              <div className="prose max-w-none">
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      campusData.aboutUniversity?.english?.replace(
+                        /\n/g,
+                        "<br/>"
+                      ) || "",
+                  }}
+                />
+              </div>
+            </div>
+          </Card>
+        </>
+      )}
 
-      <CampusEditModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        initialData={campusData}
-        onSave={handleSave}
-      />
+      {campusData && (
+        <CampusEditModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          initialData={campusData}
+          onSave={handleEditSave}
+        />
+      )}
+
+      {!campusData && (
+        <CampusAddModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onSave={handleAddSave}
+        />
+      )}
     </>
-  )
+  );
 }
-

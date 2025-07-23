@@ -63,6 +63,10 @@ export function ProfileSection() {
 
         const raw = await res.json();
 
+        if (raw.id) {
+          localStorage.setItem("universityId", String(raw.id));
+        }
+
         // ✅ Map raw backend fields to frontend ProfileData
         const data: ProfileData = {
           name: raw.university_name,
@@ -76,12 +80,11 @@ export function ProfileSection() {
           accreditationNumber: raw.accreditation_number,
           accreditationDocument: raw.accreditation_document,
           avatar: raw.logo || null,
-          latitude: "",
-          longitude: "",
+
           telegramLink: "",
           instagramLink: "",
           youtubeLink: "",
-          facebookLink: ""
+          facebookLink: "",
         };
 
         setProfileData(data);

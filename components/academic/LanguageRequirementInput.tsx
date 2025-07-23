@@ -4,6 +4,13 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 interface LanguageRequirement {
   name: string;
@@ -15,89 +22,100 @@ interface Props {
   onChange: (value: LanguageRequirement[]) => void;
 }
 
-const BUILTIN_OPTIONS: LanguageRequirement[] = [
-  { name: "IELTS", requirement: "Minimum Score: 6.0 and above" },
-  { name: "TOEFL", requirement: "Minimum Score: 80 and above" },
-  {
-    name: "Duolingo English Test",
-    requirement: "Minimum Score: 100 and above",
-  },
-  { name: "Cambridge English", requirement: "C1 Advanced or C2 Proficiency" },
-  { name: "PTE Academic", requirement: "Minimum Score: 50 and above" },
-  { name: "OET", requirement: "For healthcare professionals" },
-  { name: "MET", requirement: "Accepted in some universities" },
-];
+const DROPDOWN_OPTIONS: Record<string, string[]> = {
+  TOEFL: ["iBT 65+", "iBT 71+", "iBT 80+", "iBT 90+"],
+  IELTS: ["5.5+", "6.0+", "6.5+", "7+"],
+  TOPIK: [
+    "80–139 (TOPIK I)+",
+    "140–200 (TOPIK I)+",
+    "120–149 (TOPIK II)+",
+    "150–189 (TOPIK II)+",
+    "190–229 (TOPIK II)+",
+    "230–300 (TOPIK II)+",
+  ],
+};
 
 export function LanguageRequirementInput({ value, onChange }: Props) {
   const [customName, setCustomName] = useState("");
   const [customReq, setCustomReq] = useState("");
 
-  const isSelected = (name: string) =>
-    value.some((v) => v.name.toLowerCase() === name.toLowerCase());
-
-  const handleBuiltinToggle = (item: LanguageRequirement) => {
-    if (isSelected(item.name)) {
-      onChange(value.filter((v) => v.name !== item.name));
-    } else {
-      onChange([...value, item]);
-    }
+  const handleSelectChange = (category: string, selected: string) => {
+    const updated = value.filter((v) => v.name !== category);
+    updated.push({ name: category, requirement: selected });
+    onChange(updated);
   };
 
   const handleCustomAdd = () => {
     if (!customName || !customReq) return;
 
-    const newEntry: LanguageRequirement = {
+    const newEntry = {
       name: customName.trim(),
       requirement: customReq.trim(),
     };
 
-    // prevent duplicates
-    if (isSelected(newEntry.name)) return;
+    if (
+      value.some(
+        (v) =>
+          v.name.toLowerCase() === newEntry.name.toLowerCase() &&
+          v.requirement === newEntry.requirement
+      )
+    )
+      return;
 
     onChange([...value, newEntry]);
     setCustomName("");
     setCustomReq("");
   };
 
-  const handleRemove = (name: string) => {
-    onChange(value.filter((v) => v.name !== name));
+  const handleRemove = (name: string, requirement: string) => {
+    onChange(
+      value.filter((v) => !(v.name === name && v.requirement === requirement))
+    );
+  };
+
+  const getSelected = (name: string) => {
+    return value.find((v) => v.name === name)?.requirement || "";
   };
 
   return (
-    <div className="space-y-3">
-      <Label className="block">Select Language Requirements</Label>
+    <div className="space-y-6">
+      <Label className="text-base">Language Requirements</Label>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {BUILTIN_OPTIONS.map((option) => (
-          <label
-            key={option.name}
-            className="flex items-center gap-2 text-sm bg-purple-50 rounded p-2 cursor-pointer border border-purple-200"
+      {/* Built-in Categories as Dropdowns */}
+      {Object.entries(DROPDOWN_OPTIONS).map(([category, options]) => (
+        <div key={category}>
+          <Label className="font-semibold mb-1 block">{category}</Label>
+          <Select
+            value={getSelected(category)}
+            onValueChange={(selected) => handleSelectChange(category, selected)}
           >
-            <input
-              type="checkbox"
-              checked={isSelected(option.name)}
-              onChange={() => handleBuiltinToggle(option)}
-            />
-            <span>
-              <strong>{option.name}</strong>: {option.requirement}
-            </span>
-          </label>
-        ))}
-      </div>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={`Select ${category} requirement`} />
+            </SelectTrigger>
+            <SelectContent>
+              {options.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {category} {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      ))}
 
-      {/* Custom Entry */}
-      <div className="border-t pt-4 mt-2">
+      {/* Custom Test Entry */}
+      <div className="border-t pt-4">
         <Label className="block mb-1 text-sm font-semibold">
-          Add Custom Language Test
+          Add Custom Test
         </Label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <Input
-            placeholder="Test Name (e.g. Korean Proficiency)"
+            placeholder="Test Name (e.g. Duolingo)"
             value={customName}
             onChange={(e) => setCustomName(e.target.value)}
           />
           <Input
-            placeholder="Requirement (e.g. Level 3 or above)"
+            placeholder="Requirement (e.g. 100+)"
             value={customReq}
             onChange={(e) => setCustomReq(e.target.value)}
           />
@@ -110,21 +128,21 @@ export function LanguageRequirementInput({ value, onChange }: Props) {
         </Button>
       </div>
 
-      {/* Display Selected */}
+      {/* Selected Results */}
       {value.length > 0 && (
         <div className="mt-4">
-          <Label className="mb-1 text-sm">Selected Requirements:</Label>
-          <ul className="space-y-1 mt-2">
-            {value.map((item, index) => (
+          <Label className="mb-1 text-sm font-semibold">Selected:</Label>
+          <ul className="space-y-1">
+            {value.map((item, idx) => (
               <li
-                key={index}
-                className="flex items-center justify-between bg-purple-100 rounded px-3 py-1 text-sm"
+                key={idx}
+                className="flex items-center justify-between bg-purple-50 rounded px-3 py-1 text-sm border"
               >
                 <span>
                   <strong>{item.name}</strong>: {item.requirement}
                 </span>
                 <button
-                  onClick={() => handleRemove(item.name)}
+                  onClick={() => handleRemove(item.name, item.requirement)}
                   className="text-red-600 text-xs hover:underline"
                 >
                   Remove

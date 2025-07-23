@@ -18,34 +18,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MultiSelect } from "@/components/ui/multi-select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { LanguageRequirementInput } from "@/components/academic/LanguageRequirementInput";
+import { DocumentTypeInput } from "@/components/academic/DocumentTypeInput";
 import { useForm } from "@/hooks/use-form";
 import {
   type AcademicProgram,
   type AcademicProgramFormData,
   CATEGORIES,
   DEGREE_TYPES,
-  DOCUMENT_TYPES,
 } from "@/types/academic";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import { LanguageRequirementInput } from "@/components/academic/LanguageRequirementInput";
-import { DocumentTypeInput } from "@/components/academic/DocumentTypeInput";
-
-interface AcademicProgramModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (data: AcademicProgram | AcademicProgramFormData) => void;
-  initialData?: AcademicProgram;
-  title: string;
-}
 
 const defaultFormData: AcademicProgramFormData = {
   name: "",
@@ -67,6 +57,14 @@ const defaultFormData: AcademicProgramFormData = {
   },
 };
 
+interface AcademicProgramModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (data: AcademicProgram | AcademicProgramFormData) => void;
+  initialData?: AcademicProgram;
+  title: string;
+}
+
 export function AcademicProgramModal({
   isOpen,
   onClose,
@@ -86,10 +84,7 @@ export function AcademicProgramModal({
   } = useForm<AcademicProgramFormData>(initialData || defaultFormData);
 
   const handleSubmit = async () => {
-    // const token = localStorage.getItem("accessToken");
-    const token =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzUzMDQxOTM1LCJpYXQiOjE3NTMwMzgzMzUsImp0aSI6IjM4MjgwYzJhNzZkMTQ2M2E5YWRjYjY4NDRmMWRhZGYyIiwidXNlcl9pZCI6Mzh9.8JAMBEj6W7-8yqzLVfRVMagwGdRDZ5sS0L5Zpxny-iI";
-
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       alert("You are not authenticated.");
       return;
@@ -97,14 +92,14 @@ export function AcademicProgramModal({
 
     const payload = {
       university: 36,
-      code: values.category || "UNKNOWN", // fallback if not selected
+      code: values.category || "UNKNOWN",
       degree_level: values.degreeType,
       major: values.name,
-      duration_years: 4, // static or map from somewhere
+      duration_years: 4,
       tuition_fee: values.contractPrice,
-      platform_application_fee: "0.00", // or add field
+      platform_application_fee: "0.00",
       active: true,
-      translations: [], // optionally map from `values.description`
+      translations: [],
     };
 
     try {
@@ -163,12 +158,7 @@ export function AcademicProgramModal({
   };
 
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (!open) handleCancel();
-      }}
-    >
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">{title}</DialogTitle>
@@ -180,34 +170,44 @@ export function AcademicProgramModal({
           onValueChange={setActiveTab}
         >
           <TabsList className="bg-purple-100">
-            <TabsTrigger
-              value="english"
-              className="data-[state=active]:bg-purple-700 data-[state=active]:text-white"
-            >
-              English
-            </TabsTrigger>
-            <TabsTrigger
-              value="korean"
-              className="data-[state=active]:bg-purple-700 data-[state=active]:text-white"
-            >
-              한국어
-            </TabsTrigger>
-            <TabsTrigger
-              value="russian"
-              className="data-[state=active]:bg-purple-700 data-[state=active]:text-white"
-            >
-              Русский
-            </TabsTrigger>
-            <TabsTrigger
-              value="uzbek"
-              className="data-[state=active]:bg-purple-700 data-[state=active]:text-white"
-            >
-              O'zbek
-            </TabsTrigger>
+            {["english", "korean", "russian", "uzbek"].map((lang) => (
+              <TabsTrigger
+                key={lang}
+                value={lang}
+                className="data-[state=active]:bg-purple-700 data-[state=active]:text-white"
+              >
+                {lang === "english"
+                  ? "English"
+                  : lang === "korean"
+                  ? "한국어"
+                  : lang === "russian"
+                  ? "Русский"
+                  : "O'zbek"}
+              </TabsTrigger>
+            ))}
           </TabsList>
         </Tabs>
 
         <div className="space-y-6 mt-4">
+          <div>
+            <Label htmlFor="category">Fields of studies *</Label>
+            <Select
+              value={values.category}
+              onValueChange={(value) => handleSelectChange("category", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div>
             <Label htmlFor="name">Name of the academic program *</Label>
             <Input
@@ -221,24 +221,6 @@ export function AcademicProgramModal({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <Select
-                value={values.category}
-                onValueChange={(value) => handleSelectChange("category", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
             <div>
               <Label htmlFor="degreeType">Degree type</Label>
               <Select
@@ -259,21 +241,10 @@ export function AcademicProgramModal({
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Language Requirements</Label>
-              <LanguageRequirementInput
-                value={values.languageRequirement}
-                onChange={(updated) =>
-                  setValues({ ...values, languageRequirement: updated })
-                }
-              />
-            </div>
             <div>
               <Label htmlFor="contractPrice">
-                Contract price per semester($) *
+                Contract price per semester ($)
               </Label>
               <div className="flex items-center mt-1">
                 <span className="bg-gray-100 border border-r-0 rounded-l px-3 py-2">
@@ -293,75 +264,67 @@ export function AcademicProgramModal({
           </div>
 
           <div>
+            <LanguageRequirementInput
+              value={values.languageRequirement}
+              onChange={(updated) =>
+                setValues({ ...values, languageRequirement: updated })
+              }
+            />
+          </div>
+
+          <div>
             <Label>Admission period</Label>
             <div className="grid grid-cols-2 gap-4 mt-1">
-              <div>
-                <Label
-                  htmlFor="admissionStart"
-                  className="text-sm text-gray-500"
-                >
-                  From
-                </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal mt-1"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {values.admissionStart}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={parseDate(values.admissionStart)}
-                      onSelect={(date) =>
-                        handleDateChange("admissionStart", date)
-                      }
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div>
-                <Label htmlFor="admissionEnd" className="text-sm text-gray-500">
-                  To
-                </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal mt-1"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {values.admissionEnd}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={parseDate(values.admissionEnd)}
-                      onSelect={(date) =>
-                        handleDateChange("admissionEnd", date)
-                      }
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+              {["admissionStart", "admissionEnd"].map((field) => (
+                <div key={field}>
+                  <Label className="text-sm text-gray-500">
+                    {field === "admissionStart" ? "From" : "To"}
+                  </Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal mt-1"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {values[field]}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={parseDate(values[field])}
+                        onSelect={(date) =>
+                          handleDateChange(field as any, date)
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              ))}
             </div>
           </div>
 
           <div>
-            <Label htmlFor="documentTypes">Document types</Label>
-
+            <Label>Document Types</Label>
             <DocumentTypeInput
               value={values.documentTypes}
               onChange={(updated) =>
                 setValues({ ...values, documentTypes: updated })
               }
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Application Guide Download (English)</Label>
+              <Input type="file" />
+            </div>
+            <div>
+              <Label>Application Form Download (English)</Label>
+              <Input type="file" />
+            </div>
           </div>
 
           <div>
@@ -372,7 +335,6 @@ export function AcademicProgramModal({
             />
           </div>
 
-          {/* Action Buttons */}
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={handleCancel}>
               Cancel

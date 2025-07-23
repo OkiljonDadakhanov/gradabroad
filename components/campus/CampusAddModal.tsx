@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,84 +13,46 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useForm } from "@/hooks/use-form";
 import type { CampusInfoData } from "@/types/profile";
-import { toast } from "sonner";
 
-interface CampusEditModalProps {
+interface CampusAddModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialData: CampusInfoData;
-  onSuccess?: () => void;
+  onSave: (data: CampusInfoData) => void;
 }
 
-export function CampusEditModal({
+const EMPTY_DATA: CampusInfoData = {
+  yearOfEstablishment: "",
+  numberOfGraduates: "",
+  proportionOfEmployedGraduates: "",
+  rankingWithinCountry: "",
+  globalRankingPosition: "",
+  websiteLink: "",
+  hasDormitories: false,
+  dormitoryFeeRangeMin: "",
+  dormitoryFeeRangeMax: "",
+  aboutUniversity: {
+    english: "",
+    korean: "",
+    russian: "",
+    uzbek: "",
+  },
+};
+
+export function CampusAddModal({
   isOpen,
   onClose,
-  initialData,
-  onSuccess,
-}: CampusEditModalProps) {
+  onSave,
+}: CampusAddModalProps) {
   const {
     values,
     handleChange,
     handleCheckboxChange,
     handleNestedChange,
     reset,
-  } = useForm<CampusInfoData>(initialData);
+  } = useForm<CampusInfoData>(EMPTY_DATA);
 
-  const [universityId, setUniversityId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const idFromStorage = localStorage.getItem("universityId");
-    if (idFromStorage) setUniversityId(Number(idFromStorage));
-  }, []);
-
-  const handleSubmit = async () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      toast.error("Access token missing.");
-      return;
-    }
-
-    setLoading(true);
-
-    const payload = {
-      year_established: Number(values.yearOfEstablishment),
-      graduates_total: Number(values.numberOfGraduates),
-      graduates_employed: Number(values.proportionOfEmployedGraduates),
-      ranking_local: Number(values.rankingWithinCountry),
-      ranking_global: Number(values.globalRankingPosition),
-      dormitory_info: `${values.dormitoryFeeRangeMin} - ${values.dormitoryFeeRangeMax} USD`,
-      dormitory_available: values.hasDormitories ? "Yes" : null,
-      description: values.aboutUniversity.english,
-    };
-
-    try {
-      const response = await fetch(
-        `https://api.gradabroad.net/api/information-about-campus/`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText);
-      }
-
-      toast.success("Campus information updated successfully!");
-      onClose();
-      if (onSuccess) onSuccess();
-    } catch (err: any) {
-      toast.error("Error saving campus info.");
-      console.error("Save error:", err.message);
-    } finally {
-      setLoading(false);
-    }
+  const handleSubmit = () => {
+    onSave(values);
   };
 
   const handleCancel = () => {
@@ -108,7 +69,7 @@ export function CampusEditModal({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
-            Information about campus
+            Add Campus Information
           </DialogTitle>
         </DialogHeader>
 
@@ -117,59 +78,48 @@ export function CampusEditModal({
             <Label htmlFor="yearOfEstablishment">Year of establishment</Label>
             <Input
               id="yearOfEstablishment"
-              name="yearOfEstablishment"
               value={values.yearOfEstablishment}
               onChange={handleChange}
             />
           </div>
-
           <div>
             <Label htmlFor="numberOfGraduates">Number of graduates</Label>
             <Input
               id="numberOfGraduates"
-              name="numberOfGraduates"
               value={values.numberOfGraduates}
               onChange={handleChange}
             />
           </div>
-
           <div>
             <Label htmlFor="proportionOfEmployedGraduates">
               Proportion of employed graduates
             </Label>
             <Input
               id="proportionOfEmployedGraduates"
-              name="proportionOfEmployedGraduates"
               value={values.proportionOfEmployedGraduates}
               onChange={handleChange}
             />
           </div>
-
           <div>
             <Label htmlFor="rankingWithinCountry">
               Ranking within the country
             </Label>
             <Input
               id="rankingWithinCountry"
-              name="rankingWithinCountry"
               value={values.rankingWithinCountry}
               onChange={handleChange}
             />
           </div>
-
           <div>
             <Label htmlFor="globalRankingPosition">
               Global ranking position
             </Label>
             <Input
               id="globalRankingPosition"
-              name="globalRankingPosition"
               value={values.globalRankingPosition}
               onChange={handleChange}
-              placeholder="Global ranking position"
             />
           </div>
-
           <div className="flex items-center space-x-2">
             <Checkbox
               id="hasDormitories"
@@ -179,10 +129,9 @@ export function CampusEditModal({
               }
             />
             <Label htmlFor="hasDormitories">
-              Does the university have dormitories?
+              Does the university have dormitories
             </Label>
           </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="dormitoryFeeRangeMin">
@@ -190,7 +139,6 @@ export function CampusEditModal({
               </Label>
               <Input
                 id="dormitoryFeeRangeMin"
-                name="dormitoryFeeRangeMin"
                 value={values.dormitoryFeeRangeMin}
                 onChange={handleChange}
               />
@@ -201,13 +149,11 @@ export function CampusEditModal({
               </Label>
               <Input
                 id="dormitoryFeeRangeMax"
-                name="dormitoryFeeRangeMax"
                 value={values.dormitoryFeeRangeMax}
                 onChange={handleChange}
               />
             </div>
           </div>
-
           <div>
             <Label>About the university</Label>
             <RichTextEditor
@@ -215,17 +161,15 @@ export function CampusEditModal({
               onChange={handleRichTextChange}
             />
           </div>
-
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={handleCancel} disabled={loading}>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={loading}
-              className="bg-purple-900 hover:bg-purple-800 text-white"
+              className="bg-purple-900 hover:bg-purple-800"
             >
-              {loading ? "Saving..." : "Save"}
+              Save
             </Button>
           </div>
         </div>

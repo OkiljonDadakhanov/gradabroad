@@ -86,13 +86,13 @@ export function ScholarshipModal({ isOpen, onClose, onSave, initialData, title }
               </Select>
             </div>
             <div>
-              <Label htmlFor="academicProgram">Academic program</Label>
+              <Label htmlFor="academicProgram">Fields of studies</Label>
               <Select
                 value={values.academicProgram}
                 onValueChange={(value) => handleSelectChange("academicProgram", value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select academic program" />
+                  <SelectValue placeholder="Select field of study" />
                 </SelectTrigger>
                 <SelectContent>
                   {ACADEMIC_PROGRAMS.map((program) => (
