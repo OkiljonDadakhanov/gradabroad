@@ -63,11 +63,11 @@ export function SideNav() {
       label: "Candidates",
       path: "/candidates",
     },
-    {
-      icon: <FileText size={20} />,
-      label: "Document types",
-      path: "/document-types",
-    },
+    // {
+    //   icon: <FileText size={20} />,
+    //   label: "Document types",
+    //   path: "/document-types",
+    // },
     {
       icon: <BarChart size={20} />,
       label: "Statistics",

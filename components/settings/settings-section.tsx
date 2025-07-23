@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card } from "@/components/ui/card"
-import { PasswordChangeForm } from "./password-change-form"
-import { NotificationSettings } from "./notification-settings"
-import { LanguageSettings } from "./language-settings"
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
+import { PasswordChangeForm } from "./password-change-form";
+import { NotificationSettings } from "./notification-settings";
+import { LanguageSettings } from "./language-settings";
 
 export function SettingsSection() {
-  const [activeTab, setActiveTab] = useState("password")
+  const [activeTab, setActiveTab] = useState("password");
 
   return (
     <>
@@ -17,18 +17,28 @@ export function SettingsSection() {
       </div>
 
       <Card className="p-6">
-        <Tabs defaultValue="password" value={activeTab} onValueChange={setActiveTab}>
+        <Tabs
+          defaultValue="password"
+          value={activeTab}
+          onValueChange={setActiveTab}
+        >
           <TabsList className="bg-purple-100 mb-6">
-            <TabsTrigger value="password" className="data-[state=active]:bg-purple-700 data-[state=active]:text-white">
+            <TabsTrigger
+              value="password"
+              className="data-[state=active]:bg-purple-700 data-[state=active]:text-white"
+            >
               Password
             </TabsTrigger>
-            <TabsTrigger
+            {/* <TabsTrigger
               value="notifications"
               className="data-[state=active]:bg-purple-700 data-[state=active]:text-white"
             >
               Notifications
-            </TabsTrigger>
-            <TabsTrigger value="language" className="data-[state=active]:bg-purple-700 data-[state=active]:text-white">
+            </TabsTrigger> */}
+            <TabsTrigger
+              value="language"
+              className="data-[state=active]:bg-purple-700 data-[state=active]:text-white"
+            >
               Language
             </TabsTrigger>
           </TabsList>
@@ -37,9 +47,9 @@ export function SettingsSection() {
             <PasswordChangeForm />
           </TabsContent>
 
-          <TabsContent value="notifications">
+          {/* <TabsContent value="notifications">
             <NotificationSettings />
-          </TabsContent>
+          </TabsContent> */}
 
           <TabsContent value="language">
             <LanguageSettings />
@@ -47,5 +57,5 @@ export function SettingsSection() {
         </Tabs>
       </Card>
     </>
-  )
+  );
 }
