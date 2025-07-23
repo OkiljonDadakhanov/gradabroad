@@ -19,9 +19,9 @@ import {
 import { FileUpload } from "@/components/ui/file-upload";
 import { useForm } from "@/hooks/use-form";
 import type { ProfileData } from "@/types/profile";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 interface ProfileEditModalProps {
   isOpen: boolean;
@@ -38,10 +38,11 @@ export function ProfileEditModal({
 }: ProfileEditModalProps) {
   const { values, handleChange, handleSelectChange, setValues, reset } =
     useForm<ProfileData>(initialData);
-
+  const [loading, setLoading] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async () => {
+    setLoading(true);
     const formData = new FormData();
 
     formData.append("university_name", values.name);
@@ -88,8 +89,14 @@ export function ProfileEditModal({
 
       if (!response.ok) {
         const err = await response.json();
-        console.error(err);
-        toast.error("Failed to update profile.");
+        console.error("Profile update error:", err);
+        toast.error(
+          err?.detail ||
+            Object.entries(err)
+              .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`)
+              .join("; ") ||
+            "Failed to update profile."
+        );
         return;
       }
 
@@ -120,8 +127,10 @@ export function ProfileEditModal({
       toast.success("Profile updated successfully!");
       onClose();
     } catch (error) {
-      console.error(error);
+      console.error("Error during save:", error);
       toast.error("An error occurred while saving changes.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -143,7 +152,7 @@ export function ProfileEditModal({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Avatar */}
+          {/* Avatar Upload */}
           <div className="flex flex-col items-center space-y-2">
             <label
               htmlFor="avatar-upload"
@@ -178,7 +187,7 @@ export function ProfileEditModal({
             </p>
           </div>
 
-          {/* Fields */}
+          {/* Form Fields */}
           <div className="space-y-4">
             <div>
               <Label>Name of the university or institution *</Label>
@@ -190,7 +199,7 @@ export function ProfileEditModal({
                 <Label>Type *</Label>
                 <Select
                   value={values.type}
-                  onValueChange={(value) => handleSelectChange("type", value)}
+                  onValueChange={(val) => handleSelectChange("type", val)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select type" />
@@ -213,8 +222,8 @@ export function ProfileEditModal({
                 <Label>Classification *</Label>
                 <Select
                   value={values.classification}
-                  onValueChange={(value) =>
-                    handleSelectChange("classification", value)
+                  onValueChange={(val) =>
+                    handleSelectChange("classification", val)
                   }
                 >
                   <SelectTrigger>
@@ -301,7 +310,6 @@ export function ProfileEditModal({
               }
             />
 
-            {/* 🔹 NEW FIELDS */}
             <Label>University Website</Label>
             <Input
               name="website"
@@ -325,14 +333,22 @@ export function ProfileEditModal({
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleCancel}>
+            <Button variant="outline" onClick={handleCancel} disabled={loading}>
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
+              disabled={loading}
               className="bg-purple-900 hover:bg-purple-800"
             >
-              Save
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="animate-spin h-4 w-4" />
+                  Saving...
+                </div>
+              ) : (
+                "Save"
+              )}
             </Button>
           </div>
         </div>
