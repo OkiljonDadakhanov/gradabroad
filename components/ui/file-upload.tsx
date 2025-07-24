@@ -55,7 +55,16 @@ export function FileUpload({
 
   const fileName =
     typeof value === "string"
-      ? value.split("/").pop()
+      ? (() => {
+          try {
+            const url = new URL(value);
+            return decodeURIComponent(
+              url.pathname.split("/").pop() || "Document"
+            );
+          } catch {
+            return "Document";
+          }
+        })()
       : value instanceof File
       ? value.name
       : null;
@@ -91,7 +100,10 @@ export function FileUpload({
 
       {fileName && !error && (
         <div className="mt-2 bg-purple-100 rounded-md p-2 flex justify-between items-center">
-          <span className="text-sm truncate max-w-[80%]">{fileName}</span>
+          <span className="text-sm truncate max-w-[80%]" title={fileName || ""}>
+            {fileName}
+          </span>
+
           <button
             type="button"
             onClick={handleRemoveFile}

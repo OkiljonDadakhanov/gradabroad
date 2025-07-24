@@ -29,7 +29,7 @@ export function ProfileSection() {
     }
   }, []);
 
-  // Step 2: Fetch and map profile data
+  // Step 2: Fetch profile data
   useEffect(() => {
     const fetchProfile = async () => {
       const token = localStorage.getItem("accessToken");
@@ -40,6 +40,7 @@ export function ProfileSection() {
       }
 
       try {
+        // Fetch profile data
         const res = await fetch(
           "https://api.gradabroad.net/api/auth/universities/me/",
           {
@@ -67,7 +68,31 @@ export function ProfileSection() {
           localStorage.setItem("universityId", String(raw.id));
         }
 
-        // ✅ Map raw backend fields to frontend ProfileData
+        // Fetch signed accreditation document URL from separate API
+        let accreditationDocUrl = "";
+        try {
+          const docRes = await fetch(
+            "https://api.gradabroad.net/api/auth/universities/me/accreditation-url/",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (docRes.ok) {
+            const docJson = await docRes.json();
+            accreditationDocUrl = docJson?.signed_url || "";
+          } else {
+            console.warn("Could not load accreditation document URL");
+          }
+        } catch (docError) {
+          console.error(
+            "Failed to fetch accreditation document URL:",
+            docError
+          );
+        }
+
         const data: ProfileData = {
           name: raw.university_name,
           type: raw.types_of_schools,
@@ -78,7 +103,7 @@ export function ProfileSection() {
           telephone: raw.university_office_phone,
           email: raw.university_admission_email_address,
           accreditationNumber: raw.accreditation_number,
-          signed_accreditation_document_url: raw.signed_accreditation_document_url,
+          signed_accreditation_document_url: accreditationDocUrl,
           logo_url: raw.logo_url || null,
           representativeName: raw.university_admission_representetive_name,
           representativeEmail: raw.university_admission_representetive_email,
@@ -159,7 +184,7 @@ export function ProfileSection() {
         items={[
           {
             label: "Accreditation document",
-            value: (
+            value: profileData.signed_accreditation_document_url ? (
               <a
                 href={profileData.signed_accreditation_document_url}
                 target="_blank"
@@ -168,6 +193,8 @@ export function ProfileSection() {
               >
                 View document
               </a>
+            ) : (
+              <span className="text-gray-400">No document available</span>
             ),
           },
         ]}

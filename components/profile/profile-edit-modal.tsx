@@ -75,13 +75,15 @@ export function ProfileEditModal({
       formData.append("logo", values.logo_url);
     }
 
+    const token = localStorage.getItem("accessToken");
+
     try {
       const response = await fetch(
         "https://api.gradabroad.net/api/auth/universities/me/",
         {
           method: "PUT",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            Authorization: `Bearer ${token}`,
           },
           body: formData,
         }
@@ -102,6 +104,26 @@ export function ProfileEditModal({
 
       const raw = await response.json();
 
+      // ✅ Fetch updated accreditation document signed URL
+      let accreditationDocUrl = "";
+      try {
+        const docRes = await fetch(
+          "https://api.gradabroad.net/api/auth/universities/me/accreditation-url/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (docRes.ok) {
+          const docJson = await docRes.json();
+          accreditationDocUrl = docJson?.signed_url || "";
+        }
+      } catch (e) {
+        console.error("Failed to get signed accreditation URL", e);
+      }
+
       const mapped: ProfileData = {
         name: raw.university_name,
         type: raw.types_of_schools,
@@ -112,7 +134,7 @@ export function ProfileEditModal({
         telephone: raw.university_office_phone,
         email: raw.university_admission_email_address,
         accreditationNumber: raw.accreditation_number,
-        signed_accreditation_document_url: raw.accreditation_document,
+        signed_accreditation_document_url: accreditationDocUrl,
         logo_url: raw.logo_url ?? raw.logo ?? null,
         website: raw.website,
         representativeName: raw.university_admission_representetive_name,
