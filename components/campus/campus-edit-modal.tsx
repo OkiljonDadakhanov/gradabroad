@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ interface CampusEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialData: CampusInfoData;
-  onSuccess?: () => void;
+  onSuccess?: (updated: CampusInfoData) => void;
 }
 
 export function CampusEditModal({
@@ -35,15 +35,10 @@ export function CampusEditModal({
     handleCheckboxChange,
     handleNestedChange,
     reset,
+    setValues,
   } = useForm<CampusInfoData>(initialData);
 
-  const [universityId, setUniversityId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const idFromStorage = localStorage.getItem("universityId");
-    if (idFromStorage) setUniversityId(Number(idFromStorage));
-  }, []);
 
   const handleSubmit = async () => {
     const token = localStorage.getItem("accessToken");
@@ -66,7 +61,7 @@ export function CampusEditModal({
     };
 
     try {
-      const response = await fetch(
+      const res = await fetch(
         `https://api.gradabroad.net/api/information-about-campus/`,
         {
           method: "PUT",
@@ -78,17 +73,41 @@ export function CampusEditModal({
         }
       );
 
-      if (!response.ok) {
-        const errorText = await response.text();
+      if (!res.ok) {
+        const errorText = await res.text();
         throw new Error(errorText);
       }
 
+      const updatedRaw = await res.json();
+
+      const updated: CampusInfoData = {
+        ...values,
+        yearOfEstablishment: updatedRaw.year_established?.toString() ?? "",
+        numberOfGraduates: updatedRaw.graduates_total?.toString() ?? "",
+        proportionOfEmployedGraduates:
+          updatedRaw.graduates_employed?.toString() ?? "",
+        rankingWithinCountry: updatedRaw.ranking_local?.toString() ?? "",
+        globalRankingPosition: updatedRaw.ranking_global?.toString() ?? "",
+        dormitoryFeeRangeMin:
+          updatedRaw.dormitory_info?.split(" - ")[0]?.trim() ?? "",
+        dormitoryFeeRangeMax:
+          updatedRaw.dormitory_info
+            ?.split(" - ")[1]
+            ?.replace("USD", "")
+            ?.trim() ?? "",
+        hasDormitories: updatedRaw.dormitory_available === "Yes",
+        aboutUniversity: {
+          english: updatedRaw.description ?? "",
+        },
+      };
+
+      setValues(updated); // Optional
       toast.success("Campus information updated successfully!");
+      if (onSuccess) onSuccess(updated);
       onClose();
-      if (onSuccess) onSuccess();
     } catch (err: any) {
-      toast.error("Error saving campus info.");
-      console.error("Save error:", err.message);
+      toast.error("Failed to update campus info.");
+      console.error("Update error:", err.message);
     } finally {
       setLoading(false);
     }
@@ -117,9 +136,10 @@ export function CampusEditModal({
             <Label htmlFor="yearOfEstablishment">Year of establishment</Label>
             <Input
               id="yearOfEstablishment"
-              name="yearOfEstablishment"
               value={values.yearOfEstablishment}
               onChange={handleChange}
+              name="yearOfEstablishment"
+              placeholder="e.g. 1999"
             />
           </div>
 
@@ -127,21 +147,23 @@ export function CampusEditModal({
             <Label htmlFor="numberOfGraduates">Number of graduates</Label>
             <Input
               id="numberOfGraduates"
-              name="numberOfGraduates"
               value={values.numberOfGraduates}
               onChange={handleChange}
+              name="numberOfGraduates"
+              placeholder="e.g. 1500"
             />
           </div>
 
           <div>
             <Label htmlFor="proportionOfEmployedGraduates">
-              Proportion of employed graduates
+              Proportion of employed graduates (%)
             </Label>
             <Input
               id="proportionOfEmployedGraduates"
-              name="proportionOfEmployedGraduates"
               value={values.proportionOfEmployedGraduates}
               onChange={handleChange}
+              name="proportionOfEmployedGraduates"
+              placeholder="e.g. 80"
             />
           </div>
 
@@ -151,9 +173,10 @@ export function CampusEditModal({
             </Label>
             <Input
               id="rankingWithinCountry"
-              name="rankingWithinCountry"
               value={values.rankingWithinCountry}
               onChange={handleChange}
+              name="rankingWithinCountry"
+              placeholder="e.g. 10"
             />
           </div>
 
@@ -163,10 +186,10 @@ export function CampusEditModal({
             </Label>
             <Input
               id="globalRankingPosition"
-              name="globalRankingPosition"
               value={values.globalRankingPosition}
               onChange={handleChange}
-              placeholder="Global ranking position"
+              name="globalRankingPosition"
+              placeholder="e.g. 250"
             />
           </div>
 
@@ -183,27 +206,29 @@ export function CampusEditModal({
             </Label>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="dormitoryFeeRangeMin">
-                Dormitory fee range (min)
+                Dormitory fee (min, USD)
               </Label>
               <Input
                 id="dormitoryFeeRangeMin"
-                name="dormitoryFeeRangeMin"
                 value={values.dormitoryFeeRangeMin}
                 onChange={handleChange}
+                name="dormitoryFeeRangeMin"
+                placeholder="e.g. 100"
               />
             </div>
             <div>
               <Label htmlFor="dormitoryFeeRangeMax">
-                Dormitory fee range (max)
+                Dormitory fee (max, USD)
               </Label>
               <Input
                 id="dormitoryFeeRangeMax"
-                name="dormitoryFeeRangeMax"
                 value={values.dormitoryFeeRangeMax}
                 onChange={handleChange}
+                name="dormitoryFeeRangeMax"
+                placeholder="e.g. 300"
               />
             </div>
           </div>

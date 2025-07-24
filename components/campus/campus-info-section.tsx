@@ -217,7 +217,7 @@ export function CampusInfoSection() {
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           initialData={campusData}
-          onSave={handleEditSave}
+          onSuccess={(updatedData) => setCampusData(updatedData)} // 🔥 instant update!
         />
       )}
 
