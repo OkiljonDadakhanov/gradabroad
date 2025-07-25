@@ -10,7 +10,6 @@ import {
   Award,
   Image,
   Users,
-  FileText,
   BarChart,
   Settings,
   User,
@@ -63,11 +62,6 @@ export function SideNav() {
       label: "Candidates",
       path: "/candidates",
     },
-    // {
-    //   icon: <FileText size={20} />,
-    //   label: "Document types",
-    //   path: "/document-types",
-    // },
     {
       icon: <BarChart size={20} />,
       label: "Statistics",
@@ -78,18 +72,21 @@ export function SideNav() {
       label: "Settings",
       path: "/settings",
     },
-    {
-      icon: <LogOut size={20} />,
-      label: "Logout",
-      onClick: () => {
-        // Replace with actual logout logic
-        console.log("Logout clicked");
-      },
-    },
   ];
 
+  const logoutItem: NavItem = {
+    icon: <LogOut size={20} />,
+    label: "Logout",
+    onClick: () => {
+      // Replace with actual logout logic
+      console.log("Logout clicked");
+      localStorage.removeItem("accessToken");
+      router.push("/login");
+    },
+  };
+
   return (
-    <aside className="fixed left-0 top-[64px] w-60 h-[calc(100vh-64px)] overflow-y-auto bg-gray-50 border-r shadow-sm z-30">
+    <aside className="fixed left-0 top-[64px] w-60 h-[calc(100vh-64px)] flex flex-col justify-between bg-gray-50 border-r shadow-sm z-30">
       <nav className="p-4 space-y-2">
         {navItems.map((item, index) => {
           const isActive = pathname === item.path;
@@ -121,6 +118,16 @@ export function SideNav() {
           );
         })}
       </nav>
+
+      <div className="p-4 border-t">
+        <div
+          className="p-3 rounded-md flex items-center gap-3 cursor-pointer hover:bg-red-100 transition-colors"
+          onClick={() => handleNavigation(undefined, logoutItem.onClick)}
+        >
+          <div className="p-1 rounded text-red-600">{logoutItem.icon}</div>
+          <span className="text-red-700 font-medium">{logoutItem.label}</span>
+        </div>
+      </div>
     </aside>
   );
 }
