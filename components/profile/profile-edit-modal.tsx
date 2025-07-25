@@ -301,7 +301,7 @@ export function ProfileEditModal({
             <Label>Telephone number *</Label>
             <div className="flex">
               <div className="flex items-center border rounded-l px-3 bg-white">
-                <span className="text-green-600 mr-1">🇺🇿</span>
+                <span className="text-green-600 mr-1">kor</span>
                 <span>+</span>
               </div>
               <Input

@@ -27,6 +27,8 @@ export interface CampusInfoData {
   proportionOfEmployedGraduates: string;
   rankingWithinCountry: string;
   globalRankingPosition: string;
+  websiteLink: string;
+
   hasDormitories: boolean;
   dormitoryFeeRangeMin: string;
   dormitoryFeeRangeMax: string;

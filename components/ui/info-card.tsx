@@ -1,19 +1,20 @@
-import type { ReactNode } from "react"
-import { Card } from "@/components/ui/card"
+import type { ReactNode } from "react";
+import { Card } from "@/components/ui/card";
 
 interface InfoItem {
-  label: string
-  value: string | number | ReactNode
-  highlight?: boolean
+  label: string;
+  value: string | number | ReactNode;
+  highlight?: boolean;
 }
 
 interface InfoCardProps {
-  items: InfoItem[]
-  className?: string
+  items: InfoItem[];
+  className?: string;
 }
 
 export function InfoCard({ items, className = "" }: InfoCardProps) {
-  const gridCols = items.length <= 3 ? `grid-cols-${items.length}` : "grid-cols-3"
+  const gridCols =
+    items.length <= 3 ? `grid-cols-${items.length}` : "grid-cols-3";
 
   return (
     <Card className={`mb-6 overflow-hidden ${className}`}>
@@ -21,11 +22,16 @@ export function InfoCard({ items, className = "" }: InfoCardProps) {
         {items.map((item, index) => (
           <div key={index}>
             <p className="text-sm text-gray-500">{item.label}</p>
-            <p className={`font-medium ${item.highlight ? "text-purple-900" : ""}`}>{item.value}</p>
+            <p
+              className={`font-medium ${
+                item.highlight ? "text-purple-900" : ""
+              }`}
+            >
+              {item.value}
+            </p>
           </div>
         ))}
       </div>
     </Card>
-  )
+  );
 }
-

@@ -11,8 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
-import { useForm } from "@/hooks/use-form";
 import type { CampusInfoData } from "@/types/profile";
+import { useEffect, useState } from "react";
 
 interface CampusAddModalProps {
   isOpen: boolean;
@@ -43,29 +43,53 @@ export function CampusAddModal({
   onClose,
   onSave,
 }: CampusAddModalProps) {
-  const {
-    values,
-    handleChange,
-    handleCheckboxChange,
-    handleNestedChange,
-    reset,
-  } = useForm<CampusInfoData>(EMPTY_DATA);
+  const [values, setValues] = useState<CampusInfoData>(EMPTY_DATA);
 
-  const handleSubmit = () => {
-    onSave(values);
+  useEffect(() => {
+    if (isOpen) {
+      setValues(EMPTY_DATA); // Reset form when modal opens
+    }
+  }, [isOpen]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setValues((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCancel = () => {
-    reset();
-    onClose();
+  const handleCheckboxChange = (
+    name: keyof CampusInfoData,
+    checked: boolean
+  ) => {
+    setValues((prev) => ({ ...prev, [name]: checked }));
   };
 
   const handleRichTextChange = (lang: string, content: string) => {
-    handleNestedChange("aboutUniversity", lang, content);
+    setValues((prev) => ({
+      ...prev,
+      aboutUniversity: {
+        ...prev.aboutUniversity,
+        [lang]: content,
+      },
+    }));
+  };
+
+  const handleSubmit = () => {
+    onSave(values);
+    onClose();
+  };
+
+  const handleCancel = () => {
+    setValues(EMPTY_DATA);
+    onClose();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
@@ -78,6 +102,7 @@ export function CampusAddModal({
             <Label htmlFor="yearOfEstablishment">Year of establishment</Label>
             <Input
               id="yearOfEstablishment"
+              name="yearOfEstablishment"
               value={values.yearOfEstablishment}
               onChange={handleChange}
             />
@@ -86,6 +111,7 @@ export function CampusAddModal({
             <Label htmlFor="numberOfGraduates">Number of graduates</Label>
             <Input
               id="numberOfGraduates"
+              name="numberOfGraduates"
               value={values.numberOfGraduates}
               onChange={handleChange}
             />
@@ -96,6 +122,7 @@ export function CampusAddModal({
             </Label>
             <Input
               id="proportionOfEmployedGraduates"
+              name="proportionOfEmployedGraduates"
               value={values.proportionOfEmployedGraduates}
               onChange={handleChange}
             />
@@ -106,6 +133,7 @@ export function CampusAddModal({
             </Label>
             <Input
               id="rankingWithinCountry"
+              name="rankingWithinCountry"
               value={values.rankingWithinCountry}
               onChange={handleChange}
             />
@@ -116,7 +144,17 @@ export function CampusAddModal({
             </Label>
             <Input
               id="globalRankingPosition"
+              name="globalRankingPosition"
               value={values.globalRankingPosition}
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <Label htmlFor="websiteLink">University Website Link</Label>
+            <Input
+              id="websiteLink"
+              name="websiteLink"
+              value={values.websiteLink}
               onChange={handleChange}
             />
           </div>
@@ -139,6 +177,7 @@ export function CampusAddModal({
               </Label>
               <Input
                 id="dormitoryFeeRangeMin"
+                name="dormitoryFeeRangeMin"
                 value={values.dormitoryFeeRangeMin}
                 onChange={handleChange}
               />
@@ -149,6 +188,7 @@ export function CampusAddModal({
               </Label>
               <Input
                 id="dormitoryFeeRangeMax"
+                name="dormitoryFeeRangeMax"
                 value={values.dormitoryFeeRangeMax}
                 onChange={handleChange}
               />

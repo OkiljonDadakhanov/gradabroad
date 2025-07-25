@@ -3,229 +3,209 @@
 import { useEffect, useState } from "react";
 import { SectionHeader } from "@/components/ui/section-header";
 import { InfoCard } from "@/components/ui/info-card";
-import { Card } from "@/components/ui/card";
-import { CampusEditModal } from "./campus-edit-modal";
 import { CampusAddModal } from "./CampusAddModal";
-import type { CampusInfoData } from "@/types/profile";
+import { CampusEditModal } from "./campus-edit-modal";
 import { Button } from "@/components/ui/button";
-import { Loader } from "lucide-react";
+import { toast } from "sonner";
+import type { CampusInfoData } from "@/types/profile";
 
 export function CampusInfoSection() {
-  const [universityId, setUniversityId] = useState<number | null>(null);
   const [campusData, setCampusData] = useState<CampusInfoData | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  useEffect(() => {
-    const storedId = localStorage.getItem("universityId");
-    if (storedId) {
-      setUniversityId(Number(storedId));
-    } else {
-      setError("University ID not found in localStorage.");
-      setLoading(false);
-    }
-  }, []);
+  const fetchCampusData = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
 
-  const fetchCampusData = async (id: number) => {
     setLoading(true);
-    setError(null);
     try {
       const res = await fetch(
-        `https://api.gradabroad.net/api/information-about-campus/?university_id=${id}`
+        "https://api.gradabroad.net/api/information-about-campus/",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
-      if (!res.ok) throw new Error("Failed to fetch campus information");
 
-      const data = await res.json();
-      if (!data || Object.keys(data).length === 0) {
+      if (res.status === 404) {
         setCampusData(null);
-        return;
+      } else if (!res.ok) {
+        throw new Error("Failed to fetch campus information");
+      } else {
+        const data = await res.json();
+        setCampusData({
+          id: data.id,
+          yearOfEstablishment: String(data.year_established || ""),
+          numberOfGraduates: String(data.graduates_total || ""),
+          proportionOfEmployedGraduates: String(data.graduates_employed || ""),
+          rankingWithinCountry: String(data.ranking_local || ""),
+          globalRankingPosition: String(data.ranking_global || ""),
+          websiteLink: data.website_link || "",
+          hasDormitories: data.dormitory_available === "Yes",
+          dormitoryFeeRangeMin:
+            data.dormitory_info?.split(" - ")[0]?.trim() || "",
+          dormitoryFeeRangeMax:
+            data.dormitory_info?.split(" - ")[1]?.replace("USD", "").trim() ||
+            "",
+          aboutUniversity: {
+            english: data.description || "",
+          },
+        });
       }
-
-      const transformedData: CampusInfoData = {
-        id: data.id,
-        yearOfEstablishment: String(data.year_established ?? ""),
-        numberOfGraduates: String(data.graduates_total ?? ""),
-        proportionOfEmployedGraduates: String(data.graduates_employed ?? ""),
-        rankingWithinCountry: String(data.ranking_local ?? ""),
-        globalRankingPosition: String(data.ranking_global ?? ""),
-        hasDormitories: !!data.dormitory_available,
-        dormitoryFeeRangeMin: data.dormitory_info?.split(" - ")[0] ?? "",
-        dormitoryFeeRangeMax: data.dormitory_info?.split(" - ")[1] ?? "",
-        aboutUniversity: {
-          english: data.description ?? "",
-        },
-      };
-
-      setCampusData(transformedData);
     } catch (err: any) {
-      setError(err.message || "Unknown error occurred");
+      toast.error("Something went wrong while fetching campus info.");
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (universityId !== null) {
-      fetchCampusData(universityId);
-    }
-  }, [universityId]);
+    fetchCampusData();
+  }, []);
 
-  const handleEditClick = () => setIsEditModalOpen(true);
-
-  const handleEditSave = async (updatedData: CampusInfoData) => {
-    if (!universityId) return;
+  const saveCampusData = async (newData: CampusInfoData, isEdit = false) => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
 
     const payload = {
-      id: updatedData.id,
-      university_id: universityId,
-      year_established: Number(updatedData.yearOfEstablishment),
-      graduates_total: Number(updatedData.numberOfGraduates),
-      graduates_employed: Number(updatedData.proportionOfEmployedGraduates),
-      ranking_local: Number(updatedData.rankingWithinCountry),
-      ranking_global: Number(updatedData.globalRankingPosition),
-      dormitory_info: `${updatedData.dormitoryFeeRangeMin} - ${updatedData.dormitoryFeeRangeMax}`,
-      description: updatedData.aboutUniversity.english,
-    };
-
-    await fetch("https://api.gradabroad.net/api/information-about-campus/", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    await fetchCampusData(universityId);
-    setIsEditModalOpen(false);
-  };
-
-  const handleAddSave = async (newData: CampusInfoData) => {
-    if (!universityId) return;
-
-    const payload = {
-      university_id: universityId,
       year_established: Number(newData.yearOfEstablishment),
       graduates_total: Number(newData.numberOfGraduates),
       graduates_employed: Number(newData.proportionOfEmployedGraduates),
       ranking_local: Number(newData.rankingWithinCountry),
       ranking_global: Number(newData.globalRankingPosition),
-      dormitory_info: `${newData.dormitoryFeeRangeMin} - ${newData.dormitoryFeeRangeMax}`,
+      dormitory_info: `${newData.dormitoryFeeRangeMin} - ${newData.dormitoryFeeRangeMax} USD`,
+      dormitory_available: newData.hasDormitories ? "Yes" : null,
+      website_link: newData.websiteLink,
       description: newData.aboutUniversity.english,
     };
 
-    await fetch("https://api.gradabroad.net/api/information-about-campus/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const res = await fetch(
+        "https://api.gradabroad.net/api/information-about-campus/",
+        {
+          method: isEdit ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
-    await fetchCampusData(universityId);
-    setIsAddModalOpen(false);
+      if (!res.ok) {
+        const result = await res.json();
+        toast.error(result.detail || "Failed to save campus data.");
+        return;
+      }
+
+      toast.success("Campus information saved.");
+      await fetchCampusData();
+    } catch (err: any) {
+      toast.error("Unexpected error occurred.");
+      console.error(err);
+    }
   };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-40 text-gray-600">
-        <Loader className="animate-spin mr-2" /> Loading campus information...
-      </div>
-    );
-  }
-
-  if (error) {
-    return <div className="text-red-500 text-center py-4">Error: {error}</div>;
-  }
 
   return (
     <>
-      <SectionHeader
-        title="Information about campus"
-        onEdit={campusData ? handleEditClick : undefined}
-      />
+      <SectionHeader title="Information about campus" />
 
-      {!campusData ? (
+      {loading ? (
+        <div className="text-center text-sm text-gray-500">Loading...</div>
+      ) : campusData ? (
+        <>
+          <div className="bg-white border rounded-lg p-6 shadow-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+              <div>
+                <p className="text-sm text-gray-500">Year of establishment</p>
+                <p className="text-base font-medium text-gray-900">
+                  {campusData.yearOfEstablishment}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Number of graduates</p>
+                <p className="text-base font-medium text-gray-900">
+                  {campusData.numberOfGraduates}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Employed graduates (%)</p>
+                <p className="text-base font-medium text-gray-900">
+                  {campusData.proportionOfEmployedGraduates}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Ranking (Local)</p>
+                <p className="text-base font-medium text-gray-900">
+                  {campusData.rankingWithinCountry}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Ranking (Global)</p>
+                <p className="text-base font-medium text-gray-900">
+                  {campusData.globalRankingPosition}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Dormitory?</p>
+                <p className="text-base font-medium text-gray-900">
+                  {campusData.hasDormitories ? "Yes" : "No"}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Dormitory Fee</p>
+                <p className="text-base font-medium text-gray-900">
+                  {campusData.dormitoryFeeRangeMin} -{" "}
+                  {campusData.dormitoryFeeRangeMax} USD
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Website</p>
+                <p className="text-base font-medium text-purple-700 underline break-words">
+                  {campusData.websiteLink}
+                </p>
+              </div>
+              <div className="sm:col-span-2">
+                <p className="text-sm text-gray-500">About the university</p>
+                <p className="text-base font-medium text-gray-900 whitespace-pre-line">
+                  {campusData.aboutUniversity.english}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-right mt-4">
+            <Button onClick={() => setIsEditModalOpen(true)}>Edit</Button>
+          </div>
+        </>
+      ) : (
         <div className="text-center mt-6">
-          <p className="text-gray-600 mb-4">No campus information available.</p>
+          <p className="text-gray-600 mb-4">No campus information found.</p>
           <Button onClick={() => setIsAddModalOpen(true)}>
             Add Information
           </Button>
         </div>
-      ) : (
-        <>
-          <InfoCard
-            items={[
-              {
-                label: "Year of establishment",
-                value: campusData.yearOfEstablishment,
-                highlight: true,
-              },
-              {
-                label: "Number of graduates",
-                value: campusData.numberOfGraduates,
-              },
-              {
-                label: "Proportion of employed graduates",
-                value: campusData.proportionOfEmployedGraduates,
-              },
-            ]}
-          />
-          <InfoCard
-            items={[
-              {
-                label: "Ranking within the country",
-                value: campusData.rankingWithinCountry,
-                highlight: true,
-              },
-              {
-                label: "Global ranking position",
-                value: campusData.globalRankingPosition,
-              },
-              {
-                label: "Does the university have dormitories",
-                value: campusData.hasDormitories ? "Yes" : "No",
-              },
-            ]}
-          />
-          <InfoCard
-            items={[
-              {
-                label: "Dormitory fee range",
-                value: `${campusData.dormitoryFeeRangeMin} - ${campusData.dormitoryFeeRangeMax}`,
-              },
-            ]}
-          />
-          <Card className="overflow-hidden">
-            <h3 className="">About the university</h3>
-            <div className="p-4">
-              <div className="prose max-w-none">
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html:
-                      campusData.aboutUniversity?.english?.replace(
-                        /\n/g,
-                        "<br/>"
-                      ) || "",
-                  }}
-                />
-              </div>
-            </div>
-          </Card>
-        </>
       )}
+
+      <CampusAddModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSave={(data) => saveCampusData(data, false)}
+      />
 
       {campusData && (
         <CampusEditModal
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           initialData={campusData}
-          onSuccess={(updatedData) => setCampusData(updatedData)} // 🔥 instant update!
-        />
-      )}
-
-      {!campusData && (
-        <CampusAddModal
-          isOpen={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
-          onSave={handleAddSave}
+          onSuccess={(data) => {
+            setCampusData(data);
+            setIsEditModalOpen(false);
+          }}
         />
       )}
     </>
