@@ -44,6 +44,7 @@ export function CampusAddModal({
   onSave,
 }: CampusAddModalProps) {
   const [values, setValues] = useState<CampusInfoData>(EMPTY_DATA);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -73,9 +74,13 @@ export function CampusAddModal({
     }));
   };
 
-  const handleSubmit = () => {
-    onSave(values);
-    onClose();
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      await onSave(values);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
@@ -208,8 +213,9 @@ export function CampusAddModal({
             <Button
               onClick={handleSubmit}
               className="bg-purple-900 hover:bg-purple-800"
+              disabled={isSubmitting}
             >
-              Save
+              {isSubmitting ? "Saving..." : "Save"}
             </Button>
           </div>
         </div>

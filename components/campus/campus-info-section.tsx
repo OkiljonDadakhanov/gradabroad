@@ -194,7 +194,10 @@ export function CampusInfoSection() {
       <CampusAddModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onSave={(data) => saveCampusData(data, false)}
+        onSave={async (data) => {
+          await saveCampusData(data, false);
+          setIsAddModalOpen(false); // Close only after save & re-fetch
+        }}
       />
 
       {campusData && (
