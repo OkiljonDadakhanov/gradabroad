@@ -110,15 +110,51 @@ export function AcademicProgramsSection() {
     });
   };
 
-  const handleDeleteProgram = () => {
-    if (currentProgram) {
+  const handleDeleteProgram = async () => {
+    if (!currentProgram) return;
+
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    // Extract backend ID by removing the "api-" prefix
+    const numericId = currentProgram.id.replace("api-", "");
+
+    try {
+      const res = await fetch(
+        `https://api.gradabroad.net/api/programmes/with-requirements/${numericId}/`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!res.ok) {
+        console.error("Failed to delete program");
+        toast({
+          title: "Error",
+          description: `Failed to delete "${currentProgram.name}".`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       setPrograms((prev) => prev.filter((p) => p.id !== currentProgram.id));
-      setIsDeleteDialogOpen(false);
       toast({
         title: "Program deleted",
         description: `${currentProgram.name} has been successfully deleted.`,
         variant: "success",
       });
+    } catch (err) {
+      console.error("Delete error:", err);
+      toast({
+        title: "Error",
+        description: `An error occurred while deleting "${currentProgram.name}".`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
       setCurrentProgram(null);
     }
   };
