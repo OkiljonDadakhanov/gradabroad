@@ -53,7 +53,11 @@ export function AcademicProgramsSection() {
 
       const mapped = data.map((p: any) => {
         const languageRequirement = (p.requirements || [])
-          .filter((r: any) => r.requirementType === "language")
+          .filter(
+            (r: any) =>
+              r.requirementType === "english" ||
+              r.requirementType === "language"
+          )
           .map((r: any) => ({
             name: r.label,
             requirement: String(r.min_score ?? ""),
