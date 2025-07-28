@@ -10,18 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import type { AcademicProgram } from "@/types/academic";
 import { generateId } from "@/lib/utils";
 
-interface ProgrammeAPIResponse {
-  id: number;
-  code: string;
-  degree_level: string;
-  major: string;
-  duration_years: number;
-  tuition_fee: string;
-  platform_application_fee: string;
-  active: boolean;
-  translations: any[];
-}
-
 export function AcademicProgramsSection() {
   const { toast } = useToast();
 
@@ -37,63 +25,74 @@ export function AcademicProgramsSection() {
   );
 
   useEffect(() => {
-    const fetchPrograms = async () => {
-      const token = localStorage.getItem("accessToken");
-      if (!token) return;
+    fetchPrograms();
+  }, []);
 
-      try {
-        const res = await fetch("https://api.gradabroad.net/api/programmes/", {
+  const fetchPrograms = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    try {
+      const res = await fetch(
+        "https://api.gradabroad.net/api/programmes/mine/",
+        {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        });
-
-        if (!res.ok) {
-          console.error("Failed to fetch programs");
-          return;
         }
+      );
 
-        const data: ProgrammeAPIResponse[] = await res.json();
+      if (!res.ok) {
+        console.error("Failed to fetch programs");
+        return;
+      }
 
-        // Map to internal AcademicProgram shape
-        const mapped = data.map((p, i) => ({
+      const data = await res.json();
+
+      const mapped = data.map((p: any) => {
+        const languageRequirement = (p.requirements || [])
+          .filter((r: any) => r.requirementType === "english")
+          .map((r: any) => ({
+            name: r.label,
+            requirement: String(r.min_score ?? ""),
+          }));
+
+        const documentTypes = (p.requirements || [])
+          .filter((r: any) => r.requirementType === "document")
+          .map((r: any) => r.label);
+
+        return {
           id: `api-${p.id}`,
-          name: p.major,
-          category: p.code,
-          degreeType: p.degree_level,
-          languageRequirement: [], // default/fallback
-          contractPrice: p.tuition_fee,
-          admissionStart: "Soon",
-          admissionEnd: "Soon",
-          documentTypes: [],
+          name: p.name || p.major || "Unnamed",
+          category: p.field_of_study || p.code || "", // ✅ updated
+          degreeType: p.degreeType || p.degree_level || "",
+          languageRequirement,
+          documentTypes,
+          contractPrice: p.contractPrice || p.tuition_fee || "",
+          admissionStart: p.start_date || "Not specified",
+          admissionEnd: p.end_date || "Not specified",
           description: {
-            english: "",
+            english: p.about_program || "",
             uzbek: "",
             russian: "",
             korean: "",
           },
-        }));
+          active: p.active ?? true,
+        };
+      });
 
-        setPrograms(mapped);
-      } catch (err) {
-        console.error("Program fetch error", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPrograms();
-  }, []);
+      setPrograms(mapped);
+    } catch (err) {
+      console.error("Program fetch error", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddProgram = (program: Omit<AcademicProgram, "id">) => {
-    const newProgram = {
-      ...program,
-      id: generateId(),
-    };
-
+    const newProgram = { ...program, id: generateId() };
     setPrograms((prev) => [...prev, newProgram]);
     setIsAddModalOpen(false);
-
     toast({
       title: "Program added",
       description: `${program.name} has been successfully added.`,
@@ -102,9 +101,8 @@ export function AcademicProgramsSection() {
   };
 
   const handleEditProgram = (program: AcademicProgram) => {
-    setPrograms(programs.map((p) => (p.id === program.id ? program : p)));
+    setPrograms((prev) => prev.map((p) => (p.id === program.id ? program : p)));
     setIsEditModalOpen(false);
-
     toast({
       title: "Program updated",
       description: `${program.name} has been successfully updated.`,
@@ -114,32 +112,15 @@ export function AcademicProgramsSection() {
 
   const handleDeleteProgram = () => {
     if (currentProgram) {
-      setPrograms(programs.filter((p) => p.id !== currentProgram.id));
+      setPrograms((prev) => prev.filter((p) => p.id !== currentProgram.id));
       setIsDeleteDialogOpen(false);
-
       toast({
         title: "Program deleted",
         description: `${currentProgram.name} has been successfully deleted.`,
         variant: "success",
       });
-
       setCurrentProgram(null);
     }
-  };
-
-  const handleViewProgram = (program: AcademicProgram) => {
-    setCurrentProgram(program);
-    setIsViewModalOpen(true);
-  };
-
-  const handleOpenEditModal = (program: AcademicProgram) => {
-    setCurrentProgram(program);
-    setIsEditModalOpen(true);
-  };
-
-  const handleOpenDeleteDialog = (program: AcademicProgram) => {
-    setCurrentProgram(program);
-    setIsDeleteDialogOpen(true);
   };
 
   return (
@@ -172,7 +153,9 @@ export function AcademicProgramsSection() {
                 variant="ghost"
                 size="icon"
                 className="bg-purple-200 hover:bg-purple-300"
-                onClick={() => handleViewProgram(program)}
+                onClick={() =>
+                  setIsViewModalOpen(true) || setCurrentProgram(program)
+                }
               >
                 <Eye className="h-5 w-5 text-purple-700" />
               </Button>
@@ -180,7 +163,9 @@ export function AcademicProgramsSection() {
                 variant="ghost"
                 size="icon"
                 className="bg-purple-200 hover:bg-purple-300"
-                onClick={() => handleOpenEditModal(program)}
+                onClick={() =>
+                  setIsEditModalOpen(true) || setCurrentProgram(program)
+                }
               >
                 <Pencil className="h-5 w-5 text-purple-700" />
               </Button>
@@ -188,7 +173,9 @@ export function AcademicProgramsSection() {
                 variant="ghost"
                 size="icon"
                 className="bg-purple-200 hover:bg-purple-300"
-                onClick={() => handleOpenDeleteDialog(program)}
+                onClick={() =>
+                  setIsDeleteDialogOpen(true) || setCurrentProgram(program)
+                }
               >
                 <Trash2 className="h-5 w-5 text-purple-700" />
               </Button>
@@ -200,7 +187,10 @@ export function AcademicProgramsSection() {
       <AcademicProgramModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onSave={handleAddProgram}
+        onSave={() => {
+          setIsAddModalOpen(false);
+          fetchPrograms(); // ⬅️ Refresh after POST
+        }}
         title="Add Academic Program"
       />
 
@@ -213,13 +203,11 @@ export function AcademicProgramsSection() {
             initialData={currentProgram}
             title="Edit Academic Program"
           />
-
           <AcademicProgramViewModal
             isOpen={isViewModalOpen}
             onClose={() => setIsViewModalOpen(false)}
             program={currentProgram}
           />
-
           <AcademicProgramDeleteDialog
             isOpen={isDeleteDialogOpen}
             onClose={() => setIsDeleteDialogOpen(false)}

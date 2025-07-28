@@ -78,10 +78,8 @@ export function SideNav() {
     icon: <LogOut size={20} />,
     label: "Logout",
     onClick: () => {
-      // Replace with actual logout logic
-      console.log("Logout clicked");
       localStorage.removeItem("accessToken");
-      router.push("/login");
+      window.location.href = "https://www.gradabroad.net/login/university";
     },
   };
 

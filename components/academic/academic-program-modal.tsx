@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -18,13 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { LanguageRequirementInput } from "@/components/academic/LanguageRequirementInput";
 import { DocumentTypeInput } from "@/components/academic/DocumentTypeInput";
@@ -35,7 +31,7 @@ import {
   CATEGORIES,
   DEGREE_TYPES,
 } from "@/types/academic";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 const defaultFormData: AcademicProgramFormData = {
   name: "",
@@ -43,11 +39,8 @@ const defaultFormData: AcademicProgramFormData = {
   degreeType: "",
   languageRequirement: [],
   contractPrice: "",
-  admissionStart: format(new Date(), "dd/MM/yyyy"),
-  admissionEnd: format(
-    new Date(new Date().setMonth(new Date().getMonth() + 1)),
-    "dd/MM/yyyy"
-  ),
+  start_date: new Date(),
+  end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)),
   documentTypes: [],
   description: {
     english: "",
@@ -55,12 +48,13 @@ const defaultFormData: AcademicProgramFormData = {
     russian: "",
     uzbek: "",
   },
+  active: true,
 };
 
 interface AcademicProgramModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: AcademicProgram | AcademicProgramFormData) => void;
+  onSave: (data: AcademicProgram) => void;
   initialData?: AcademicProgram;
   title: string;
 }
@@ -74,6 +68,15 @@ export function AcademicProgramModal({
 }: AcademicProgramModalProps) {
   const [activeTab, setActiveTab] = useState("english");
 
+  const transformedInitialData: AcademicProgramFormData =
+    initialData && initialData.start_date && initialData.end_date
+      ? {
+          ...initialData,
+          start_date: parseISO(initialData.start_date),
+          end_date: parseISO(initialData.end_date),
+        }
+      : defaultFormData;
+
   const {
     values,
     setValues,
@@ -81,49 +84,64 @@ export function AcademicProgramModal({
     handleSelectChange,
     handleNestedChange,
     reset,
-  } = useForm<AcademicProgramFormData>(initialData || defaultFormData);
+  } = useForm<AcademicProgramFormData>(transformedInitialData);
 
   const handleSubmit = async () => {
     const token = localStorage.getItem("accessToken");
-    if (!token) {
-      alert("You are not authenticated.");
-      return;
-    }
+    if (!token) return alert("You are not authenticated.");
 
     const payload = {
-      university: 36,
-      code: values.category || "UNKNOWN",
-      degree_level: values.degreeType,
-      major: values.name,
-      duration_years: 4,
-      tuition_fee: values.contractPrice,
-      platform_application_fee: "0.00",
-      active: true,
-      translations: [],
+      programme: {
+        name: values.name,
+        field_of_study: values.category,
+        degreeType: values.degreeType,
+        duration_years: 4,
+        contractPrice: Number(values.contractPrice),
+        platformApplicationFee: 0,
+        about_program: values.description.english,
+        start_date: format(values.start_date, "yyyy-MM-dd"),
+        end_date: format(values.end_date, "yyyy-MM-dd"),
+        active: values.active,
+      },
+      requirements: [
+        ...values.languageRequirement.map((item) => ({
+          requirementType: "english",
+          label: item.name,
+          required: true,
+          min_score: parseFloat(item.requirement),
+          note: null,
+        })),
+        ...values.documentTypes.map((doc) => ({
+          requirementType: "document",
+          label: doc,
+          required: true,
+          note: null,
+        })),
+      ],
     };
 
     try {
-      const res = await fetch("https://api.gradabroad.net/api/programmes/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        "https://api.gradabroad.net/api/programmes/with-requirements/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!res.ok) {
         const error = await res.json();
-        console.error("Failed to create program", error);
-        alert(error.detail || "Something went wrong");
+        console.error("POST error", error);
+        alert("Failed to create program: " + JSON.stringify(error));
         return;
       }
 
-      const newProgram = await res.json();
-      onSave({
-        ...values,
-        id: `api-${newProgram.id}`,
-      });
+      const { programme } = await res.json();
+      onSave({ ...values, id: `api-${programme.id}` });
       onClose();
     } catch (err) {
       console.error("POST error", err);
@@ -138,23 +156,6 @@ export function AcademicProgramModal({
 
   const handleRichTextChange = (lang: string, content: string) => {
     handleNestedChange("description", lang, content);
-  };
-
-  const handleDateChange = (
-    field: "admissionStart" | "admissionEnd",
-    date: Date | undefined
-  ) => {
-    if (date) {
-      setValues({
-        ...values,
-        [field]: format(date, "dd/MM/yyyy"),
-      });
-    }
-  };
-
-  const parseDate = (dateString: string): Date => {
-    const [day, month, year] = dateString.split("/").map(Number);
-    return new Date(year, month - 1, day);
   };
 
   return (
@@ -263,48 +264,51 @@ export function AcademicProgramModal({
             </div>
           </div>
 
-          <div>
-            <LanguageRequirementInput
-              value={values.languageRequirement}
-              onChange={(updated) =>
-                setValues({ ...values, languageRequirement: updated })
-              }
-            />
-          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Admission Start Date *</Label>
+              <DatePicker
+                selected={values.start_date}
+                onChange={(date: Date) =>
+                  setValues({ ...values, start_date: date })
+                }
+                dateFormat="yyyy-MM-dd"
+                className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
+                placeholderText="Select start date"
+              />
+            </div>
 
-          <div>
-            <Label>Admission period</Label>
-            <div className="grid grid-cols-2 gap-4 mt-1">
-              {["admissionStart", "admissionEnd"].map((field) => (
-                <div key={field}>
-                  <Label className="text-sm text-gray-500">
-                    {field === "admissionStart" ? "From" : "To"}
-                  </Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal mt-1"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {values[field]}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={parseDate(values[field])}
-                        onSelect={(date) =>
-                          handleDateChange(field as any, date)
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              ))}
+            <div>
+              <Label>Admission End Date *</Label>
+              <DatePicker
+                selected={values.end_date}
+                onChange={(date: Date) =>
+                  setValues({ ...values, end_date: date })
+                }
+                dateFormat="yyyy-MM-dd"
+                className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
+                placeholderText="Select end date"
+              />
             </div>
           </div>
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="active"
+              checked={values.active}
+              onCheckedChange={(val) =>
+                setValues({ ...values, active: Boolean(val) })
+              }
+            />
+            <Label htmlFor="active">Program is active</Label>
+          </div>
+
+          <LanguageRequirementInput
+            value={values.languageRequirement}
+            onChange={(updated) =>
+              setValues({ ...values, languageRequirement: updated })
+            }
+          />
 
           <div>
             <Label>Document Types</Label>
@@ -314,17 +318,6 @@ export function AcademicProgramModal({
                 setValues({ ...values, documentTypes: updated })
               }
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Application Guide Download (English)</Label>
-              <Input type="file" />
-            </div>
-            <div>
-              <Label>Application Form Download (English)</Label>
-              <Input type="file" />
-            </div>
           </div>
 
           <div>
