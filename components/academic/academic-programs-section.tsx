@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import { Plus, Eye, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AcademicProgramModal } from "./academic-program-modal";
+import { useToast } from "@/hooks/use-toast";
 import { AcademicProgramViewModal } from "./academic-program-view-modal";
 import { AcademicProgramDeleteDialog } from "./academic-program-delete-dialog";
-import { useToast } from "@/hooks/use-toast";
-import type { AcademicProgram } from "@/types/academic";
+import { AcademicProgramModal } from "./academic-program-modal"; // For adding
+import { AcademicProgramEditModal } from "./academic-program-edit-modal"; // For editing
 import { generateId } from "@/lib/utils";
+import type { AcademicProgram } from "@/types/academic";
 
 export function AcademicProgramsSection() {
   const { toast } = useToast();
@@ -17,8 +18,8 @@ export function AcademicProgramsSection() {
   const [loading, setLoading] = useState(true);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentProgram, setCurrentProgram] = useState<AcademicProgram | null>(
     null
@@ -32,6 +33,7 @@ export function AcademicProgramsSection() {
     const token = localStorage.getItem("accessToken");
     if (!token) return;
 
+    setLoading(true);
     try {
       const res = await fetch(
         "https://api.gradabroad.net/api/programmes/mine/",
@@ -51,7 +53,7 @@ export function AcademicProgramsSection() {
 
       const mapped = data.map((p: any) => {
         const languageRequirement = (p.requirements || [])
-          .filter((r: any) => r.requirementType === "english")
+          .filter((r: any) => r.requirementType === "language")
           .map((r: any) => ({
             name: r.label,
             requirement: String(r.min_score ?? ""),
@@ -64,13 +66,14 @@ export function AcademicProgramsSection() {
         return {
           id: `api-${p.id}`,
           name: p.name || p.major || "Unnamed",
-          category: p.field_of_study || p.code || "", // ✅ updated
+          category: p.field_of_study || p.code || "",
           degreeType: p.degreeType || p.degree_level || "",
           languageRequirement,
           documentTypes,
           contractPrice: p.contractPrice || p.tuition_fee || "",
-          admissionStart: p.start_date || "Not specified",
-          admissionEnd: p.end_date || "Not specified",
+          platformApplicationFee: p.platformApplicationFee || "0.00",
+          admissionStart: p.start_date || "",
+          admissionEnd: p.end_date || "",
           description: {
             english: p.about_program || "",
             uzbek: "",
@@ -89,34 +92,11 @@ export function AcademicProgramsSection() {
     }
   };
 
-  const handleAddProgram = (program: Omit<AcademicProgram, "id">) => {
-    const newProgram = { ...program, id: generateId() };
-    setPrograms((prev) => [...prev, newProgram]);
-    setIsAddModalOpen(false);
-    toast({
-      title: "Program added",
-      description: `${program.name} has been successfully added.`,
-      variant: "success",
-    });
-  };
-
-  const handleEditProgram = (program: AcademicProgram) => {
-    setPrograms((prev) => prev.map((p) => (p.id === program.id ? program : p)));
-    setIsEditModalOpen(false);
-    toast({
-      title: "Program updated",
-      description: `${program.name} has been successfully updated.`,
-      variant: "success",
-    });
-  };
-
   const handleDeleteProgram = async () => {
     if (!currentProgram) return;
-
     const token = localStorage.getItem("accessToken");
     if (!token) return;
 
-    // Extract backend ID by removing the "api-" prefix
     const numericId = currentProgram.id.replace("api-", "");
 
     try {
@@ -131,10 +111,9 @@ export function AcademicProgramsSection() {
       );
 
       if (!res.ok) {
-        console.error("Failed to delete program");
         toast({
           title: "Error",
-          description: `Failed to delete "${currentProgram.name}".`,
+          description: `Failed to delete "${currentProgram.name}"`,
           variant: "destructive",
         });
         return;
@@ -143,14 +122,14 @@ export function AcademicProgramsSection() {
       setPrograms((prev) => prev.filter((p) => p.id !== currentProgram.id));
       toast({
         title: "Program deleted",
-        description: `${currentProgram.name} has been successfully deleted.`,
+        description: `${currentProgram.name} was deleted successfully.`,
         variant: "success",
       });
     } catch (err) {
       console.error("Delete error:", err);
       toast({
         title: "Error",
-        description: `An error occurred while deleting "${currentProgram.name}".`,
+        description: `Error deleting "${currentProgram.name}"`,
         variant: "destructive",
       });
     } finally {
@@ -167,7 +146,7 @@ export function AcademicProgramsSection() {
         </h2>
         <Button
           onClick={() => setIsAddModalOpen(true)}
-          className="bg-purple-900 hover:bg-purple-800"
+          className="bg-purple-900 hover:bg-purple-800 text-white"
         >
           <Plus className="mr-2 h-4 w-4" /> Add
         </Button>
@@ -189,9 +168,10 @@ export function AcademicProgramsSection() {
                 variant="ghost"
                 size="icon"
                 className="bg-purple-200 hover:bg-purple-300"
-                onClick={() =>
-                  setIsViewModalOpen(true) || setCurrentProgram(program)
-                }
+                onClick={() => {
+                  setCurrentProgram(program);
+                  setIsViewModalOpen(true);
+                }}
               >
                 <Eye className="h-5 w-5 text-purple-700" />
               </Button>
@@ -199,9 +179,10 @@ export function AcademicProgramsSection() {
                 variant="ghost"
                 size="icon"
                 className="bg-purple-200 hover:bg-purple-300"
-                onClick={() =>
-                  setIsEditModalOpen(true) || setCurrentProgram(program)
-                }
+                onClick={() => {
+                  setCurrentProgram(program);
+                  setIsEditModalOpen(true);
+                }}
               >
                 <Pencil className="h-5 w-5 text-purple-700" />
               </Button>
@@ -209,9 +190,10 @@ export function AcademicProgramsSection() {
                 variant="ghost"
                 size="icon"
                 className="bg-purple-200 hover:bg-purple-300"
-                onClick={() =>
-                  setIsDeleteDialogOpen(true) || setCurrentProgram(program)
-                }
+                onClick={() => {
+                  setCurrentProgram(program);
+                  setIsDeleteDialogOpen(true);
+                }}
               >
                 <Trash2 className="h-5 w-5 text-purple-700" />
               </Button>
@@ -220,37 +202,44 @@ export function AcademicProgramsSection() {
         ))}
       </div>
 
+      {/* ADD MODAL */}
       <AcademicProgramModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSave={() => {
           setIsAddModalOpen(false);
-          fetchPrograms(); // ⬅️ Refresh after POST
+          fetchPrograms();
         }}
         title="Add Academic Program"
       />
 
+      {/* EDIT MODAL */}
       {currentProgram && (
-        <>
-          <AcademicProgramModal
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-            onSave={handleEditProgram}
-            initialData={currentProgram}
-            title="Edit Academic Program"
-          />
-          <AcademicProgramViewModal
-            isOpen={isViewModalOpen}
-            onClose={() => setIsViewModalOpen(false)}
-            program={currentProgram}
-          />
-          <AcademicProgramDeleteDialog
-            isOpen={isDeleteDialogOpen}
-            onClose={() => setIsDeleteDialogOpen(false)}
-            onConfirm={handleDeleteProgram}
-            programName={currentProgram.name}
-          />
-        </>
+        <AcademicProgramEditModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          initialData={currentProgram}
+          onSuccess={fetchPrograms}
+        />
+      )}
+
+      {/* VIEW MODAL */}
+      {currentProgram && (
+        <AcademicProgramViewModal
+          isOpen={isViewModalOpen}
+          onClose={() => setIsViewModalOpen(false)}
+          program={currentProgram}
+        />
+      )}
+
+      {/* DELETE DIALOG */}
+      {currentProgram && (
+        <AcademicProgramDeleteDialog
+          isOpen={isDeleteDialogOpen}
+          onClose={() => setIsDeleteDialogOpen(false)}
+          onConfirm={handleDeleteProgram}
+          programName={currentProgram.name}
+        />
       )}
     </>
   );
