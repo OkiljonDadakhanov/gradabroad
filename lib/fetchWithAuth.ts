@@ -1,19 +1,24 @@
-// lib/fetchWithAuth.ts
-
 const API_BASE = "https://api.gradabroad.net";
 
 export async function refreshToken(): Promise<boolean> {
+  const refresh = localStorage.getItem("refreshToken");
+
+  if (!refresh) return false;
+
   try {
     const res = await fetch(`${API_BASE}/api/auth/token/refresh/`, {
       method: "POST",
-      credentials: "include", // for cookie-based refresh
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refresh }),
     });
 
     if (!res.ok) return false;
 
     const data = await res.json();
-    if (data.access_token) {
-      localStorage.setItem("accessToken", data.access_token);
+    if (data.access) {
+      localStorage.setItem("accessToken", data.access);
       return true;
     }
 
@@ -42,7 +47,7 @@ export async function fetchWithAuth(
     return res;
   }
 
-  // Try to refresh token
+  // Token expired: try refresh
   const refreshed = await refreshToken();
   if (!refreshed) {
     throw new Error("Session expired");
