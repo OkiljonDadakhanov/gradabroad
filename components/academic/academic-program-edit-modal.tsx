@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import {
   Dialog,
   DialogContent,
@@ -11,14 +13,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
-import { useForm } from "@/hooks/use-form";
-import type { AcademicProgram } from "@/types/academic";
-import { toast } from "sonner";
 import { LanguageRequirementInput } from "./LanguageRequirementInput";
 import { DocumentTypeInput } from "./DocumentTypeInput";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css"; // Assuming you use a wrapper
+import { useForm } from "@/hooks/use-form";
+import { AcademicProgram, CATEGORIES, DEGREE_TYPES } from "@/types/academic";
+import { toast } from "sonner";
+import { format, parseISO } from "date-fns";
 
 interface AcademicProgramEditModalProps {
   isOpen: boolean;
@@ -33,14 +42,23 @@ export function AcademicProgramEditModal({
   initialData,
   onSuccess,
 }: AcademicProgramEditModalProps) {
+  const [activeTab, setActiveTab] = useState("english");
+
+  const transformedInitialData = {
+    ...initialData,
+    admissionStart: parseISO(initialData.admissionStart),
+    admissionEnd: parseISO(initialData.admissionEnd),
+  };
+
   const {
     values,
+    setValues,
     handleChange,
+    handleSelectChange,
     handleCheckboxChange,
     handleNestedChange,
-    setValues,
     reset,
-  } = useForm<AcademicProgram>(initialData);
+  } = useForm<AcademicProgram>(transformedInitialData);
 
   const [loading, setLoading] = useState(false);
 
@@ -76,8 +94,8 @@ export function AcademicProgramEditModal({
         degreeType: values.degreeType,
         contractPrice: values.contractPrice,
         platformApplicationFee: values.platformApplicationFee || "0.00",
-        start_date: values.admissionStart || null,
-        end_date: values.admissionEnd || null,
+        start_date: format(values.admissionStart, "yyyy-MM-dd"),
+        end_date: format(values.admissionEnd, "yyyy-MM-dd"),
         about_program: values.description?.english || "",
         active: values.active,
       },
@@ -126,90 +144,125 @@ export function AcademicProgramEditModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Academic Program</DialogTitle>
+          <DialogTitle className="text-xl font-bold">
+            Edit Academic Program
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div>
-            <Label>Name</Label>
-            <Input name="name" value={values.name} onChange={handleChange} />
-          </div>
+        <Tabs
+          defaultValue="english"
+          className="mt-2"
+          onValueChange={setActiveTab}
+        >
+          <TabsList className="bg-purple-100">
+            {["english", "korean", "russian", "uzbek"].map((lang) => (
+              <TabsTrigger
+                key={lang}
+                value={lang}
+                className="data-[state=active]:bg-purple-700 data-[state=active]:text-white"
+              >
+                {lang === "english"
+                  ? "English"
+                  : lang === "korean"
+                  ? "한국어"
+                  : lang === "russian"
+                  ? "Русский"
+                  : "O'zbek"}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+
+        <div className="space-y-6 mt-4">
           <div>
             <Label>Field of Study</Label>
-            <Input
-              name="category"
+            <Select
               value={values.category}
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <Label>Degree Type</Label>
-            <Input
-              name="degreeType"
-              value={values.degreeType}
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <Label>Contract Price (USD)</Label>
-            <Input
-              name="contractPrice"
-              value={values.contractPrice}
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <Label>Platform Application Fee (USD)</Label>
-            <Input
-              name="platformApplicationFee"
-              value={values.platformApplicationFee || ""}
-              onChange={handleChange}
-            />
+              onValueChange={(val) => handleSelectChange("category", val)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <Label>Program Name</Label>
+            <Input name="name" value={values.name} onChange={handleChange} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Degree Type</Label>
+              <Select
+                value={values.degreeType}
+                onValueChange={(val) => handleSelectChange("degreeType", val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select degree type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {DEGREE_TYPES.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Contract Price ($)</Label>
+              <Input
+                name="contractPrice"
+                value={values.contractPrice}
+                onChange={handleChange}
+                type="number"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Start Date</Label>
               <DatePicker
-                selected={
-                  values.admissionStart ? new Date(values.admissionStart) : null
-                }
-                onChange={(date: Date | null) =>
-                  handleChange({
-                    target: {
-                      name: "admissionStart",
-                      value: date ? date.toISOString().split("T")[0] : "",
-                    },
-                  } as any)
+                selected={values.admissionStart}
+                onChange={(date) =>
+                  setValues({ ...values, admissionStart: date ?? new Date() })
                 }
                 dateFormat="yyyy-MM-dd"
+                className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
               />
             </div>
             <div>
               <Label>End Date</Label>
               <DatePicker
-                selected={
-                  values.admissionEnd ? new Date(values.admissionEnd) : null
-                }
-                onChange={(date: Date | null) =>
-                  handleChange({
-                    target: {
-                      name: "admissionEnd",
-                      value: date ? date.toISOString().split("T")[0] : "",
-                    },
-                  } as any)
+                selected={values.admissionEnd}
+                onChange={(date) =>
+                  setValues({ ...values, admissionEnd: date ?? new Date() })
                 }
                 dateFormat="yyyy-MM-dd"
+                className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
               />
             </div>
           </div>
 
-          <div>
-            <Label>About Program (English)</Label>
-            <RichTextEditor
-              value={values.description}
-              onChange={handleRichTextChange}
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="active"
+              checked={values.active}
+              onCheckedChange={(checked) =>
+                handleCheckboxChange("active", Boolean(checked))
+              }
             />
+            <Label htmlFor="active">Program is active</Label>
           </div>
 
           <div>
@@ -230,19 +283,16 @@ export function AcademicProgramEditModal({
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <Checkbox
-              checked={values.active}
-              onCheckedChange={(checked) =>
-                handleCheckboxChange("active", checked as boolean)
-              }
-              id="active"
+          <div>
+            <Label>About Program ({activeTab})</Label>
+            <RichTextEditor
+              value={values.description}
+              onChange={handleRichTextChange}
             />
-            <Label htmlFor="active">Program is active</Label>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button onClick={handleCancel} variant="outline" disabled={loading}>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={handleCancel} disabled={loading}>
               Cancel
             </Button>
             <Button
