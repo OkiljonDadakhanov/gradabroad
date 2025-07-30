@@ -10,6 +10,7 @@ import { AcademicProgramModal } from "./academic-program-modal"; // For adding
 import { AcademicProgramEditModal } from "./academic-program-edit-modal"; // For editing
 import { generateId } from "@/lib/utils";
 import type { AcademicProgram } from "@/types/academic";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 export function AcademicProgramsSection() {
   const { toast } = useToast();
@@ -30,18 +31,11 @@ export function AcademicProgramsSection() {
   }, []);
 
   const fetchPrograms = async () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
-
     setLoading(true);
+
     try {
-      const res = await fetch(
-        "https://api.gradabroad.net/api/programmes/mine/",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const res = await fetchWithAuth(
+        "https://api.gradabroad.net/api/programmes/mine/"
       );
 
       if (!res.ok) {
@@ -104,16 +98,20 @@ export function AcademicProgramsSection() {
     const numericId = currentProgram.id.replace("api-", "");
 
     try {
-      const res = await fetch(
+      const res = await fetchWithAuth(
         `https://api.gradabroad.net/api/programmes/with-requirements/${numericId}/`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         }
       );
-
+      if (res.status === 401) {
+        toast({
+          title: "Authentication Error",
+          description: "You need to be logged in to delete a program.",
+          variant: "destructive",
+        });
+        return;
+      }
       if (!res.ok) {
         toast({
           title: "Error",

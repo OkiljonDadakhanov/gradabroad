@@ -95,9 +95,10 @@ export function GalleryImageModal({
         (file, index) => ({
           title: formValues.title || file.name,
           description: formValues.description,
-          imageUrl: file.name,
+          imageUrl: "", // to be replaced after upload
           altText: formValues.altText || file.name.split(".")[0],
           date: formValues.date,
+          imageFile: file, // this is the key for upload
         })
       );
       onSave(multipleImages);

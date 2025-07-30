@@ -22,6 +22,7 @@ import type { ProfileData } from "@/types/profile";
 import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRef, useState } from "react";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 interface ProfileEditModalProps {
   isOpen: boolean;
@@ -78,13 +79,10 @@ export function ProfileEditModal({
     const token = localStorage.getItem("accessToken");
 
     try {
-      const response = await fetch(
+      const response = await fetchWithAuth(
         "https://api.gradabroad.net/api/auth/universities/me/",
         {
           method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           body: formData,
         }
       );
@@ -107,13 +105,8 @@ export function ProfileEditModal({
       // ✅ Fetch updated accreditation document signed URL
       let accreditationDocUrl = "";
       try {
-        const docRes = await fetch(
-          "https://api.gradabroad.net/api/auth/universities/me/accreditation-url/",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+        const docRes = await fetchWithAuth(
+          "https://api.gradabroad.net/api/auth/universities/me/accreditation-url/"
         );
 
         if (docRes.ok) {

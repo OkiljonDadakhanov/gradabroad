@@ -7,6 +7,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { InfoCard } from "@/components/ui/info-card";
 import { ProfileEditModal } from "./profile-edit-modal";
 import type { ProfileData } from "@/types/profile";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 export function ProfileSection() {
   const router = useRouter();
@@ -41,13 +42,8 @@ export function ProfileSection() {
       }
 
       try {
-        const res = await fetch(
-          "https://api.gradabroad.net/api/auth/universities/me/",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+        const res = await fetchWithAuth(
+          "https://api.gradabroad.net/api/auth/universities/me/"
         );
 
         if (res.status === 401) {
@@ -114,11 +110,8 @@ export function ProfileSection() {
     setDocLoading(true);
 
     try {
-      const res = await fetch(
-        "https://api.gradabroad.net/api/auth/universities/me/accreditation-url/",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const res = await fetchWithAuth(
+        "https://api.gradabroad.net/api/auth/universities/me/accreditation-url/"
       );
 
       if (!res.ok) {
