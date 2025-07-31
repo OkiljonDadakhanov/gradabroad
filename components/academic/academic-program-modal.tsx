@@ -158,6 +158,9 @@ export function AcademicProgramModal({
     handleNestedChange("description", lang, content);
   };
 
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -327,6 +330,23 @@ export function AcademicProgramModal({
               onChange={handleRichTextChange}
             />
           </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="terms"
+              checked={termsAccepted}
+              onCheckedChange={(val) => setTermsAccepted(Boolean(val))}
+            />
+            <Label htmlFor="terms">
+              I agree to the{" "}
+              <button
+                type="button"
+                onClick={() => setIsTermsModalOpen(true)}
+                className="underline text-purple-700 hover:text-purple-900"
+              >
+                Terms and Conditions
+              </button>
+            </Label>
+          </div>
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={handleCancel}>
@@ -335,6 +355,7 @@ export function AcademicProgramModal({
             <Button
               onClick={handleSubmit}
               className="bg-purple-900 hover:bg-purple-800"
+              disabled={!termsAccepted}
             >
               Save
             </Button>
