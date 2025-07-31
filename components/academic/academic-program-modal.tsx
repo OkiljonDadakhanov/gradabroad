@@ -32,6 +32,7 @@ import {
   DEGREE_TYPES,
 } from "@/types/academic";
 import { format, parseISO } from "date-fns";
+import { TermsAndConditionsModal } from "./TermsAndConditionsModal";
 
 const defaultFormData: AcademicProgramFormData = {
   name: "",
@@ -362,6 +363,10 @@ export function AcademicProgramModal({
           </div>
         </div>
       </DialogContent>
+      <TermsAndConditionsModal
+        open={isTermsModalOpen}
+        onClose={() => setIsTermsModalOpen(false)}
+      />
     </Dialog>
   );
 }

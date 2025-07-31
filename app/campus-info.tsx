@@ -1,17 +1,22 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { PenSquare } from "lucide-react"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PenSquare } from "lucide-react";
 
 export default function CampusInfoPage() {
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [campusData, setCampusData] = useState({
     yearOfEstablishment: "01.01.2020",
     numberOfGraduates: "600",
@@ -32,20 +37,20 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
       russian: "",
       uzbek: "",
     },
-  })
+  });
 
-  const [formData, setFormData] = useState({ ...campusData })
-  const [activeTab, setActiveTab] = useState("english")
+  const [formData, setFormData] = useState({ ...campusData });
+  const [activeTab, setActiveTab] = useState("english");
 
   const handleEditClick = () => {
-    setFormData({ ...campusData })
-    setIsEditModalOpen(true)
-  }
+    setFormData({ ...campusData });
+    setIsEditModalOpen(true);
+  };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData({ ...formData, [name]: value })
-  }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
 
   const handleAboutChange = (value) => {
     setFormData({
@@ -54,20 +59,24 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
         ...formData.aboutUniversity,
         [activeTab]: value,
       },
-    })
-  }
+    });
+  };
 
   const handleSave = () => {
-    setCampusData({ ...formData })
-    setIsEditModalOpen(false)
-  }
+    setCampusData({ ...formData });
+    setIsEditModalOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-white">
       <header className="border-b p-4 flex justify-between items-center">
         <h1 className="text-xl font-bold">Graduate in Korea</h1>
         <div className="w-10 h-10 rounded-full overflow-hidden">
-          <img src="/placeholder.svg?height=40&width=40" alt="US Flag" className="w-full h-full object-cover" />
+          <img
+            src="/placeholder.svg?height=40&width=40"
+            alt="US Flag"
+            className="w-full h-full object-cover"
+          />
         </div>
       </header>
 
@@ -112,7 +121,9 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
                   <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
               </div>
-              <span className="font-medium text-purple-900">Information about campus</span>
+              <span className="font-medium text-purple-900">
+                Information about campus
+              </span>
             </div>
 
             {[
@@ -126,7 +137,10 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
               { icon: "bar-chart", text: "Statistics" },
               { icon: "settings", text: "Settings" },
             ].map((item, index) => (
-              <div key={index} className="p-3 rounded-md flex items-center gap-3 hover:bg-gray-100 cursor-pointer">
+              <div
+                key={index}
+                className="p-3 rounded-md flex items-center gap-3 hover:bg-gray-100 cursor-pointer"
+              >
                 <div className="text-gray-500 p-1 rounded">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -139,7 +153,14 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <rect
+                      x="3"
+                      y="3"
+                      width="18"
+                      height="18"
+                      rx="2"
+                      ry="2"
+                    ></rect>
                   </svg>
                 </div>
                 <span className="text-gray-600">{item.text}</span>
@@ -170,8 +191,13 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
         {/* Main content */}
         <main className="flex-1 p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-purple-900">Information about campus</h2>
-            <Button onClick={handleEditClick} className="bg-purple-900 hover:bg-purple-800">
+            <h2 className="text-2xl font-bold text-purple-900">
+              Information about campus
+            </h2>
+            <Button
+              onClick={handleEditClick}
+              className="bg-purple-900 hover:bg-purple-800"
+            >
               <PenSquare className="mr-2 h-4 w-4" /> Edit
             </Button>
           </div>
@@ -180,15 +206,21 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
             <div className="grid grid-cols-3 gap-4 p-4">
               <div>
                 <p className="text-sm text-gray-500">Year of establishment</p>
-                <p className="font-medium text-purple-900">{campusData.yearOfEstablishment}</p>
+                <p className="font-medium text-purple-900">
+                  {campusData.yearOfEstablishment}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Number of graduates</p>
                 <p className="font-medium">{campusData.numberOfGraduates}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Proportion of employed graduates</p>
-                <p className="font-medium">{campusData.proportionOfEmployedGraduates}</p>
+                <p className="text-sm text-gray-500">
+                  Proportion of employed graduates
+                </p>
+                <p className="font-medium">
+                  {campusData.proportionOfEmployedGraduates}
+                </p>
               </div>
             </div>
           </Card>
@@ -196,16 +228,26 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
           <Card className="mb-6 overflow-hidden">
             <div className="grid grid-cols-3 gap-4 p-4">
               <div>
-                <p className="text-sm text-gray-500">Ranking within the country</p>
-                <p className="font-medium text-purple-900">{campusData.rankingWithinCountry}</p>
+                <p className="text-sm text-gray-500">
+                  Ranking within the country
+                </p>
+                <p className="font-medium text-purple-900">
+                  {campusData.rankingWithinCountry}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Global ranking position</p>
-                <p className="font-medium">{campusData.globalRankingPosition}</p>
+                <p className="font-medium">
+                  {campusData.globalRankingPosition}
+                </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Does the university have dormitories</p>
-                <p className="font-medium">{campusData.hasDormitories ? "Yes" : "No"}</p>
+                <p className="text-sm text-gray-500">
+                  Does the university have dormitories
+                </p>
+                <p className="font-medium">
+                  {campusData.hasDormitories ? "Yes" : "No"}
+                </p>
               </div>
             </div>
           </Card>
@@ -214,7 +256,8 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
             <div className="p-4">
               <p className="text-sm text-gray-500">Dormitory fee range</p>
               <p className="font-medium">
-                {campusData.dormitoryFeeRangeMin} - {campusData.dormitoryFeeRangeMax}
+                {campusData.dormitoryFeeRangeMin} -{" "}
+                {campusData.dormitoryFeeRangeMax}
               </p>
             </div>
           </Card>
@@ -222,7 +265,14 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
           <Card className="overflow-hidden">
             <div className="p-4">
               <div className="prose max-w-none">
-                <div dangerouslySetInnerHTML={{ __html: campusData.aboutUniversity.english.replace(/\n/g, "<br/>") }} />
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: campusData.aboutUniversity.english.replace(
+                      /\n/g,
+                      "<br/>"
+                    ),
+                  }}
+                />
               </div>
             </div>
           </Card>
@@ -233,7 +283,9 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Information about campus</DialogTitle>
+            <DialogTitle className="text-xl font-bold">
+              Information about campus
+            </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6">
@@ -260,7 +312,9 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
             </div>
 
             <div>
-              <Label htmlFor="proportionOfEmployedGraduates">Proportion of employed graduates</Label>
+              <Label htmlFor="proportionOfEmployedGraduates">
+                Proportion of employed graduates
+              </Label>
               <Input
                 id="proportionOfEmployedGraduates"
                 name="proportionOfEmployedGraduates"
@@ -271,7 +325,9 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
             </div>
 
             <div>
-              <Label htmlFor="rankingWithinCountry">Ranking within the country</Label>
+              <Label htmlFor="rankingWithinCountry">
+                Ranking within the country
+              </Label>
               <Input
                 id="rankingWithinCountry"
                 name="rankingWithinCountry"
@@ -294,7 +350,9 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
             </div>
 
             <div>
-              <Label htmlFor="globalRankingPosition">Global ranking position</Label>
+              <Label htmlFor="globalRankingPosition">
+                Global ranking position
+              </Label>
               <Input
                 id="globalRankingPosition"
                 name="globalRankingPosition"
@@ -321,16 +379,20 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
               <Checkbox
                 id="hasDormitories"
                 checked={formData.hasDormitories}
-                onCheckedChange={(checked) => {
-                  setFormData({ ...formData, hasDormitories: checked })
+                onCheckedChange={(checked: boolean) => {
+                  setFormData({ ...formData, hasDormitories: checked });
                 }}
               />
-              <Label htmlFor="hasDormitories">Does the university have dormitories</Label>
+              <Label htmlFor="hasDormitories">
+                Does the university have dormitories
+              </Label>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="dormitoryFeeRangeMin">Dormitory fee range (min)</Label>
+                <Label htmlFor="dormitoryFeeRangeMin">
+                  Dormitory fee range (min)
+                </Label>
                 <Input
                   id="dormitoryFeeRangeMin"
                   name="dormitoryFeeRangeMin"
@@ -340,7 +402,9 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
                 />
               </div>
               <div>
-                <Label htmlFor="dormitoryFeeRangeMax">Dormitory fee range (max)</Label>
+                <Label htmlFor="dormitoryFeeRangeMax">
+                  Dormitory fee range (max)
+                </Label>
                 <Input
                   id="dormitoryFeeRangeMax"
                   name="dormitoryFeeRangeMax"
@@ -353,7 +417,11 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
 
             <div>
               <Label>About the university</Label>
-              <Tabs defaultValue="english" className="mt-2" onValueChange={setActiveTab}>
+              <Tabs
+                defaultValue="english"
+                className="mt-2"
+                onValueChange={setActiveTab}
+              >
                 <TabsList className="bg-purple-100">
                   <TabsTrigger
                     value="english"
@@ -417,8 +485,12 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
                       <option>Heading 1</option>
                       <option>Heading 2</option>
                     </select>
-                    <button className="p-1 hover:bg-gray-100 rounded font-bold">B</button>
-                    <button className="p-1 hover:bg-gray-100 rounded italic">I</button>
+                    <button className="p-1 hover:bg-gray-100 rounded font-bold">
+                      B
+                    </button>
+                    <button className="p-1 hover:bg-gray-100 rounded italic">
+                      I
+                    </button>
                     <button className="p-1 hover:bg-gray-100 rounded">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -513,10 +585,16 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditModalOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleSave} className="bg-purple-900 hover:bg-purple-800">
+              <Button
+                onClick={handleSave}
+                className="bg-purple-900 hover:bg-purple-800"
+              >
                 Save
               </Button>
             </div>
@@ -524,6 +602,5 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-

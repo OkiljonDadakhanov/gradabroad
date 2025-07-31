@@ -156,7 +156,9 @@ export function AcademicProgramsSection() {
 
       <div className="space-y-4">
         {!loading && programs.length === 0 && (
-          <div className="text-center py-8 text-gray-500 text-sm">SOON</div>
+          <div className="text-center py-8 text-gray-500 text-sm">
+            No academic programs found.
+          </div>
         )}
 
         {programs.map((program) => (

@@ -26,7 +26,6 @@ const EMPTY_DATA: CampusInfoData = {
   proportionOfEmployedGraduates: "",
   rankingWithinCountry: "",
   globalRankingPosition: "",
-  websiteLink: "",
   hasDormitories: false,
   dormitoryFeeRangeMin: "",
   dormitoryFeeRangeMax: "",
@@ -154,15 +153,7 @@ export function CampusAddModal({
               onChange={handleChange}
             />
           </div>
-          <div>
-            <Label htmlFor="websiteLink">University Website Link</Label>
-            <Input
-              id="websiteLink"
-              name="websiteLink"
-              value={values.websiteLink}
-              onChange={handleChange}
-            />
-          </div>
+          
           <div className="flex items-center space-x-2">
             <Checkbox
               id="hasDormitories"

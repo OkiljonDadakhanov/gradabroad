@@ -43,7 +43,6 @@ export function CampusInfoSection() {
           proportionOfEmployedGraduates: String(data.graduates_employed || ""),
           rankingWithinCountry: String(data.ranking_local || ""),
           globalRankingPosition: String(data.ranking_global || ""),
-          websiteLink: data.website_link || "",
           hasDormitories: data.dormitory_available === "Yes",
           dormitoryFeeRangeMin:
             data.dormitory_info?.split(" - ")[0]?.trim() || "",
@@ -79,7 +78,6 @@ export function CampusInfoSection() {
       ranking_global: Number(newData.globalRankingPosition),
       dormitory_info: `${newData.dormitoryFeeRangeMin} - ${newData.dormitoryFeeRangeMax} USD`,
       dormitory_available: newData.hasDormitories ? "Yes" : null,
-      website_link: newData.websiteLink,
       description: newData.aboutUniversity.english,
     };
 
@@ -163,12 +161,7 @@ export function CampusInfoSection() {
                   {campusData.dormitoryFeeRangeMax} USD
                 </p>
               </div>
-              <div>
-                <p className="text-sm text-gray-500">Website</p>
-                <p className="text-base font-medium text-purple-700 underline break-words">
-                  {campusData.websiteLink}
-                </p>
-              </div>
+              
               <div className="sm:col-span-2">
                 <p className="text-sm text-gray-500">About the university</p>
                 <p className="text-base font-medium text-gray-900 whitespace-pre-line">
