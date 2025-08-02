@@ -50,11 +50,11 @@ export function CampusEditModal({
     setLoading(true);
 
     const payload = {
-      year_established: Number(values.yearOfEstablishment),
-      graduates_total: Number(values.numberOfGraduates),
-      graduates_employed: Number(values.proportionOfEmployedGraduates),
-      ranking_local: Number(values.rankingWithinCountry),
-      ranking_global: Number(values.globalRankingPosition),
+      year_established: values.yearOfEstablishment,
+      graduates_total: values.numberOfGraduates,
+      graduates_employed: values.proportionOfEmployedGraduates,
+      ranking_local: values.rankingWithinCountry,
+      ranking_global: values.globalRankingPosition,
       dormitory_fee: `${values.dormitoryFeeRangeMin} - ${values.dormitoryFeeRangeMax} USD`,
       dormitory_available: values.hasDormitories ? "Yes" : null,
       description: values.aboutUniversity.english,
@@ -86,8 +86,8 @@ export function CampusEditModal({
         numberOfGraduates: updatedRaw.graduates_total?.toString() ?? "",
         proportionOfEmployedGraduates:
           updatedRaw.graduates_employed?.toString() ?? "",
-        rankingWithinCountry: updatedRaw.ranking_local?.toString() ?? "",
-        globalRankingPosition: updatedRaw.ranking_global?.toString() ?? "",
+        rankingWithinCountry: String(updatedRaw.ranking_local ?? ""), // fix here
+        globalRankingPosition: String(updatedRaw.ranking_global ?? ""),
         dormitoryFeeRangeMin:
           updatedRaw.dormitory_fee?.split(" - ")[0]?.trim() ?? "",
         dormitoryFeeRangeMax:

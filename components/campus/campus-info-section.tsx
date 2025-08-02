@@ -41,8 +41,8 @@ export function CampusInfoSection() {
           yearOfEstablishment: String(data.year_established || ""),
           numberOfGraduates: String(data.graduates_total || ""),
           proportionOfEmployedGraduates: String(data.graduates_employed || ""),
-          rankingWithinCountry: String(data.ranking_local || ""),
-          globalRankingPosition: String(data.ranking_global || ""),
+          rankingWithinCountry: String(data.ranking_local ?? ""), // Accepts both number & string
+          globalRankingPosition: String(data.ranking_global ?? ""), // Same here
           hasDormitories: data.dormitory_available === "Yes",
           dormitoryFeeRangeMin:
             data.dormitory_fee?.split(" - ")[0]?.trim() || "",
@@ -71,11 +71,11 @@ export function CampusInfoSection() {
     if (!token) return;
 
     const payload = {
-      year_established: Number(newData.yearOfEstablishment),
-      graduates_total: Number(newData.numberOfGraduates),
-      graduates_employed: Number(newData.proportionOfEmployedGraduates),
-      ranking_local: Number(newData.rankingWithinCountry),
-      ranking_global: Number(newData.globalRankingPosition),
+      year_established: newData.yearOfEstablishment,
+      graduates_total: newData.numberOfGraduates,
+      graduates_employed: newData.proportionOfEmployedGraduates,
+      ranking_local: newData.rankingWithinCountry,
+      ranking_global: newData.globalRankingPosition,
       dormitory_fee: `${newData.dormitoryFeeRangeMin} - ${newData.dormitoryFeeRangeMax} USD`,
       dormitory_available: newData.hasDormitories ? "Yes" : null,
       description: newData.aboutUniversity.english,
@@ -161,7 +161,7 @@ export function CampusInfoSection() {
                   {campusData.dormitoryFeeRangeMax} USD
                 </p>
               </div>
-              
+
               <div className="sm:col-span-2">
                 <p className="text-sm text-gray-500">About the university</p>
                 <p className="text-base font-medium text-gray-900 whitespace-pre-line">
