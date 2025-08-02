@@ -65,15 +65,15 @@ export function GalleryGrid({ images, onEdit, onDelete }: GalleryGridProps) {
           </div>
 
           <div className="p-4">
-            <h3 className="font-medium text-lg text-purple-900 truncate">
+            {/* <h3 className="font-medium text-lg text-purple-900 truncate">
               {image.title || "Untitled"}
-            </h3>
+            </h3> */}
             <p className="text-gray-600 text-sm mt-1 line-clamp-2">
               {image.description || "No description provided."}
             </p>
-            <p className="text-gray-500 text-xs mt-2">
+            {/* <p className="text-gray-500 text-xs mt-2">
               {new Date(image.date).toLocaleDateString()}
-            </p>
+            </p> */}
           </div>
         </div>
       ))}

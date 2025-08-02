@@ -97,11 +97,11 @@ export function GalleryImageModal({
 
       const multipleImages: GalleryImageFormData[] = images.map(
         (file, index) => ({
-          title: formValues.title || file.name,
+          // title: formValues.title || file.name,
           description: formValues.description,
           imageUrl: "", // Will be set after upload
           altText: formValues.altText || file.name.split(".")[0],
-          date: formValues.date,
+          // date: formValues.date,
           imageFile: file,
         })
       );
@@ -117,6 +117,7 @@ export function GalleryImageModal({
         ...formValues,
         id: initialData?.id,
         imageUrl: initialData?.imageUrl || images[0]?.name || "",
+        imageFile: images[0],
       });
     }
 
@@ -145,7 +146,7 @@ export function GalleryImageModal({
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
-          <div>
+          {/* <div>
             <Label htmlFor="title">Image title</Label>
             <Input
               id="title"
@@ -154,7 +155,7 @@ export function GalleryImageModal({
               onChange={handleChange}
               className="mt-1"
             />
-          </div>
+          </div> */}
 
           <div>
             <Label htmlFor="description">Description</Label>
@@ -234,7 +235,7 @@ export function GalleryImageModal({
             />
           </div>
 
-          <div>
+          {/* <div>
             <Label htmlFor="date">Date</Label>
             <Input
               id="date"
@@ -244,7 +245,7 @@ export function GalleryImageModal({
               onChange={handleChange}
               className="mt-1"
             />
-          </div>
+          </div> */}
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={handleCancel}>

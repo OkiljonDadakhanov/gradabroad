@@ -48,9 +48,9 @@ export function GallerySection() {
           id: img.id.toString(),
           imageUrl: img.image_url,
           altText: img.alt_text || cat.name,
-          title: img.title || "Untitled",
+          // title: img.title || "Untitled",
           description: img.description || "",
-          date: img.uploaded_at,
+          // date: img.uploaded_at,
         })),
       }));
 
@@ -111,24 +111,32 @@ export function GallerySection() {
     await fetchCategories();
   };
 
-  const handleEditImage = async (image: GalleryImage) => {
+  const handleEditImage = async (
+    image: GalleryImage | GalleryImageFormData
+  ) => {
     const token = localStorage.getItem("accessToken");
-    if (!token || !image.id) return;
+    if (!token || !image.id || !selectedCategory) return;
+
+    const formData = new FormData();
+    formData.append("category_id", selectedCategory.id.toString());
+
+    if ("imageFile" in image && image.imageFile) {
+      formData.append("image", image.imageFile);
+    }
+
+    // formData.append("title", image.title || "");
+    formData.append("description", image.description || "");
+    formData.append("alt_text", image.altText || "");
 
     try {
       const res = await fetch(
         `https://api.gradabroad.net/api/media/gallery/images/${image.id}/`,
         {
-          method: "PUT",
+          method: "PATCH", // PATCH is safer for partial updates
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            title: image.title,
-            description: image.description,
-            alt_text: image.altText,
-          }),
+          body: formData,
         }
       );
 
@@ -139,10 +147,11 @@ export function GallerySection() {
     } catch (err) {
       toast({
         title: "Error",
-        description: "Failed to update image",
+        description: (err as Error).message,
         variant: "destructive",
       });
     }
+
     setIsEditModalOpen(false);
   };
 
