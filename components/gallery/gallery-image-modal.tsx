@@ -12,9 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useForm } from "@/hooks/use-form";
-import type { GalleryImage, GalleryImageFormData } from "@/types/gallery";
 import { X, Upload } from "lucide-react";
+import type { GalleryImage, GalleryImageFormData } from "@/types/gallery";
 
 interface GalleryImageModalProps {
   isOpen: boolean;
@@ -37,31 +36,32 @@ export function GalleryImageModal({
 }: GalleryImageModalProps) {
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
-  const [formValues, setFormValues] = useState<GalleryImageFormData>({
-    title: "",
-    description: "",
-    imageUrl: "",
-    altText: "",
-    date: new Date().toISOString().split("T")[0],
-  });
-
   const [error, setError] = useState<string | null>(null);
+
+  const [formValues, setFormValues] = useState<GalleryImageFormData>({
+    title: initialData?.title || "",
+    description: initialData?.description || "",
+    imageUrl: initialData?.imageUrl || "",
+    altText: initialData?.altText || "",
+    date: initialData?.date || new Date().toISOString().split("T")[0], // YYYY-MM-DD
+  });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-    const files = Array.from(e.target.files);
 
+    const files = Array.from(e.target.files);
     if (files.length > 10) {
       setError("You can upload up to 10 images at once.");
       return;
     }
 
-    const previews: string[] = [];
     const validFiles: File[] = [];
+    setPreviews([]); // Reset previous
 
     files.forEach((file) => {
       if (file.size <= 5 * 1024 * 1024) {
         validFiles.push(file);
+
         const reader = new FileReader();
         reader.onload = (event) => {
           if (event.target?.result) {
@@ -90,31 +90,43 @@ export function GalleryImageModal({
 
   const handleSubmit = () => {
     if (isMultiple) {
-      if (!images.length) return setError("Please upload at least one image.");
+      if (!images.length) {
+        setError("Please upload at least one image.");
+        return;
+      }
+
       const multipleImages: GalleryImageFormData[] = images.map(
         (file, index) => ({
           title: formValues.title || file.name,
           description: formValues.description,
-          imageUrl: "", // to be replaced after upload
+          imageUrl: "", // Will be set after upload
           altText: formValues.altText || file.name.split(".")[0],
           date: formValues.date,
-          imageFile: file, // this is the key for upload
+          imageFile: file,
         })
       );
+
       onSave(multipleImages);
     } else {
-      if (!images[0] && !initialData)
-        return setError("Please upload an image.");
+      if (!images[0] && !initialData) {
+        setError("Please upload an image.");
+        return;
+      }
+
       onSave({
         ...formValues,
         id: initialData?.id,
         imageUrl: initialData?.imageUrl || images[0]?.name || "",
       });
     }
-    handleCancel();
+
+    handleCancel(); // Clean up
   };
 
   const handleCancel = () => {
+    setImages([]);
+    setPreviews([]);
+    setError(null);
     setFormValues({
       title: "",
       description: "",
@@ -122,9 +134,6 @@ export function GalleryImageModal({
       altText: "",
       date: new Date().toISOString().split("T")[0],
     });
-    setImages([]);
-    setPreviews([]);
-    setError(null);
     onClose();
   };
 

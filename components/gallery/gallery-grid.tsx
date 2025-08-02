@@ -1,20 +1,9 @@
 "use client";
 
-import type React from "react";
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Pencil, Trash2 } from "lucide-react";
+import type { GalleryImage } from "@/types/gallery";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useForm } from "@/hooks/use-form";
-import type { GalleryImage, GalleryImageFormData } from "@/types/gallery";
-import { X, Upload, Pencil, Trash2 } from "lucide-react";
 
 interface GalleryGridProps {
   images: GalleryImage[];
@@ -52,6 +41,7 @@ export function GalleryGrid({ images, onEdit, onDelete }: GalleryGridProps) {
                   "/placeholder.svg?height=300&width=500";
               }}
             />
+
             {hoveredImageId === image.id && (
               <div className="absolute top-2 right-2 flex gap-2">
                 <Button
@@ -73,12 +63,13 @@ export function GalleryGrid({ images, onEdit, onDelete }: GalleryGridProps) {
               </div>
             )}
           </div>
+
           <div className="p-4">
             <h3 className="font-medium text-lg text-purple-900 truncate">
-              {image.title}
+              {image.title || "Untitled"}
             </h3>
             <p className="text-gray-600 text-sm mt-1 line-clamp-2">
-              {image.description}
+              {image.description || "No description provided."}
             </p>
             <p className="text-gray-500 text-xs mt-2">
               {new Date(image.date).toLocaleDateString()}

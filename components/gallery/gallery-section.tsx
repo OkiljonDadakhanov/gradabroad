@@ -27,86 +27,71 @@ export function GallerySection() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
 
-  // 🔁 Fetch from API
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const res = await fetch(
-          "https://api.gradabroad.net/api/media/gallery/categories/"
-        );
-        const data = await res.json();
-        const mapped = data.map((cat: any) => ({
-          id: cat.id,
-          name: cat.name,
-          images: cat.images.map((img: any) => ({
-            id: img.id.toString(),
-            imageUrl: img.image_url,
-            altText: cat.name,
-            title: "",
-            description: "",
-            date: img.uploaded_at,
-          })),
-        }));
-        setCategories(mapped);
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch gallery categories",
-          variant: "destructive",
-        });
-      }
-    };
+  const fetchCategories = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
 
+    try {
+      const res = await fetch(
+        "https://api.gradabroad.net/api/media/gallery/categories/",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const data = await res.json();
+
+      const mapped: CategoryGallery[] = data.map((cat: any) => ({
+        id: cat.id,
+        name: cat.name,
+        images: (cat.images || []).map((img: any) => ({
+          id: img.id.toString(),
+          imageUrl: img.image_url,
+          altText: img.alt_text || cat.name,
+          title: img.title || "Untitled",
+          description: img.description || "",
+          date: img.uploaded_at,
+        })),
+      }));
+
+      setCategories(mapped);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch gallery categories",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
     fetchCategories();
   }, []);
 
-  // Add image locally (not API integrated yet)
   const handleAddImage = async (images: GalleryImageFormData[]) => {
     if (!selectedCategory) return;
-
     const token = localStorage.getItem("accessToken");
-    if (!token) {
-      toast({
-        title: "Authentication Error",
-        description: "Access token is missing.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const uploadedImages: GalleryImage[] = [];
+    if (!token) return;
 
     for (const img of images) {
-      if (!img.imageFile) continue;
-
       const formData = new FormData();
       formData.append("category_id", selectedCategory.id.toString());
-      formData.append("image", img.imageFile);
+      formData.append("image", img.imageFile!);
+      formData.append("description", img.description);
+      formData.append("alt_text", img.altText);
+      formData.append("title", img.title);
 
       try {
         const res = await fetch(
           "https://api.gradabroad.net/api/media/gallery/images/",
           {
             method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
             body: formData,
           }
         );
 
         if (!res.ok) throw new Error("Upload failed");
-
-        const result = await res.json();
-
-        uploadedImages.push({
-          id: result.id.toString(),
-          imageUrl: result.image_url,
-          altText: img.altText,
-          title: img.title,
-          description: img.description,
-          date: result.uploaded_at,
-        });
       } catch (err) {
         toast({
           title: "Upload failed",
@@ -116,75 +101,98 @@ export function GallerySection() {
       }
     }
 
-    if (uploadedImages.length > 0) {
-      setCategories((prev) =>
-        prev.map((cat) =>
-          cat.id === selectedCategory.id
-            ? { ...cat, images: [...cat.images, ...uploadedImages] }
-            : cat
-        )
-      );
-      toast({
-        title: "Upload successful",
-        description: `Uploaded ${uploadedImages.length} image(s) to ${selectedCategory.name}`,
-        variant: "success",
-      });
-    }
+    toast({
+      title: "Upload successful",
+      description: `Uploaded ${images.length} image(s) to ${selectedCategory.name}`,
+      variant: "success",
+    });
 
     setIsAddModalOpen(false);
+    await fetchCategories();
   };
 
-  const handleEditImage = (image: GalleryImage) => {
-    setCategories((prev) =>
-      prev.map((cat) => ({
-        ...cat,
-        images: cat.images.map((img) => (img.id === image.id ? image : img)),
-      }))
-    );
+  const handleEditImage = async (image: GalleryImage) => {
+    const token = localStorage.getItem("accessToken");
+    if (!token || !image.id) return;
+
+    try {
+      const res = await fetch(
+        `https://api.gradabroad.net/api/media/gallery/images/${image.id}/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title: image.title,
+            description: image.description,
+            alt_text: image.altText,
+          }),
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to update image");
+
+      toast({ title: "Image updated", variant: "success" });
+      await fetchCategories();
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to update image",
+        variant: "destructive",
+      });
+    }
     setIsEditModalOpen(false);
-    toast({ title: "Image updated", variant: "success" });
   };
 
-  const handleDeleteImage = () => {
-    if (!currentImage || !selectedCategory) return;
-    setCategories((prev) =>
-      prev.map((cat) =>
-        cat.id === selectedCategory.id
-          ? {
-              ...cat,
-              images: cat.images.filter((img) => img.id !== currentImage.id),
-            }
-          : cat
-      )
-    );
-    setIsDeleteDialogOpen(false);
-    setCurrentImage(null);
-    toast({ title: "Image deleted", variant: "success" });
+  const handleDeleteImage = async () => {
+    if (!currentImage) return;
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    try {
+      const res = await fetch(
+        `https://api.gradabroad.net/api/media/gallery/images/${currentImage.id}/`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!res.ok) throw new Error("Delete failed");
+      toast({ title: "Image deleted", variant: "success" });
+      await fetchCategories();
+      setCurrentImage(null);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: (err as Error).message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
+    }
   };
 
-  const handleOpenEditModal = (image: GalleryImage) => {
-    setCurrentImage(image);
-    setIsEditModalOpen(true);
-  };
-
-  const handleOpenDeleteDialog = (image: GalleryImage) => {
-    setCurrentImage(image);
-    setIsDeleteDialogOpen(true);
-  };
-
-  // ✅ POST new category to backend
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) return;
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
 
     try {
       const res = await fetch(
         "https://api.gradabroad.net/api/media/gallery/categories/",
         {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({ name: newCategoryName.trim() }),
         }
       );
+
       const data = await res.json();
       setCategories((prev) => [
         ...prev,
@@ -237,8 +245,14 @@ export function GallerySection() {
           </div>
           <GalleryGrid
             images={category.images}
-            onEdit={handleOpenEditModal}
-            onDelete={handleOpenDeleteDialog}
+            onEdit={(img) => {
+              setCurrentImage(img);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={(img) => {
+              setCurrentImage(img);
+              setIsDeleteDialogOpen(true);
+            }}
           />
         </div>
       ))}
@@ -252,22 +266,22 @@ export function GallerySection() {
       />
 
       {currentImage && (
-        <GalleryImageModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          onSave={handleEditImage}
-          initialData={currentImage}
-          title="Edit Image"
-        />
-      )}
+        <>
+          <GalleryImageModal
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            onSave={handleEditImage}
+            initialData={currentImage}
+            title="Edit Image"
+          />
 
-      {currentImage && (
-        <GalleryDeleteDialog
-          isOpen={isDeleteDialogOpen}
-          onClose={() => setIsDeleteDialogOpen(false)}
-          onConfirm={handleDeleteImage}
-          imageTitle={currentImage.title}
-        />
+          <GalleryDeleteDialog
+            isOpen={isDeleteDialogOpen}
+            onClose={() => setIsDeleteDialogOpen(false)}
+            onConfirm={handleDeleteImage}
+            imageTitle={currentImage.title}
+          />
+        </>
       )}
     </div>
   );
