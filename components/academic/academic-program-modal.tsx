@@ -31,7 +31,7 @@ import {
   CATEGORIES,
   DEGREE_TYPES,
 } from "@/types/academic";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { TermsAndConditionsModal } from "./TermsAndConditionsModal";
 
 const defaultFormData: AcademicProgramFormData = {
@@ -39,24 +39,21 @@ const defaultFormData: AcademicProgramFormData = {
   category: "",
   degreeType: "",
   languageRequirement: [],
-  contractPrice: "",
-  start_date: new Date(),
-  end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)),
   documentTypes: [],
-  description: {
-    english: "",
-    korean: "",
-    russian: "",
-    uzbek: "",
-  },
+  contractPrice: "",
+  description: { english: "", korean: "", russian: "", uzbek: "" },
   active: true,
+  start_date: new Date(),
+  end_date: new Date(),
+  results_announcement_date: new Date(),
+  admissionStart: new Date(),
+  admissionEnd: new Date(),
 };
 
 interface AcademicProgramModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: AcademicProgram) => void;
-  initialData?: AcademicProgram;
   title: string;
 }
 
@@ -64,19 +61,14 @@ export function AcademicProgramModal({
   isOpen,
   onClose,
   onSave,
-  initialData,
   title,
 }: AcademicProgramModalProps) {
   const [activeTab, setActiveTab] = useState("english");
-
-  const transformedInitialData: AcademicProgramFormData =
-    initialData && initialData.start_date && initialData.end_date
-      ? {
-          ...initialData,
-          start_date: parseISO(initialData.start_date),
-          end_date: parseISO(initialData.end_date),
-        }
-      : defaultFormData;
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [guideFile, setGuideFile] = useState<File | null>(null);
+  const [formFile, setFormFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const {
     values,
@@ -85,41 +77,62 @@ export function AcademicProgramModal({
     handleSelectChange,
     handleNestedChange,
     reset,
-  } = useForm<AcademicProgramFormData>(transformedInitialData);
+  } = useForm<AcademicProgramFormData>(defaultFormData);
+
+  const handleRichTextChange = (lang: string, content: string) => {
+    handleNestedChange("description", lang, content);
+  };
 
   const handleSubmit = async () => {
     const token = localStorage.getItem("accessToken");
     if (!token) return alert("You are not authenticated.");
 
-    const payload = {
-      programme: {
-        name: values.name,
-        field_of_study: values.category,
-        degreeType: values.degreeType,
-        duration_years: 4,
-        contractPrice: Number(values.contractPrice),
-        platformApplicationFee: 0,
-        about_program: values.description.english,
-        start_date: format(values.start_date, "yyyy-MM-dd"),
-        end_date: format(values.end_date, "yyyy-MM-dd"),
-        active: values.active,
-      },
-      requirements: [
-        ...values.languageRequirement.map((item) => ({
-          requirementType: "english",
-          label: item.name,
-          required: true,
-          min_score: parseFloat(item.requirement),
-          note: null,
-        })),
-        ...values.documentTypes.map((doc) => ({
-          requirementType: "document",
-          label: doc,
-          required: true,
-          note: null,
-        })),
-      ],
-    };
+    setLoading(true);
+
+    const formData = new FormData();
+
+    formData.append("name", values.name);
+    formData.append("field_of_study", values.category);
+    formData.append("degreeType", values.degreeType);
+    formData.append("contractPrice", values.contractPrice);
+    formData.append("platformApplicationFee", "0.00");
+    formData.append("about_program", values.description.english);
+    formData.append("active", String(values.active));
+    formData.append("start_date", format(values.start_date, "yyyy-MM-dd"));
+    formData.append("end_date", format(values.end_date, "yyyy-MM-dd"));
+    formData.append(
+      "admissionStart",
+      format(values.admissionStart, "yyyy-MM-dd")
+    );
+    formData.append("admissionEnd", format(values.admissionEnd, "yyyy-MM-dd"));
+    formData.append(
+      "results_announcement_date",
+      format(values.results_announcement_date, "yyyy-MM-dd")
+    );
+    formData.append(
+      "description",
+      JSON.stringify({ en: values.description.english })
+    );
+    formData.append("documentTypes", JSON.stringify(values.documentTypes));
+
+    if (guideFile) formData.append("application_guide", guideFile);
+    if (formFile) formData.append("application_form", formFile);
+
+    values.languageRequirement.forEach((req, index) => {
+      formData.append(`requirements[${index}][requirementType]`, "english");
+      formData.append(`requirements[${index}][label]`, req.name);
+      formData.append(
+        `requirements[${index}][note]`,
+        req.requirement ? `Minimum ${req.requirement} band` : ""
+      );
+    });
+
+    values.documentTypes.forEach((doc, index) => {
+      const idx = values.languageRequirement.length + index;
+      formData.append(`requirements[${idx}][requirementType]`, "document");
+      formData.append(`requirements[${idx}][label]`, doc);
+      formData.append(`requirements[${idx}][required]`, "true");
+    });
 
     try {
       const res = await fetch(
@@ -127,26 +140,27 @@ export function AcademicProgramModal({
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(payload),
+          body: formData,
         }
       );
 
-      if (!res.ok) {
-        const error = await res.json();
-        console.error("POST error", error);
-        alert("Failed to create program: " + JSON.stringify(error));
+      const created = await res.json();
+
+      if (!res.ok || !created?.id) {
+        alert("Failed to create program: " + JSON.stringify(created));
         return;
       }
 
-      const { programme } = await res.json();
-      onSave({ ...values, id: `api-${programme.id}` });
+      onSave({ ...values, id: `api-${created.id}` });
       onClose();
-    } catch (err) {
+      reset();
+    } catch (err: any) {
       console.error("POST error", err);
-      alert("An error occurred while saving the program.");
+      alert("Unexpected error: " + (err?.message || "Unknown"));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -154,13 +168,6 @@ export function AcademicProgramModal({
     reset();
     onClose();
   };
-
-  const handleRichTextChange = (lang: string, content: string) => {
-    handleNestedChange("description", lang, content);
-  };
-
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
@@ -296,6 +303,39 @@ export function AcademicProgramModal({
             </div>
           </div>
 
+          <div>
+            <Label>Application Guide (PDF/PNG)</Label>
+            <Input
+              type="file"
+              accept=".pdf,.png"
+              onChange={(e) => setGuideFile(e.target.files?.[0] || null)}
+            />
+          </div>
+
+          <div>
+            <Label>Application Form (PDF/PNG)</Label>
+            <Input
+              type="file"
+              accept=".pdf,.png"
+              onChange={(e) => setFormFile(e.target.files?.[0] || null)}
+            />
+          </div>
+
+          <div>
+            <Label>Results Announcement Date</Label>
+            <DatePicker
+              selected={values.results_announcement_date}
+              onChange={(date) =>
+                setValues({
+                  ...values,
+                  results_announcement_date: date || new Date(),
+                })
+              }
+              dateFormat="yyyy-MM-dd"
+              className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
+            />
+          </div>
+
           <div className="flex items-center gap-2">
             <Checkbox
               id="active"
@@ -331,6 +371,7 @@ export function AcademicProgramModal({
               onChange={handleRichTextChange}
             />
           </div>
+
           <div className="flex items-center gap-2">
             <Checkbox
               id="terms"

@@ -27,7 +27,7 @@ export function AcademicProgramViewModal({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
-            {program.name}
+            View Academic Program
           </DialogTitle>
         </DialogHeader>
 
@@ -35,11 +35,11 @@ export function AcademicProgramViewModal({
           <Card className="p-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-500">Category</p>
+                <p className="text-sm text-gray-500">Field of Study</p>
                 <p className="font-medium">{program.category}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Degree type</p>
+                <p className="text-sm text-gray-500">Degree Type</p>
                 <p className="font-medium">{program.degreeType}</p>
               </div>
             </div>
@@ -107,6 +107,49 @@ export function AcademicProgramViewModal({
           </Card>
 
           <Card className="p-4">
+            <p className="text-sm text-gray-500">Results Announcement Date</p>
+            <p className="font-medium">
+              {program.results_announcement_date
+                ? new Date(
+                    program.results_announcement_date
+                  ).toLocaleDateString()
+                : "Not specified"}
+            </p>
+          </Card>
+
+          <Card className="p-4">
+            <p className="text-sm text-gray-500">Application Guide</p>
+            {program.application_guide_url ? (
+              <a
+                href={program.application_guide_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-purple-600 hover:underline mt-2 inline-block"
+              >
+                Download Application Guide
+              </a>
+            ) : (
+              <p className="text-gray-500 mt-2">No guide available</p>
+            )}
+          </Card>
+
+          <Card className="p-4">
+            <p className="text-sm text-gray-500">Application Form</p>
+            {program.application_form_url ? (
+              <a
+                href={program.application_form_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-purple-600 hover:underline mt-2 inline-block"
+              >
+                Download Application Form
+              </a>
+            ) : (
+              <p className="text-gray-500 mt-2">No form available</p>
+            )}
+          </Card>
+
+          <Card className="p-4">
             <p className="text-sm text-gray-500 mb-2">Program Description</p>
             <Tabs defaultValue="english">
               <TabsList className="bg-purple-100">
@@ -140,14 +183,7 @@ export function AcademicProgramViewModal({
                     />
                   ) : (
                     <p className="text-gray-500">
-                      No description available in{" "}
-                      {lang === "english"
-                        ? "English"
-                        : lang === "korean"
-                        ? "Korean"
-                        : lang === "russian"
-                        ? "Russian"
-                        : "Uzbek"}
+                      No description available in {lang}
                     </p>
                   )}
                 </TabsContent>
@@ -158,7 +194,7 @@ export function AcademicProgramViewModal({
           <div className="flex justify-end">
             <Button
               onClick={onClose}
-              className="bg-purple-900 hover:bg-purple-800"
+              className="bg-purple-900 hover:bg-purple-800 text-white"
             >
               Close
             </Button>

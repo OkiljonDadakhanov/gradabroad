@@ -48,6 +48,9 @@ export function AcademicProgramEditModal({
     ...initialData,
     admissionStart: parseISO(initialData.admissionStart),
     admissionEnd: parseISO(initialData.admissionEnd),
+    results_announcement_date: initialData.results_announcement_date
+      ? parseISO(initialData.results_announcement_date)
+      : new Date(),
   };
 
   const {
@@ -61,6 +64,8 @@ export function AcademicProgramEditModal({
   } = useForm<AcademicProgram>(transformedInitialData);
 
   const [loading, setLoading] = useState(false);
+  const [guideFile, setGuideFile] = useState<File | null>(null);
+  const [formFile, setFormFile] = useState<File | null>(null);
 
   const handleRichTextChange = (lang: string, content: string) => {
     handleNestedChange("description", lang, content);
@@ -72,35 +77,43 @@ export function AcademicProgramEditModal({
 
     setLoading(true);
 
-    const requirements = [
-      ...(values.languageRequirement || []).map((req) => ({
-        requirementType: "language",
-        label: req.name,
-        required: true,
-        min_score: req.requirement ? parseFloat(req.requirement) : null,
-        note: "",
-      })),
-      ...(values.documentTypes || []).map((doc) => ({
-        requirementType: "document",
-        label: doc,
-        required: true,
-      })),
-    ];
+    const formData = new FormData();
 
-    const body = {
-      programme: {
-        name: values.name,
-        field_of_study: values.category,
-        degreeType: values.degreeType,
-        contractPrice: values.contractPrice,
-        platformApplicationFee: values.platformApplicationFee || "0.00",
-        start_date: format(values.admissionStart, "yyyy-MM-dd"),
-        end_date: format(values.admissionEnd, "yyyy-MM-dd"),
-        about_program: values.description?.english || "",
-        active: values.active,
-      },
-      requirements,
-    };
+    formData.append("name", values.name);
+    formData.append("field_of_study", values.category);
+    formData.append("degreeType", values.degreeType);
+    formData.append("contractPrice", values.contractPrice);
+    formData.append(
+      "platformApplicationFee",
+      values.platformApplicationFee || "0.00"
+    );
+    formData.append("start_date", format(values.admissionStart, "yyyy-MM-dd"));
+    formData.append("end_date", format(values.admissionEnd, "yyyy-MM-dd"));
+    formData.append(
+      "results_announcement_date",
+      format(values.results_announcement_date, "yyyy-MM-dd")
+    );
+    formData.append("about_program", values.description?.english || "");
+    formData.append("active", String(values.active));
+
+    if (guideFile) formData.append("application_guide", guideFile);
+    if (formFile) formData.append("application_form", formFile);
+
+    values.languageRequirement.forEach((req, index) => {
+      formData.append(`requirements[${index}][requirementType]`, "language");
+      formData.append(`requirements[${index}][label]`, req.name);
+      formData.append(`requirements[${index}][required]`, "true");
+      if (req.requirement) {
+        formData.append(`requirements[${index}][min_score]`, req.requirement);
+      }
+    });
+
+    values.documentTypes.forEach((doc, index) => {
+      const idx = values.languageRequirement.length + index;
+      formData.append(`requirements[${idx}][requirementType]`, "document");
+      formData.append(`requirements[${idx}][label]`, doc);
+      formData.append(`requirements[${idx}][required]`, "true");
+    });
 
     const numericId = values.id.replace("api-", "");
 
@@ -110,10 +123,9 @@ export function AcademicProgramEditModal({
         {
           method: "PATCH",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(body),
+          body: formData,
         }
       );
 
@@ -149,12 +161,8 @@ export function AcademicProgramEditModal({
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs
-          defaultValue="english"
-          className="mt-2"
-          onValueChange={setActiveTab}
-        >
-          <TabsList className="bg-purple-100">
+        <Tabs defaultValue="english" onValueChange={setActiveTab}>
+          <TabsList className="bg-purple-100 mt-2">
             {["english", "korean", "russian", "uzbek"].map((lang) => (
               <TabsTrigger
                 key={lang}
@@ -252,6 +260,39 @@ export function AcademicProgramEditModal({
                 className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
               />
             </div>
+          </div>
+
+          <div>
+            <Label>Results Announcement Date</Label>
+            <DatePicker
+              selected={values.results_announcement_date}
+              onChange={(date) =>
+                setValues({
+                  ...values,
+                  results_announcement_date: date ?? new Date(),
+                })
+              }
+              dateFormat="yyyy-MM-dd"
+              className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
+            />
+          </div>
+
+          <div>
+            <Label>Application Guide (PDF/PNG)</Label>
+            <Input
+              type="file"
+              accept=".pdf,.png"
+              onChange={(e) => setGuideFile(e.target.files?.[0] || null)}
+            />
+          </div>
+
+          <div>
+            <Label>Application Form (PDF/PNG)</Label>
+            <Input
+              type="file"
+              accept=".pdf,.png"
+              onChange={(e) => setFormFile(e.target.files?.[0] || null)}
+            />
           </div>
 
           <div className="flex items-center gap-2">

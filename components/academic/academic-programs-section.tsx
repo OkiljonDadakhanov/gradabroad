@@ -54,7 +54,10 @@ export function AcademicProgramsSection() {
           )
           .map((r: any) => ({
             name: r.label,
-            requirement: String(r.min_score ?? ""),
+            requirement:
+              r.min_score !== null && r.min_score !== undefined
+                ? String(r.min_score)
+                : r.note || "",
           }));
 
         const documentTypes = (p.requirements || [])
@@ -70,6 +73,9 @@ export function AcademicProgramsSection() {
           documentTypes,
           contractPrice: p.contractPrice || p.tuition_fee || "",
           platformApplicationFee: p.platformApplicationFee || "0.00",
+          results_announcement_date: p.results_announcement_date || null,
+          application_guide_url: p.application_guide_url || null,
+          application_form_url: p.application_form_url || null,
           admissionStart: p.start_date || "",
           admissionEnd: p.end_date || "",
           description: {

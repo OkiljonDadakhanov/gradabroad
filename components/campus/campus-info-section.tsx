@@ -45,9 +45,9 @@ export function CampusInfoSection() {
           globalRankingPosition: String(data.ranking_global || ""),
           hasDormitories: data.dormitory_available === "Yes",
           dormitoryFeeRangeMin:
-            data.dormitory_info?.split(" - ")[0]?.trim() || "",
+            data.dormitory_fee?.split(" - ")[0]?.trim() || "",
           dormitoryFeeRangeMax:
-            data.dormitory_info?.split(" - ")[1]?.replace("USD", "").trim() ||
+            data.dormitory_fee?.split(" - ")[1]?.replace("USD", "").trim() ||
             "",
           aboutUniversity: {
             english: data.description || "",
@@ -76,7 +76,7 @@ export function CampusInfoSection() {
       graduates_employed: Number(newData.proportionOfEmployedGraduates),
       ranking_local: Number(newData.rankingWithinCountry),
       ranking_global: Number(newData.globalRankingPosition),
-      dormitory_info: `${newData.dormitoryFeeRangeMin} - ${newData.dormitoryFeeRangeMax} USD`,
+      dormitory_fee: `${newData.dormitoryFeeRangeMin} - ${newData.dormitoryFeeRangeMax} USD`,
       dormitory_available: newData.hasDormitories ? "Yes" : null,
       description: newData.aboutUniversity.english,
     };

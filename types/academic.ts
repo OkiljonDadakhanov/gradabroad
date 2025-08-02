@@ -6,6 +6,9 @@ export interface AcademicProgram {
   languageRequirement: LanguageRequirement[];
   contractPrice: string;
   admissionStart: string;
+  results_announcement_date?: string | null;
+  application_guide_url?: string | null;
+  application_form_url?: string | null;
   admissionEnd: string;
   documentTypes: string[];
   description: {

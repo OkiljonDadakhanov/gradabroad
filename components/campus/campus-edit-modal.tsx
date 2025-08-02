@@ -55,7 +55,7 @@ export function CampusEditModal({
       graduates_employed: Number(values.proportionOfEmployedGraduates),
       ranking_local: Number(values.rankingWithinCountry),
       ranking_global: Number(values.globalRankingPosition),
-      dormitory_info: `${values.dormitoryFeeRangeMin} - ${values.dormitoryFeeRangeMax} USD`,
+      dormitory_fee: `${values.dormitoryFeeRangeMin} - ${values.dormitoryFeeRangeMax} USD`,
       dormitory_available: values.hasDormitories ? "Yes" : null,
       description: values.aboutUniversity.english,
     };
@@ -89,9 +89,9 @@ export function CampusEditModal({
         rankingWithinCountry: updatedRaw.ranking_local?.toString() ?? "",
         globalRankingPosition: updatedRaw.ranking_global?.toString() ?? "",
         dormitoryFeeRangeMin:
-          updatedRaw.dormitory_info?.split(" - ")[0]?.trim() ?? "",
+          updatedRaw.dormitory_fee?.split(" - ")[0]?.trim() ?? "",
         dormitoryFeeRangeMax:
-          updatedRaw.dormitory_info
+          updatedRaw.dormitory_fee
             ?.split(" - ")[1]
             ?.replace("USD", "")
             ?.trim() ?? "",
