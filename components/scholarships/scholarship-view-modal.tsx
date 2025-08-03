@@ -46,7 +46,7 @@ export function ScholarshipViewModal({
             </div>
 
             <div>
-              <p className="text-sm text-gray-500">Eligibility Criteria</p>
+              <p className="text-sm text-gray-500">About</p>
               <p className="font-medium">
                 {scholarship.eligibility_criteria || "-"}
               </p>

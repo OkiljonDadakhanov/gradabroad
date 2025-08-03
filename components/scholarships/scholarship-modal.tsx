@@ -16,6 +16,7 @@ import { useForm } from "@/hooks/use-form";
 import type { Scholarship, ScholarshipFormData } from "@/types/scholarship";
 import type { AcademicProgram } from "@/types/academic";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ScholarshipModalProps {
   isOpen: boolean;
@@ -152,12 +153,14 @@ export function ScholarshipModal({
           </div>
 
           <div>
-            <Label>Eligibility Criteria *</Label>
-            <Input
+            <Label>About *</Label>
+            <Textarea
               name="eligibility_criteria"
               value={values.eligibility_criteria}
               onChange={handleChange}
               required
+              rows={5} // you can adjust the height
+              className="resize-y"
             />
           </div>
 
