@@ -81,6 +81,10 @@ export function ScholarshipModal({
       const res = await fetchWithAuth(url, {
         method: isEdit ? "PATCH" : "POST",
 
+        headers: {
+          "Content-Type": "application/json",
+        },
+
         body: JSON.stringify(payload),
       });
 

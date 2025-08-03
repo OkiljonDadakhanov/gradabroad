@@ -33,6 +33,7 @@ import {
 } from "@/types/academic";
 import { format } from "date-fns";
 import { TermsAndConditionsModal } from "./TermsAndConditionsModal";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 const defaultFormData: AcademicProgramFormData = {
   name: "",
@@ -135,13 +136,10 @@ export function AcademicProgramModal({
     });
 
     try {
-      const res = await fetch(
+      const res = await fetchWithAuth(
         "https://api.gradabroad.net/api/programmes/with-requirements/",
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           body: formData,
         }
       );
@@ -256,7 +254,7 @@ export function AcademicProgramModal({
 
             <div>
               <Label htmlFor="contractPrice">
-                Contract price per semester ($)
+                Contract price per semester approximately ($)
               </Label>
               <div className="flex items-center mt-1">
                 <span className="bg-gray-100 border border-r-0 rounded-l px-3 py-2">
@@ -397,9 +395,35 @@ export function AcademicProgramModal({
             <Button
               onClick={handleSubmit}
               className="bg-purple-900 hover:bg-purple-800"
-              disabled={!termsAccepted}
+              disabled={!termsAccepted || loading}
             >
-              Save
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <svg
+                    className="animate-spin h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 11-8 8h4z"
+                    />
+                  </svg>
+                  Saving...
+                </div>
+              ) : (
+                "Save"
+              )}
             </Button>
           </div>
         </div>

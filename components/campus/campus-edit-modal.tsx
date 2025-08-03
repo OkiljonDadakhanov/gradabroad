@@ -66,6 +66,9 @@ export function CampusEditModal({
         `https://api.gradabroad.net/api/information-about-campus/`,
         {
           method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(payload),
         }
       );
