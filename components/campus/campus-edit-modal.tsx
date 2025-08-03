@@ -15,6 +15,7 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useForm } from "@/hooks/use-form";
 import type { CampusInfoData } from "@/types/profile";
 import { toast } from "sonner";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 interface CampusEditModalProps {
   isOpen: boolean;
@@ -61,14 +62,10 @@ export function CampusEditModal({
     };
 
     try {
-      const res = await fetch(
+      const res = await fetchWithAuth(
         `https://api.gradabroad.net/api/information-about-campus/`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
           body: JSON.stringify(payload),
         }
       );

@@ -27,7 +27,7 @@ export function AcademicProgramViewModal({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
-            View Academic Program
+           {program.name || "Program Details"}
           </DialogTitle>
         </DialogHeader>
 

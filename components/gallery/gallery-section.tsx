@@ -8,6 +8,7 @@ import type { GalleryImage } from "@/types/gallery";
 import { GalleryGrid } from "./gallery-grid";
 import { GalleryDeleteDialog } from "./gallery-delete-dialog";
 import { GalleryImageModal } from "./gallery-image-modal";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 interface CategoryGallery {
   id: number;
@@ -32,11 +33,8 @@ export function GallerySection() {
     if (!token) return;
 
     try {
-      const res = await fetch(
-        "https://api.gradabroad.net/api/media/gallery/categories/",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const res = await fetchWithAuth(
+        "https://api.gradabroad.net/api/media/gallery/categories/"
       );
 
       const data = await res.json();
@@ -82,7 +80,7 @@ export function GallerySection() {
       formData.append("title", img.title);
 
       try {
-        const res = await fetch(
+        const res = await fetchWithAuth(
           "https://api.gradabroad.net/api/media/gallery/images/",
           {
             method: "POST",
@@ -129,13 +127,11 @@ export function GallerySection() {
     formData.append("alt_text", image.altText || "");
 
     try {
-      const res = await fetch(
+      const res = await fetchWithAuth(
         `https://api.gradabroad.net/api/media/gallery/images/${image.id}/`,
         {
           method: "PATCH", // PATCH is safer for partial updates
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+
           body: formData,
         }
       );
@@ -161,11 +157,10 @@ export function GallerySection() {
     if (!token) return;
 
     try {
-      const res = await fetch(
+      const res = await fetchWithAuth(
         `https://api.gradabroad.net/api/media/gallery/images/${currentImage.id}/`,
         {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
@@ -190,14 +185,11 @@ export function GallerySection() {
     if (!token) return;
 
     try {
-      const res = await fetch(
+      const res = await fetchWithAuth(
         "https://api.gradabroad.net/api/media/gallery/categories/",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+         
           body: JSON.stringify({ name: newCategoryName.trim() }),
         }
       );

@@ -39,7 +39,7 @@ export function SideNav() {
     },
     {
       icon: <Home size={20} />,
-      label: "Information about campus",
+      label: "Information about school",
       path: "/campus-info",
     },
     {

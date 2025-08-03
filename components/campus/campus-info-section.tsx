@@ -8,6 +8,7 @@ import { CampusEditModal } from "./campus-edit-modal";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { CampusInfoData } from "@/types/profile";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 export function CampusInfoSection() {
   const [campusData, setCampusData] = useState<CampusInfoData | null>(null);
@@ -21,13 +22,8 @@ export function CampusInfoSection() {
 
     setLoading(true);
     try {
-      const res = await fetch(
-        "https://api.gradabroad.net/api/information-about-campus/",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const res = await fetchWithAuth(
+        "https://api.gradabroad.net/api/information-about-campus/"
       );
 
       if (res.status === 404) {
@@ -82,7 +78,7 @@ export function CampusInfoSection() {
     };
 
     try {
-      const res = await fetch(
+      const res = await fetchWithAuth(
         "https://api.gradabroad.net/api/information-about-campus/",
         {
           method: isEdit ? "PUT" : "POST",
@@ -92,6 +88,7 @@ export function CampusInfoSection() {
           },
           body: JSON.stringify(payload),
         }
+        
       );
 
       if (!res.ok) {

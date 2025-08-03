@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "@/hooks/use-form";
 import type { Scholarship, ScholarshipFormData } from "@/types/scholarship";
 import type { AcademicProgram } from "@/types/academic";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 interface ScholarshipModalProps {
   isOpen: boolean;
@@ -77,12 +78,9 @@ export function ScholarshipModal({
       : "https://api.gradabroad.net/api/scholarships/";
 
     try {
-      const res = await fetch(url, {
+      const res = await fetchWithAuth(url, {
         method: isEdit ? "PATCH" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+
         body: JSON.stringify(payload),
       });
 

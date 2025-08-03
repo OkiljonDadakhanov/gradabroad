@@ -28,6 +28,7 @@ import { useForm } from "@/hooks/use-form";
 import { AcademicProgram, CATEGORIES, DEGREE_TYPES } from "@/types/academic";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 interface AcademicProgramEditModalProps {
   isOpen: boolean;
@@ -118,13 +119,11 @@ export function AcademicProgramEditModal({
     const numericId = values.id.replace("api-", "");
 
     try {
-      const res = await fetch(
+      const res = await fetchWithAuth(
         `https://api.gradabroad.net/api/programmes/with-requirements/${numericId}/`,
         {
           method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+         
           body: formData,
         }
       );
