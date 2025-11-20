@@ -8,6 +8,7 @@ export default function SettingsPage() {
     <AppLayout>
       {/* <SettingsSection /> */}
        <p>to be updated soon</p>
+       
     </AppLayout>
   )
 }
