@@ -1,4 +1,4 @@
-const API_BASE = "https://api.gradabroad.net";
+import { API_BASE } from "./constants";
 
 export async function refreshToken(): Promise<boolean> {
   const refresh = localStorage.getItem("refreshToken");
@@ -35,7 +35,9 @@ export async function fetchWithAuth(
 ): Promise<Response> {
   let token = localStorage.getItem("accessToken");
 
-  const res = await fetch(url, {
+  const fullUrl = url.startsWith("http") ? url : `${API_BASE}${url}`;
+
+  const res = await fetch(fullUrl, {
     ...options,
     headers: {
       ...options.headers,
@@ -55,11 +57,54 @@ export async function fetchWithAuth(
 
   token = localStorage.getItem("accessToken");
 
-  return fetch(url, {
+  return fetch(fullUrl, {
     ...options,
     headers: {
       ...options.headers,
       Authorization: `Bearer ${token}`,
     },
   });
+}
+
+// Public fetch without authentication (for browsing programs, etc.)
+export async function fetchPublic(
+  url: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  const fullUrl = url.startsWith("http") ? url : `${API_BASE}${url}`;
+
+  return fetch(fullUrl, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+}
+
+// Check if user is authenticated
+export function isAuthenticated(): boolean {
+  if (typeof window === "undefined") return false;
+  return !!localStorage.getItem("accessToken");
+}
+
+// Get current user type from token (basic JWT decode)
+export function getUserType(): "student" | "university" | null {
+  if (typeof window === "undefined") return null;
+
+  const token = localStorage.getItem("accessToken");
+  if (!token) return null;
+
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.user_type || null;
+  } catch {
+    return null;
+  }
+}
+
+// Logout - clear tokens
+export function logout(): void {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
 }

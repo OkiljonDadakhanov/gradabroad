@@ -1,178 +1,183 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { CandidatesTable } from "./candidates-table"
-import { CandidateViewModal } from "./candidate-view-modal"
-import { CandidateEditModal } from "./candidate-edit-modal"
-import { useToast } from "@/hooks/use-toast"
-import type { Candidate } from "@/types/candidate"
-import { CandidateStatus } from "@/types/candidate"
+import { useState, useEffect } from "react";
+import { CandidatesTable } from "./candidates-table";
+import { CandidateViewModal } from "./candidate-view-modal";
+import { CandidateChatModal } from "./candidate-chat-modal";
+import { useToast } from "@/hooks/use-toast";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
+import { ENDPOINTS, STATUS_LABELS } from "@/lib/constants";
+import { Candidate, STATUS_OPTIONS } from "@/types/candidate";
+import { ApplicationStatus } from "@/types/application";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AlertCircle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function CandidatesSection() {
-  const { toast } = useToast()
-  const [candidates, setCandidates] = useState<Candidate[]>([
-    {
-      id: "cand-1",
-      fullName: "John Smith",
-      faculty: "Computer Science",
-      appliedDate: "2023-05-15",
-      status: CandidateStatus.DOCUMENT_SUBMITTED,
-      email: "john.smith@example.com",
-      phone: "+1 123-456-7890",
-      country: "United States",
-      program: "Master of Science in Data Science",
-      documents: {
-        diploma: true,
-        passport: true,
-        transcript: true,
-        motivationLetter: false,
-      },
-      notes: "Strong academic background in computer science.",
-    },
-    {
-      id: "cand-2",
-      fullName: "Emma Johnson",
-      faculty: "Business",
-      appliedDate: "2023-06-02",
-      status: CandidateStatus.ACCEPTED,
-      email: "emma.johnson@example.com",
-      phone: "+44 20 1234 5678",
-      country: "United Kingdom",
-      program: "Master of Business Administration",
-      documents: {
-        diploma: true,
-        passport: true,
-        transcript: true,
-        motivationLetter: true,
-      },
-      notes: "Has 3 years of work experience in finance.",
-    },
-    {
-      id: "cand-3",
-      fullName: "Mohammed Al-Farsi",
-      faculty: "Engineering",
-      appliedDate: "2023-05-28",
-      status: CandidateStatus.SENT_FOR_RESENDING,
-      email: "mohammed.alfarsi@example.com",
-      phone: "+966 50 123 4567",
-      country: "Saudi Arabia",
-      program: "Bachelor of Engineering",
-      documents: {
-        diploma: false,
-        passport: true,
-        transcript: true,
-        motivationLetter: true,
-      },
-      notes: "Missing original diploma, requested to resend.",
-    },
-    {
-      id: "cand-4",
-      fullName: "Yuki Tanaka",
-      faculty: "Medicine",
-      appliedDate: "2023-06-10",
-      status: CandidateStatus.DOCUMENT_SAVED,
-      email: "yuki.tanaka@example.com",
-      phone: "+81 3 1234 5678",
-      country: "Japan",
-      program: "Medicine",
-      documents: {
-        diploma: true,
-        passport: true,
-        transcript: true,
-        motivationLetter: true,
-      },
-      notes: "Excellent academic record, graduated top of class.",
-    },
-    {
-      id: "cand-5",
-      fullName: "Elena Petrova",
-      faculty: "Arts",
-      appliedDate: "2023-05-20",
-      status: CandidateStatus.VISA_TAKEN,
-      email: "elena.petrova@example.com",
-      phone: "+7 495 123-45-67",
-      country: "Russia",
-      program: "English Literature",
-      documents: {
-        diploma: true,
-        passport: true,
-        transcript: true,
-        motivationLetter: true,
-      },
-      notes: "Visa approved on June 15, 2023.",
-    },
-  ])
+  const { toast } = useToast();
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [currentCandidate, setCurrentCandidate] = useState<Candidate | null>(null)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState<CandidateStatus | "">("")
-  const [facultyFilter, setFacultyFilter] = useState("")
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [currentCandidate, setCurrentCandidate] = useState<Candidate | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "">("");
+  const [programFilter, setProgramFilter] = useState("");
+
+  useEffect(() => {
+    fetchCandidates();
+  }, []);
+
+  async function fetchCandidates() {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetchWithAuth(ENDPOINTS.CANDIDATES);
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch candidates");
+      }
+
+      const data = await res.json();
+      // Handle both array and paginated response
+      const candidatesList = Array.isArray(data) ? data : data.results || [];
+      setCandidates(candidatesList);
+    } catch (err: any) {
+      console.error("Error fetching candidates:", err);
+      setError(err.message || "Failed to load candidates");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Get unique programs for filter dropdown
+  const uniquePrograms = Array.from(
+    new Set(candidates.map((c) => c.programme?.name).filter(Boolean))
+  );
 
   const filteredCandidates = candidates.filter((candidate) => {
-    const matchesSearch = candidate.fullName.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "" || candidate.status === statusFilter
-    const matchesFaculty = facultyFilter === "" || candidate.faculty === facultyFilter
+    const fullName = `${candidate.student?.first_name || ""} ${candidate.student?.last_name || ""}`.toLowerCase();
+    const matchesSearch = fullName.includes(searchTerm.toLowerCase()) ||
+      candidate.student?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "" || candidate.status === statusFilter;
+    const matchesProgram = programFilter === "" || candidate.programme?.name === programFilter;
 
-    return matchesSearch && matchesStatus && matchesFaculty
-  })
+    return matchesSearch && matchesStatus && matchesProgram;
+  });
 
   const handleViewCandidate = (candidate: Candidate) => {
-    setCurrentCandidate(candidate)
-    setIsViewModalOpen(true)
+    setCurrentCandidate(candidate);
+    setIsViewModalOpen(true);
+  };
+
+  const handleChatWithCandidate = (candidate: Candidate) => {
+    setCurrentCandidate(candidate);
+    setIsChatModalOpen(true);
+  };
+
+  const handleStatusChange = async (candidateId: number, newStatus: ApplicationStatus) => {
+    try {
+      const res = await fetchWithAuth(ENDPOINTS.CANDIDATE(candidateId), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.detail || "Failed to update status");
+      }
+
+      // Update local state
+      setCandidates(
+        candidates.map((c) =>
+          c.id === candidateId ? { ...c, status: newStatus } : c
+        )
+      );
+
+      toast({
+        title: "Status updated",
+        description: `Application status changed to ${STATUS_LABELS[newStatus] || newStatus}.`,
+      });
+    } catch (err: any) {
+      console.error("Error updating status:", err);
+      toast({
+        title: "Error",
+        description: err.message || "Failed to update status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="mb-6">
+          <Skeleton className="h-8 w-48" />
+        </div>
+        <div className="flex gap-4 mb-4">
+          <Skeleton className="h-10 flex-1" />
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-10 w-48" />
+        </div>
+        <div className="border rounded-md">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex items-center p-4 border-b last:border-b-0">
+              <Skeleton className="h-5 w-48 mr-4" />
+              <Skeleton className="h-5 w-32 mr-4" />
+              <Skeleton className="h-5 w-24 mr-4" />
+              <Skeleton className="h-8 w-32 mr-4" />
+              <Skeleton className="h-8 w-20 ml-auto" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
-  const handleEditCandidate = (candidate: Candidate) => {
-    setCurrentCandidate(candidate)
-    setIsEditModalOpen(true)
-  }
-
-  const handleUpdateCandidate = (updatedCandidate: Candidate) => {
-    setCandidates(candidates.map((c) => (c.id === updatedCandidate.id ? updatedCandidate : c)))
-    setIsEditModalOpen(false)
-
-    toast({
-      title: "Candidate updated",
-      description: `${updatedCandidate.fullName}'s information has been updated.`,
-      variant: "success",
-    })
-  }
-
-  const handleStatusChange = (candidateId: string, newStatus: CandidateStatus) => {
-    setCandidates(
-      candidates.map((c) => {
-        if (c.id === candidateId) {
-          return { ...c, status: newStatus }
-        }
-        return c
-      }),
-    )
-
-    toast({
-      title: "Status updated",
-      description: `Candidate status has been changed to ${newStatus}.`,
-      variant: "success",
-    })
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <AlertCircle className="mx-auto h-12 w-12 text-red-400 mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
+          Failed to load candidates
+        </h3>
+        <p className="text-gray-500 mb-4">{error}</p>
+        <Button onClick={fetchCandidates} variant="outline">
+          <RefreshCw size={16} className="mr-2" />
+          Try Again
+        </Button>
+      </div>
+    );
   }
 
   return (
     <>
-      <div className="mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <h2 className="text-2xl font-bold text-purple-900">Candidates</h2>
+        <Button onClick={fetchCandidates} variant="outline" size="sm">
+          <RefreshCw size={14} className="mr-2" />
+          Refresh
+        </Button>
       </div>
 
       <CandidatesTable
         candidates={filteredCandidates}
         onView={handleViewCandidate}
-        onEdit={handleEditCandidate}
+        onChat={handleChatWithCandidate}
         onStatusChange={handleStatusChange}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
-        facultyFilter={facultyFilter}
-        onFacultyFilterChange={setFacultyFilter}
+        programFilter={programFilter}
+        onProgramFilterChange={setProgramFilter}
+        programs={uniquePrograms}
       />
 
       {/* View Candidate Modal */}
@@ -181,22 +186,16 @@ export function CandidatesSection() {
           isOpen={isViewModalOpen}
           onClose={() => setIsViewModalOpen(false)}
           candidate={currentCandidate}
-          onEdit={() => {
-            setIsViewModalOpen(false)
-            setIsEditModalOpen(true)
-          }}
+          onStatusChange={handleStatusChange}
         />
       )}
 
-      {/* Edit Candidate Modal */}
-      {currentCandidate && (
-        <CandidateEditModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          initialData={currentCandidate}
-          onSave={handleUpdateCandidate}
-        />
-      )}
+      {/* Chat Modal */}
+      <CandidateChatModal
+        candidate={currentCandidate}
+        open={isChatModalOpen}
+        onOpenChange={setIsChatModalOpen}
+      />
     </>
-  )
+  );
 }

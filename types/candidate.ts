@@ -1,31 +1,68 @@
-export interface Candidate {
-  id: string
-  fullName: string
-  faculty: string
-  appliedDate: string
-  status: CandidateStatus
-  email: string
-  phone: string
-  country: string
-  program: string
-  documents: {
-    passport: boolean
-    diploma: boolean
-    transcript: boolean
-    motivationLetter: boolean
-  }
-  notes: string
+import { ApplicationStatus } from "./application";
+
+export interface CandidateStudent {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone?: string;
+  country?: string;
+  date_of_birth?: string;
 }
 
-export enum CandidateStatus {
-  DOCUMENT_SUBMITTED = "Document submitted",
-  REJECTED = "Rejected",
-  ACCEPTED = "Accepted",
-  SENT_FOR_RESENDING = "Sent for resending",
-  DOCUMENT_SAVED = "Document saved",
-  VISA_TAKEN = "Visa taken",
-  STUDYING = "Studying",
+export interface CandidateProgramme {
+  id: number;
+  name: string;
+  field_of_study: string;
+  degree_type: string;
 }
+
+export interface CandidateDocument {
+  id: number;
+  document_type: string;
+  document_type_name: string;
+  file_url: string;
+  status: "pending" | "approved" | "rejected";
+  uploaded_at: string;
+  notes?: string;
+}
+
+export interface Candidate {
+  id: number;
+  student: CandidateStudent;
+  programme: CandidateProgramme;
+  status: ApplicationStatus;
+  created_at: string;
+  updated_at: string;
+  submitted_at?: string;
+  documents: CandidateDocument[];
+  notes?: string;
+}
+
+// For backward compatibility with old components
+export enum CandidateStatus {
+  DRAFT = "draft",
+  DOCUMENT_SAVED = "document_saved",
+  SUBMITTED = "submitted",
+  UNDER_REVIEW = "under_review",
+  INTERVIEW = "interview",
+  ACCEPTED = "accepted",
+  REJECTED = "rejected",
+  CONFIRMED = "confirmed",
+  VISA_TAKEN = "visa_taken",
+  STUDYING = "studying",
+}
+
+export const STATUS_OPTIONS: { value: ApplicationStatus; label: string }[] = [
+  { value: "submitted", label: "Submitted" },
+  { value: "under_review", label: "Under Review" },
+  { value: "interview", label: "Interview" },
+  { value: "accepted", label: "Accepted" },
+  { value: "rejected", label: "Rejected" },
+  { value: "confirmed", label: "Confirmed" },
+  { value: "visa_taken", label: "Visa Obtained" },
+  { value: "studying", label: "Studying" },
+];
 
 export const FACULTIES = [
   "Engineering",
@@ -38,7 +75,7 @@ export const FACULTIES = [
   "Mathematics",
   "Law",
   "Education",
-]
+];
 
 export const COUNTRIES = [
   "Afghanistan",
@@ -73,17 +110,4 @@ export const COUNTRIES = [
   "United States",
   "Uzbekistan",
   "Vietnam",
-]
-
-export const PROGRAMS = [
-  "Bachelor of Engineering",
-  "Bachelor of Computer Science",
-  "Bachelor of Business Administration",
-  "Master of Science in Data Science",
-  "Master of Business Administration",
-  "PhD in Computer Science",
-  "PhD in Engineering",
-  "English Literature",
-  "Software Engineering",
-  "Medicine",
-]
+];
