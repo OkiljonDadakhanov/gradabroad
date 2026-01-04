@@ -9,12 +9,11 @@ export interface University {
 
 export interface ProgramRequirement {
   id: number;
-  requirement_type: "document" | "english" | "language" | "other";
+  requirementType: "document" | "english" | "language" | "score" | "text" | "file" | "passport" | "gpa" | string;
   label: string;
   required: boolean;
-  min_score?: number;
-  max_score?: number;
   note?: string;
+  matching_doc_type?: string;
 }
 
 export interface PublicProgram {

@@ -12,6 +12,7 @@ export const ENDPOINTS = {
   // Programs (Public)
   PROGRAMS: "/api/programmes/",
   PROGRAM_DETAIL: (id: number) => `/api/programmes/${id}/`,
+  STUDENT_READINESS: (id: number) => `/api/programmes/${id}/student-readiness/`,
 
   // University Programs
   MY_PROGRAMS: "/api/programmes/mine/",

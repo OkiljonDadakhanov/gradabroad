@@ -3,8 +3,27 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { PublicProgram } from "@/types/program";
-import { fetchPublic, isAuthenticated } from "@/lib/fetchWithAuth";
+import { fetchPublic, fetchWithAuth, isAuthenticated } from "@/lib/fetchWithAuth";
 import { ENDPOINTS } from "@/lib/constants";
+
+// Type for readiness response
+interface RequirementStatus {
+  id: number;
+  requirementType: string;
+  label: string;
+  required: boolean;
+  note: string | null;
+  status: "satisfied" | "missing";
+  reason: string | null;
+  matched_record: [string, string] | null;
+}
+
+interface ReadinessData {
+  requirements: RequirementStatus[];
+  satisfied: number[];
+  missing_required: number[];
+  can_apply: boolean;
+}
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +40,8 @@ import {
   Download,
   Clock,
   CheckCircle,
+  XCircle,
+  AlertCircle,
   Building,
 } from "lucide-react";
 import Link from "next/link";
@@ -32,12 +53,36 @@ export default function ProgramDetailPage() {
   const [program, setProgram] = useState<PublicProgram | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [readiness, setReadiness] = useState<ReadinessData | null>(null);
+  const [readinessLoading, setReadinessLoading] = useState(false);
 
   useEffect(() => {
     if (params.id) {
       fetchProgram();
     }
   }, [params.id]);
+
+  // Fetch readiness when program is loaded and user is authenticated
+  useEffect(() => {
+    if (program && isAuthenticated()) {
+      fetchReadiness();
+    }
+  }, [program]);
+
+  async function fetchReadiness() {
+    setReadinessLoading(true);
+    try {
+      const res = await fetchWithAuth(ENDPOINTS.STUDENT_READINESS(Number(params.id)));
+      if (res.ok) {
+        const data = await res.json();
+        setReadiness(data);
+      }
+    } catch (err) {
+      console.error("Error fetching readiness:", err);
+    } finally {
+      setReadinessLoading(false);
+    }
+  }
 
   async function fetchProgram() {
     setLoading(true);
@@ -134,7 +179,18 @@ export default function ProgramDetailPage() {
               <Link href="/programs" className="text-gray-600 hover:text-gray-900">
                 Programs
               </Link>
-              <Button onClick={handleApply}>Apply Now</Button>
+              <Button
+                onClick={handleApply}
+                disabled={isAuthenticated() && readiness?.can_apply === false}
+                variant={readiness?.can_apply === false ? "outline" : "default"}
+              >
+                {!isAuthenticated()
+                  ? "Login to Apply"
+                  : readiness?.can_apply === false
+                    ? "Profile Incomplete"
+                    : "Apply Now"
+                }
+              </Button>
             </nav>
           </div>
         </div>
@@ -304,41 +360,87 @@ export default function ProgramDetailPage() {
             {program.requirements && program.requirements.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Requirements</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>Requirements</span>
+                    {readiness && (
+                      <Badge
+                        variant={readiness.can_apply ? "default" : "destructive"}
+                        className={readiness.can_apply ? "bg-green-100 text-green-700" : ""}
+                      >
+                        {readiness.can_apply
+                          ? `${readiness.satisfied.length}/${readiness.requirements.length} Complete`
+                          : `${readiness.missing_required.length} Missing`
+                        }
+                      </Badge>
+                    )}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {program.requirements.map((req, index) => (
-                      <div
-                        key={index}
-                        className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
-                      >
-                        <CheckCircle
-                          size={18}
-                          className={
-                            req.required ? "text-purple-600" : "text-gray-400"
-                          }
-                        />
-                        <div>
-                          <p className="font-medium text-gray-900">{req.label}</p>
-                          {req.min_score && (
-                            <p className="text-sm text-gray-500">
-                              Minimum score: {req.min_score}
-                              {req.max_score && ` - ${req.max_score}`}
-                            </p>
+                    {(readiness?.requirements || program.requirements).map((req, index) => {
+                      const readinessReq = readiness?.requirements.find(r => r.id === req.id);
+                      const status = readinessReq?.status;
+                      const reason = readinessReq?.reason;
+
+                      return (
+                        <div
+                          key={req.id || index}
+                          className={`flex items-start gap-3 p-3 rounded-lg ${
+                            status === "satisfied"
+                              ? "bg-green-50 border border-green-200"
+                              : status === "missing"
+                                ? "bg-red-50 border border-red-200"
+                                : "bg-gray-50"
+                          }`}
+                        >
+                          {status === "satisfied" ? (
+                            <CheckCircle size={18} className="text-green-600 mt-0.5" />
+                          ) : status === "missing" ? (
+                            <XCircle size={18} className="text-red-500 mt-0.5" />
+                          ) : (
+                            <AlertCircle size={18} className="text-gray-400 mt-0.5" />
                           )}
-                          {req.note && (
-                            <p className="text-sm text-gray-500">{req.note}</p>
-                          )}
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">{req.label}</p>
+                            {req.note && (
+                              <p className="text-sm text-gray-500">{req.note}</p>
+                            )}
+                            {status === "missing" && reason && (
+                              <p className="text-sm text-red-600 mt-1">{reason}</p>
+                            )}
+                            {status === "satisfied" && (
+                              <p className="text-sm text-green-600 mt-1">Document uploaded</p>
+                            )}
+                          </div>
+                          <div className="flex flex-col items-end gap-1">
+                            {req.required && (
+                              <Badge variant="secondary" className="text-xs">
+                                Required
+                              </Badge>
+                            )}
+                            {status && (
+                              <Badge
+                                variant={status === "satisfied" ? "outline" : "destructive"}
+                                className={`text-xs ${status === "satisfied" ? "border-green-300 text-green-700" : ""}`}
+                              >
+                                {status === "satisfied" ? "Complete" : "Missing"}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                        {req.required && (
-                          <Badge variant="secondary" className="ml-auto text-xs">
-                            Required
-                          </Badge>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
+
+                  {/* Login prompt for unauthenticated users */}
+                  {!isAuthenticated() && (
+                    <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                      <p className="text-sm text-purple-700">
+                        <AlertCircle size={14} className="inline mr-1" />
+                        Log in to see which requirements you've already completed.
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -369,15 +471,66 @@ export default function ProgramDetailPage() {
             <Card className="sticky top-24">
               <CardContent className="p-6">
                 <h3 className="font-semibold text-lg text-gray-900 mb-4">
-                  Ready to Apply?
+                  {readiness?.can_apply === false ? "Complete Your Profile" : "Ready to Apply?"}
                 </h3>
-                <p className="text-sm text-gray-600 mb-6">
-                  Start your application today and take the first step towards
-                  studying in Korea.
-                </p>
-                <Button className="w-full mb-4" size="lg" onClick={handleApply}>
-                  Apply Now
+
+                {/* Show readiness summary for authenticated users */}
+                {isAuthenticated() && readiness && (
+                  <div className={`mb-4 p-3 rounded-lg ${
+                    readiness.can_apply
+                      ? "bg-green-50 border border-green-200"
+                      : "bg-amber-50 border border-amber-200"
+                  }`}>
+                    {readiness.can_apply ? (
+                      <p className="text-sm text-green-700 flex items-center gap-2">
+                        <CheckCircle size={16} />
+                        All requirements met! You're ready to apply.
+                      </p>
+                    ) : (
+                      <div>
+                        <p className="text-sm text-amber-700 flex items-center gap-2 font-medium">
+                          <AlertCircle size={16} />
+                          {readiness.missing_required.length} required item(s) missing
+                        </p>
+                        <p className="text-xs text-amber-600 mt-1">
+                          Complete your profile to apply for this program.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {!isAuthenticated() && (
+                  <p className="text-sm text-gray-600 mb-4">
+                    Start your application today and take the first step towards
+                    studying in Korea.
+                  </p>
+                )}
+
+                <Button
+                  className="w-full mb-4"
+                  size="lg"
+                  onClick={handleApply}
+                  disabled={isAuthenticated() && readiness?.can_apply === false}
+                  variant={readiness?.can_apply === false ? "outline" : "default"}
+                >
+                  {!isAuthenticated()
+                    ? "Login to Apply"
+                    : readiness?.can_apply === false
+                      ? "Complete Profile First"
+                      : "Apply Now"
+                  }
                 </Button>
+
+                {/* Link to profile when requirements missing */}
+                {isAuthenticated() && readiness?.can_apply === false && (
+                  <a
+                    href="https://www.gradabroad.net/profile"
+                    className="block text-center text-sm text-purple-600 hover:text-purple-800 mb-4"
+                  >
+                    Go to Profile to upload documents →
+                  </a>
+                )}
 
                 {program.results_announcement_date && (
                   <div className="text-sm text-gray-500 text-center">
