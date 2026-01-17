@@ -1,183 +1,197 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { CandidatesTable } from "./candidates-table";
-import { CandidateViewModal } from "./candidate-view-modal";
-import { CandidateChatModal } from "./candidate-chat-modal";
-import { useToast } from "@/hooks/use-toast";
-import { fetchWithAuth } from "@/lib/fetchWithAuth";
-import { ENDPOINTS, STATUS_LABELS } from "@/lib/constants";
-import { Candidate, STATUS_OPTIONS } from "@/types/candidate";
-import { ApplicationStatus } from "@/types/application";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react"
+import { CandidatesTable } from "./candidates-table"
+import { CandidateViewModal } from "./candidate-view-modal"
+import { CandidateEditModal } from "./candidate-edit-modal"
+import { useToast } from "@/hooks/use-toast"
+import type { Candidate } from "@/types/candidate"
+import { CandidateStatus } from "@/types/candidate"
+import { fetchWithAuth, API_BASE } from "@/lib/fetchWithAuth"
+
+// Map backend status to frontend CandidateStatus
+function mapStatus(status: string): CandidateStatus {
+  const statusMap: Record<string, CandidateStatus> = {
+    "document_saved": CandidateStatus.DOCUMENT_SAVED,
+    "submitted": CandidateStatus.DOCUMENT_SUBMITTED,
+    "under_review": CandidateStatus.DOCUMENT_SUBMITTED,
+    "resend": CandidateStatus.SENT_FOR_RESENDING,
+    "interview": CandidateStatus.DOCUMENT_SUBMITTED,
+    "accepted": CandidateStatus.ACCEPTED,
+    "confirmed": CandidateStatus.ACCEPTED,
+    "visa_taken": CandidateStatus.VISA_TAKEN,
+    "studying": CandidateStatus.STUDYING,
+    "rejected": CandidateStatus.REJECTED,
+    "waitlisted": CandidateStatus.DOCUMENT_SUBMITTED,
+  }
+  return statusMap[status?.toLowerCase()] || CandidateStatus.DOCUMENT_SUBMITTED
+}
 
 export function CandidatesSection() {
-  const { toast } = useToast();
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast()
+  const [candidates, setCandidates] = useState<Candidate[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
-  const [currentCandidate, setCurrentCandidate] = useState<Candidate | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "">("");
-  const [programFilter, setProgramFilter] = useState("");
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [currentCandidate, setCurrentCandidate] = useState<Candidate | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<CandidateStatus | "">("")
+  const [facultyFilter, setFacultyFilter] = useState("")
 
+  // Fetch candidates from API
   useEffect(() => {
-    fetchCandidates();
-  }, []);
-
-  async function fetchCandidates() {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetchWithAuth(ENDPOINTS.CANDIDATES);
-
-      if (!res.ok) {
-        throw new Error("Failed to fetch candidates");
+    const fetchCandidates = async () => {
+      // Check for authentication
+      const token = localStorage.getItem("accessToken")
+      if (!token) {
+        setLoading(false)
+        toast({
+          title: "Not authenticated",
+          description: "Please login to view candidates",
+          variant: "destructive",
+        })
+        return
       }
 
-      const data = await res.json();
-      // Handle both array and paginated response
-      const candidatesList = Array.isArray(data) ? data : data.results || [];
-      setCandidates(candidatesList);
-    } catch (err: any) {
-      console.error("Error fetching candidates:", err);
-      setError(err.message || "Failed to load candidates");
-    } finally {
-      setLoading(false);
-    }
-  }
+      try {
+        setLoading(true)
+        const res = await fetchWithAuth(`${API_BASE}/api/applications/candidates/`)
 
-  // Get unique programs for filter dropdown
-  const uniquePrograms = Array.from(
-    new Set(candidates.map((c) => c.programme?.name).filter(Boolean))
-  );
+        if (res.status === 401) {
+          toast({
+            title: "Session expired",
+            description: "Please login again",
+            variant: "destructive",
+          })
+          setLoading(false)
+          return
+        }
+
+        if (!res.ok) throw new Error("Failed to fetch candidates")
+
+        const data = await res.json()
+        const results = data.results || data || []
+
+        // Map API response to Candidate type
+        const mapped: Candidate[] = results.map((item: any) => ({
+          id: String(item.id),
+          fullName: item.applicant_full_name || "Unknown",
+          faculty: item.programme_name?.split(" - ")[0] || "N/A",
+          appliedDate: item.applied_date?.split("T")[0] || "",
+          status: mapStatus(item.status),
+          email: item.applicant_email || "",
+          phone: "",
+          country: "",
+          program: item.programme_name || "",
+          documents: {
+            passport: true,
+            diploma: true,
+            transcript: true,
+            motivationLetter: true,
+          },
+          notes: item.remarks || "",
+        }))
+
+        setCandidates(mapped)
+      } catch (err) {
+        console.error("Error fetching candidates:", err)
+        toast({
+          title: "Error",
+          description: "Failed to load candidates. Please try again.",
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCandidates()
+  }, [])
 
   const filteredCandidates = candidates.filter((candidate) => {
-    const fullName = `${candidate.student?.first_name || ""} ${candidate.student?.last_name || ""}`.toLowerCase();
-    const matchesSearch = fullName.includes(searchTerm.toLowerCase()) ||
-      candidate.student?.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "" || candidate.status === statusFilter;
-    const matchesProgram = programFilter === "" || candidate.programme?.name === programFilter;
+    const matchesSearch = candidate.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = statusFilter === "" || candidate.status === statusFilter
+    const matchesFaculty = facultyFilter === "" || candidate.faculty === facultyFilter
 
-    return matchesSearch && matchesStatus && matchesProgram;
-  });
+    return matchesSearch && matchesStatus && matchesFaculty
+  })
 
   const handleViewCandidate = (candidate: Candidate) => {
-    setCurrentCandidate(candidate);
-    setIsViewModalOpen(true);
-  };
+    setCurrentCandidate(candidate)
+    setIsViewModalOpen(true)
+  }
 
-  const handleChatWithCandidate = (candidate: Candidate) => {
-    setCurrentCandidate(candidate);
-    setIsChatModalOpen(true);
-  };
+  const handleEditCandidate = (candidate: Candidate) => {
+    setCurrentCandidate(candidate)
+    setIsEditModalOpen(true)
+  }
 
-  const handleStatusChange = async (candidateId: number, newStatus: ApplicationStatus) => {
-    try {
-      const res = await fetchWithAuth(ENDPOINTS.CANDIDATE(candidateId), {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
+  const handleUpdateCandidate = (updatedCandidate: Candidate) => {
+    setCandidates(candidates.map((c) => (c.id === updatedCandidate.id ? updatedCandidate : c)))
+    setIsEditModalOpen(false)
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.detail || "Failed to update status");
-      }
+    toast({
+      title: "Candidate updated",
+      description: `${updatedCandidate.fullName}'s information has been updated.`,
+      variant: "success",
+    })
+  }
 
-      // Update local state
-      setCandidates(
-        candidates.map((c) =>
-          c.id === candidateId ? { ...c, status: newStatus } : c
-        )
-      );
+  const handleStatusChange = (candidateId: string, newStatus: CandidateStatus) => {
+    setCandidates(
+      candidates.map((c) => {
+        if (c.id === candidateId) {
+          return { ...c, status: newStatus }
+        }
+        return c
+      }),
+    )
 
-      toast({
-        title: "Status updated",
-        description: `Application status changed to ${STATUS_LABELS[newStatus] || newStatus}.`,
-      });
-    } catch (err: any) {
-      console.error("Error updating status:", err);
-      toast({
-        title: "Error",
-        description: err.message || "Failed to update status",
-        variant: "destructive",
-      });
-    }
-  };
+    toast({
+      title: "Status updated",
+      description: `Candidate status has been changed to ${newStatus}.`,
+      variant: "success",
+    })
+  }
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="mb-6">
-          <Skeleton className="h-8 w-48" />
-        </div>
-        <div className="flex gap-4 mb-4">
-          <Skeleton className="h-10 flex-1" />
-          <Skeleton className="h-10 w-48" />
-          <Skeleton className="h-10 w-48" />
-        </div>
-        <div className="border rounded-md">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center p-4 border-b last:border-b-0">
-              <Skeleton className="h-5 w-48 mr-4" />
-              <Skeleton className="h-5 w-32 mr-4" />
-              <Skeleton className="h-5 w-24 mr-4" />
-              <Skeleton className="h-8 w-32 mr-4" />
-              <Skeleton className="h-8 w-20 ml-auto" />
-            </div>
-          ))}
-        </div>
+      <div className="flex flex-col items-center justify-center py-16 space-y-4">
+        <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+        <p className="text-gray-500 font-medium">Loading candidates...</p>
       </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <AlertCircle className="mx-auto h-12 w-12 text-red-400 mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
-          Failed to load candidates
-        </h3>
-        <p className="text-gray-500 mb-4">{error}</p>
-        <Button onClick={fetchCandidates} variant="outline">
-          <RefreshCw size={16} className="mr-2" />
-          Try Again
-        </Button>
-      </div>
-    );
+    )
   }
 
   return (
     <>
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-purple-900">Candidates</h2>
-        <Button onClick={fetchCandidates} variant="outline" size="sm">
-          <RefreshCw size={14} className="mr-2" />
-          Refresh
-        </Button>
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-purple-900">Candidates</h2>
+            <p className="text-gray-500 mt-1">Manage and review student applications</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="bg-purple-100 text-purple-700 px-4 py-2 rounded-lg">
+              <span className="font-semibold text-lg">{candidates.length}</span>
+              <span className="ml-1 text-sm">Total Applications</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <CandidatesTable
         candidates={filteredCandidates}
         onView={handleViewCandidate}
-        onChat={handleChatWithCandidate}
+        onEdit={handleEditCandidate}
         onStatusChange={handleStatusChange}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
-        programFilter={programFilter}
-        onProgramFilterChange={setProgramFilter}
-        programs={uniquePrograms}
+        facultyFilter={facultyFilter}
+        onFacultyFilterChange={setFacultyFilter}
       />
 
       {/* View Candidate Modal */}
@@ -186,16 +200,22 @@ export function CandidatesSection() {
           isOpen={isViewModalOpen}
           onClose={() => setIsViewModalOpen(false)}
           candidate={currentCandidate}
-          onStatusChange={handleStatusChange}
+          onEdit={() => {
+            setIsViewModalOpen(false)
+            setIsEditModalOpen(true)
+          }}
         />
       )}
 
-      {/* Chat Modal */}
-      <CandidateChatModal
-        candidate={currentCandidate}
-        open={isChatModalOpen}
-        onOpenChange={setIsChatModalOpen}
-      />
+      {/* Edit Candidate Modal */}
+      {currentCandidate && (
+        <CandidateEditModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          initialData={currentCandidate}
+          onSave={handleUpdateCandidate}
+        />
+      )}
     </>
-  );
+  )
 }

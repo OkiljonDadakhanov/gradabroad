@@ -1,287 +1,207 @@
-"use client";
+"use client"
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Candidate, STATUS_OPTIONS, CandidateDocument } from "@/types/candidate";
-import { ApplicationStatus } from "@/types/application";
-import { STATUS_COLORS, STATUS_LABELS, DOCUMENT_STATUS_COLORS } from "@/lib/constants";
-import { formatDate } from "@/lib/utils";
-import { cn } from "@/lib/utils";
-import {
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  GraduationCap,
-  FileText,
-  Download,
-  CheckCircle,
-  XCircle,
-  Clock,
-  MessageSquare,
-} from "lucide-react";
+import { useState, useEffect } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { FileText, Download, Mail, Calendar, GraduationCap, Loader2, ExternalLink } from "lucide-react"
+import type { Candidate } from "@/types/candidate"
+import { formatDate } from "@/lib/utils"
+import { fetchWithAuth, API_BASE } from "@/lib/fetchWithAuth"
 
-interface CandidateViewModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  candidate: Candidate;
-  onStatusChange: (candidateId: number, status: ApplicationStatus) => void;
+interface Attachment {
+  id: number
+  file_type: string
+  signed_file_url: string
+  uploaded_at: string
 }
 
-export function CandidateViewModal({
-  isOpen,
-  onClose,
-  candidate,
-  onStatusChange,
-}: CandidateViewModalProps) {
-  const getDocumentStatusIcon = (status: string) => {
-    switch (status) {
-      case "approved":
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case "rejected":
-        return <XCircle className="h-4 w-4 text-red-600" />;
-      default:
-        return <Clock className="h-4 w-4 text-yellow-600" />;
+interface CandidateDetail {
+  id: number
+  applicant_full_name: string
+  applicant_email: string
+  programme_name: string
+  status: string
+  applied_date: string
+  remarks: string
+  attachments: Attachment[]
+  application_documents: any[]
+}
+
+interface CandidateViewModalProps {
+  isOpen: boolean
+  onClose: () => void
+  candidate: Candidate
+  onEdit: () => void
+}
+
+const fileTypeLabels: Record<string, string> = {
+  cv: "CV / Resume",
+  transcript: "Transcript",
+  recommendation_letter: "Recommendation Letter",
+  motivation_letter: "Motivation Letter",
+  passport: "Passport",
+  diploma: "Diploma",
+}
+
+export function CandidateViewModal({ isOpen, onClose, candidate, onEdit }: CandidateViewModalProps) {
+  const [details, setDetails] = useState<CandidateDetail | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (isOpen && candidate.id) {
+      fetchCandidateDetails()
     }
-  };
+  }, [isOpen, candidate.id])
+
+  const fetchCandidateDetails = async () => {
+    setLoading(true)
+    try {
+      const res = await fetchWithAuth(`${API_BASE}/api/applications/candidates/${candidate.id}/`)
+      if (res.ok) {
+        const data = await res.json()
+        setDetails(data)
+      }
+    } catch (err) {
+      console.error("Failed to fetch candidate details:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    const s = status.toLowerCase()
+    if (s.includes("accepted") || s.includes("confirmed")) return "bg-green-100 text-green-800 border-green-200"
+    if (s.includes("rejected")) return "bg-red-100 text-red-800 border-red-200"
+    if (s.includes("resend")) return "bg-amber-100 text-amber-800 border-amber-200"
+    if (s.includes("visa")) return "bg-blue-100 text-blue-800 border-blue-200"
+    if (s.includes("studying")) return "bg-emerald-100 text-emerald-800 border-emerald-200"
+    return "bg-gray-100 text-gray-800 border-gray-200"
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-bold text-purple-900">
-              Application Details
-            </DialogTitle>
-            <Badge
-              className={cn(
-                "ml-4",
-                STATUS_COLORS[candidate.status] || "bg-gray-100"
-              )}
-            >
-              {STATUS_LABELS[candidate.status] || candidate.status}
-            </Badge>
-          </div>
+          <DialogTitle className="text-xl font-bold flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                {(details?.applicant_full_name || candidate.fullName || "?").split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <span>{details?.applicant_full_name || candidate.fullName || "Applicant"}</span>
+                <p className="text-sm font-normal text-gray-500">{details?.applicant_email || candidate.email}</p>
+              </div>
+            </div>
+            <Badge className={`${getStatusColor(candidate.status)} border`}>{candidate.status}</Badge>
+          </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="overview" className="mt-4">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="documents">
-              Documents ({candidate.documents?.length || 0})
-            </TabsTrigger>
-            <TabsTrigger value="actions">Actions</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="mt-4 space-y-4">
-            {/* Student Info */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <User size={18} />
-                  Student Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-4 text-sm">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+          </div>
+        ) : (
+          <div className="space-y-6 mt-4">
+            {/* Application Info */}
+            <Card className="p-4 border-gray-200">
+              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 text-purple-600" />
+                Application Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-gray-500">Full Name</p>
-                  <p className="font-medium">
-                    {candidate.student?.first_name} {candidate.student?.last_name}
+                  <p className="text-sm text-gray-500">Program</p>
+                  <p className="font-medium text-gray-900">{details?.programme_name || candidate.program}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Applied Date</p>
+                  <p className="font-medium text-gray-900 flex items-center gap-1">
+                    <Calendar className="w-4 h-4 text-gray-400" />
+                    {formatDate(details?.applied_date?.split("T")[0] || candidate.appliedDate)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-500 flex items-center gap-1">
-                    <Mail size={12} />
-                    Email
+                  <p className="text-sm text-gray-500">Email</p>
+                  <p className="font-medium text-gray-900 flex items-center gap-1">
+                    <Mail className="w-4 h-4 text-gray-400" />
+                    <a href={`mailto:${details?.applicant_email || candidate.email}`} className="text-purple-600 hover:underline">
+                      {details?.applicant_email || candidate.email}
+                    </a>
                   </p>
-                  <p className="font-medium">{candidate.student?.email}</p>
-                </div>
-                {candidate.student?.phone && (
-                  <div>
-                    <p className="text-gray-500 flex items-center gap-1">
-                      <Phone size={12} />
-                      Phone
-                    </p>
-                    <p className="font-medium">{candidate.student?.phone}</p>
-                  </div>
-                )}
-                {candidate.student?.country && (
-                  <div>
-                    <p className="text-gray-500 flex items-center gap-1">
-                      <MapPin size={12} />
-                      Country
-                    </p>
-                    <p className="font-medium">{candidate.student?.country}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Program Info */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <GraduationCap size={18} />
-                  Program Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-gray-500">Program Name</p>
-                  <p className="font-medium">{candidate.programme?.name}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Degree Type</p>
-                  <p className="font-medium">{candidate.programme?.degree_type}</p>
+                  <p className="text-sm text-gray-500">Status</p>
+                  <Badge className={`${getStatusColor(details?.status || candidate.status)} border mt-1`}>
+                    {details?.status || candidate.status}
+                  </Badge>
                 </div>
-                <div>
-                  <p className="text-gray-500">Field of Study</p>
-                  <p className="font-medium">{candidate.programme?.field_of_study}</p>
-                </div>
-              </CardContent>
+              </div>
             </Card>
 
-            {/* Timeline */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Calendar size={18} />
-                  Timeline
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Created</span>
-                  <span>{formatDate(candidate.created_at)}</span>
-                </div>
-                {candidate.submitted_at && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Submitted</span>
-                    <span>{formatDate(candidate.submitted_at)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Last Updated</span>
-                  <span>{formatDate(candidate.updated_at)}</span>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="documents" className="mt-4">
-            <Card>
-              <CardContent className="pt-6">
-                {candidate.documents && candidate.documents.length > 0 ? (
-                  <div className="space-y-3">
-                    {candidate.documents.map((doc: CandidateDocument) => (
-                      <div
-                        key={doc.id}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          {getDocumentStatusIcon(doc.status)}
-                          <div>
-                            <p className="font-medium text-sm">
-                              {doc.document_type_name || doc.document_type}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              Uploaded {formatDate(doc.uploaded_at)}
-                            </p>
-                          </div>
+            {/* Documents */}
+            <Card className="p-4 border-gray-200">
+              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-purple-600" />
+                Submitted Documents
+              </h3>
+              {details?.attachments && details.attachments.length > 0 ? (
+                <div className="space-y-3">
+                  {details.attachments.map((attachment) => (
+                    <div
+                      key={attachment.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-purple-200 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                          <FileText className="w-5 h-5 text-purple-600" />
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            className={cn(
-                              "text-xs",
-                              DOCUMENT_STATUS_COLORS[doc.status] || "bg-gray-100"
-                            )}
-                          >
-                            {doc.status}
-                          </Badge>
-                          {doc.file_url && (
-                            <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                              <Button variant="outline" size="sm">
-                                <Download size={14} className="mr-1" />
-                                View
-                              </Button>
-                            </a>
-                          )}
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {fileTypeLabels[attachment.file_type] || attachment.file_type}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Uploaded {formatDate(attachment.uploaded_at?.split("T")[0])}
+                          </p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <FileText className="mx-auto h-12 w-12 text-gray-300 mb-2" />
-                    <p>No documents uploaded yet</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="actions" className="mt-4 space-y-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Update Status</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Select
-                  value={candidate.status}
-                  onValueChange={(value) =>
-                    onStatusChange(candidate.id, value as ApplicationStatus)
-                  }
-                >
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUS_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </CardContent>
+                      <a
+                        href={attachment.signed_file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                      >
+                        <Download className="w-4 h-4" />
+                        Download
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-4">No documents uploaded yet</p>
+              )}
             </Card>
 
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="flex gap-3">
-                <Button variant="outline">
-                  <MessageSquare size={16} className="mr-2" />
-                  Message Student
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+            {/* Remarks */}
+            {(details?.remarks || candidate.notes) && (
+              <Card className="p-4 border-gray-200">
+                <h3 className="font-semibold text-gray-900 mb-3">Remarks / Notes</h3>
+                <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">{details?.remarks || candidate.notes}</p>
+              </Card>
+            )}
 
-        <div className="flex justify-end mt-4">
-          <Button variant="outline" onClick={onClose}>
-            Close
-          </Button>
-        </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={onClose}>
+                Close
+              </Button>
+              <Button onClick={onEdit} className="bg-purple-600 hover:bg-purple-700">
+                Edit Application
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
-  );
+  )
 }

@@ -43,7 +43,7 @@ export function ProfileSection() {
 
       try {
         const res = await fetchWithAuth(
-          "https://api.gradabroad.net/api/auth/universities/me/"
+          `${process.env.NEXT_PUBLIC_API_BASE || "http://localhost"}/api/auth/universities/me/`
         );
 
         if (res.status === 401) {
@@ -111,7 +111,7 @@ export function ProfileSection() {
 
     try {
       const res = await fetchWithAuth(
-        "https://api.gradabroad.net/api/auth/universities/me/accreditation-url/"
+        `${process.env.NEXT_PUBLIC_API_BASE || "http://localhost"}/api/auth/universities/me/accreditation-url/`
       );
 
       if (!res.ok) {
