@@ -1,4 +1,4 @@
-const API_BASE = "https://api.gradabroad.net";
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost";
 
 export async function refreshToken(): Promise<boolean> {
   const refresh = localStorage.getItem("refreshToken");

@@ -33,10 +33,10 @@ export function ScholarshipsSection() {
 
     try {
       const resPrograms = await fetchWithAuth(
-        "https://api.gradabroad.net/api/programmes/mine/"
+        `${process.env.NEXT_PUBLIC_API_BASE || "http://localhost"}/api/programmes/mine/`
       );
       const resScholarships = await fetchWithAuth(
-        "https://api.gradabroad.net/api/scholarships/mine/"
+        `${process.env.NEXT_PUBLIC_API_BASE || "http://localhost"}/api/scholarships/mine/`
       );
 
       if (!resPrograms.ok || !resScholarships.ok) {

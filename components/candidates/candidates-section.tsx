@@ -1,107 +1,36 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { CandidatesTable } from "./candidates-table"
 import { CandidateViewModal } from "./candidate-view-modal"
 import { CandidateEditModal } from "./candidate-edit-modal"
 import { useToast } from "@/hooks/use-toast"
 import type { Candidate } from "@/types/candidate"
 import { CandidateStatus } from "@/types/candidate"
+import { fetchWithAuth, API_BASE } from "@/lib/fetchWithAuth"
+
+// Map backend status to frontend CandidateStatus
+function mapStatus(status: string): CandidateStatus {
+  const statusMap: Record<string, CandidateStatus> = {
+    "document_saved": CandidateStatus.DOCUMENT_SAVED,
+    "submitted": CandidateStatus.DOCUMENT_SUBMITTED,
+    "under_review": CandidateStatus.DOCUMENT_SUBMITTED,
+    "resend": CandidateStatus.SENT_FOR_RESENDING,
+    "interview": CandidateStatus.DOCUMENT_SUBMITTED,
+    "accepted": CandidateStatus.ACCEPTED,
+    "confirmed": CandidateStatus.ACCEPTED,
+    "visa_taken": CandidateStatus.VISA_TAKEN,
+    "studying": CandidateStatus.STUDYING,
+    "rejected": CandidateStatus.REJECTED,
+    "waitlisted": CandidateStatus.DOCUMENT_SUBMITTED,
+  }
+  return statusMap[status?.toLowerCase()] || CandidateStatus.DOCUMENT_SUBMITTED
+}
 
 export function CandidatesSection() {
   const { toast } = useToast()
-  const [candidates, setCandidates] = useState<Candidate[]>([
-    {
-      id: "cand-1",
-      fullName: "John Smith",
-      faculty: "Computer Science",
-      appliedDate: "2023-05-15",
-      status: CandidateStatus.DOCUMENT_SUBMITTED,
-      email: "john.smith@example.com",
-      phone: "+1 123-456-7890",
-      country: "United States",
-      program: "Master of Science in Data Science",
-      documents: {
-        diploma: true,
-        passport: true,
-        transcript: true,
-        motivationLetter: false,
-      },
-      notes: "Strong academic background in computer science.",
-    },
-    {
-      id: "cand-2",
-      fullName: "Emma Johnson",
-      faculty: "Business",
-      appliedDate: "2023-06-02",
-      status: CandidateStatus.ACCEPTED,
-      email: "emma.johnson@example.com",
-      phone: "+44 20 1234 5678",
-      country: "United Kingdom",
-      program: "Master of Business Administration",
-      documents: {
-        diploma: true,
-        passport: true,
-        transcript: true,
-        motivationLetter: true,
-      },
-      notes: "Has 3 years of work experience in finance.",
-    },
-    {
-      id: "cand-3",
-      fullName: "Mohammed Al-Farsi",
-      faculty: "Engineering",
-      appliedDate: "2023-05-28",
-      status: CandidateStatus.SENT_FOR_RESENDING,
-      email: "mohammed.alfarsi@example.com",
-      phone: "+966 50 123 4567",
-      country: "Saudi Arabia",
-      program: "Bachelor of Engineering",
-      documents: {
-        diploma: false,
-        passport: true,
-        transcript: true,
-        motivationLetter: true,
-      },
-      notes: "Missing original diploma, requested to resend.",
-    },
-    {
-      id: "cand-4",
-      fullName: "Yuki Tanaka",
-      faculty: "Medicine",
-      appliedDate: "2023-06-10",
-      status: CandidateStatus.DOCUMENT_SAVED,
-      email: "yuki.tanaka@example.com",
-      phone: "+81 3 1234 5678",
-      country: "Japan",
-      program: "Medicine",
-      documents: {
-        diploma: true,
-        passport: true,
-        transcript: true,
-        motivationLetter: true,
-      },
-      notes: "Excellent academic record, graduated top of class.",
-    },
-    {
-      id: "cand-5",
-      fullName: "Elena Petrova",
-      faculty: "Arts",
-      appliedDate: "2023-05-20",
-      status: CandidateStatus.VISA_TAKEN,
-      email: "elena.petrova@example.com",
-      phone: "+7 495 123-45-67",
-      country: "Russia",
-      program: "English Literature",
-      documents: {
-        diploma: true,
-        passport: true,
-        transcript: true,
-        motivationLetter: true,
-      },
-      notes: "Visa approved on June 15, 2023.",
-    },
-  ])
+  const [candidates, setCandidates] = useState<Candidate[]>([])
+  const [loading, setLoading] = useState(true)
 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -109,6 +38,76 @@ export function CandidatesSection() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<CandidateStatus | "">("")
   const [facultyFilter, setFacultyFilter] = useState("")
+
+  // Fetch candidates from API
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      // Check for authentication
+      const token = localStorage.getItem("accessToken")
+      if (!token) {
+        setLoading(false)
+        toast({
+          title: "Not authenticated",
+          description: "Please login to view candidates",
+          variant: "destructive",
+        })
+        return
+      }
+
+      try {
+        setLoading(true)
+        const res = await fetchWithAuth(`${API_BASE}/api/applications/candidates/`)
+
+        if (res.status === 401) {
+          toast({
+            title: "Session expired",
+            description: "Please login again",
+            variant: "destructive",
+          })
+          setLoading(false)
+          return
+        }
+
+        if (!res.ok) throw new Error("Failed to fetch candidates")
+
+        const data = await res.json()
+        const results = data.results || data || []
+
+        // Map API response to Candidate type
+        const mapped: Candidate[] = results.map((item: any) => ({
+          id: String(item.id),
+          fullName: item.applicant_full_name || "Unknown",
+          faculty: item.programme_name?.split(" - ")[0] || "N/A",
+          appliedDate: item.applied_date?.split("T")[0] || "",
+          status: mapStatus(item.status),
+          email: item.applicant_email || "",
+          phone: "",
+          country: "",
+          program: item.programme_name || "",
+          documents: {
+            passport: true,
+            diploma: true,
+            transcript: true,
+            motivationLetter: true,
+          },
+          notes: item.remarks || "",
+        }))
+
+        setCandidates(mapped)
+      } catch (err) {
+        console.error("Error fetching candidates:", err)
+        toast({
+          title: "Error",
+          description: "Failed to load candidates. Please try again.",
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCandidates()
+  }, [])
 
   const filteredCandidates = candidates.filter((candidate) => {
     const matchesSearch = candidate.fullName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -156,10 +155,30 @@ export function CandidatesSection() {
     })
   }
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 space-y-4">
+        <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+        <p className="text-gray-500 font-medium">Loading candidates...</p>
+      </div>
+    )
+  }
+
   return (
     <>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-purple-900">Candidates</h2>
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-purple-900">Candidates</h2>
+            <p className="text-gray-500 mt-1">Manage and review student applications</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="bg-purple-100 text-purple-700 px-4 py-2 rounded-lg">
+              <span className="font-semibold text-lg">{candidates.length}</span>
+              <span className="ml-1 text-sm">Total Applications</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <CandidatesTable
