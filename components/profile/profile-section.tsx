@@ -134,93 +134,94 @@ export function ProfileSection() {
     }
   };
 
-  if (loading) return <p className="text-white">Loading...</p>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
+
   if (!profileData) return null;
 
   return (
-    <>
-      <SectionHeader title="My profile" onEdit={handleEditClick} />
-
-      <div className="mb-6">
-        <div className="w-24 h-24 rounded-full overflow-hidden">
-          <img
-            src={profileData.logo_url || "/placeholder.svg"}
-            alt="University Avatar"
-            className="w-full h-full object-cover"
-          />
-        </div>
-      </div>
-
-      <InfoCard
-        items={[
-          {
-            label: "Name of the university or institution",
-            value: profileData.name,
-            highlight: true,
-          },
-          { label: "Type", value: profileData.type },
-          { label: "Classification", value: profileData.classification },
-        ]}
+    <div className="max-w-4xl">
+      <SectionHeader
+        title="University Profile"
+        subtitle="Manage your institution's information"
+        onEdit={handleEditClick}
       />
 
-      <InfoCard
-        items={[
-          { label: "Address", value: profileData.address, highlight: true },
-          { label: "City", value: profileData.city },
-          { label: "Zip code", value: profileData.zipCode },
-        ]}
-      />
-
-      <InfoCard
-        items={[
-          { label: "Email address", value: profileData.email, highlight: true },
-          { label: "Telephone number", value: profileData.telephone },
-          {
-            label: "Accreditation number",
-            value: profileData.accreditationNumber,
-          },
-        ]}
-      />
-
-      <InfoCard
-        items={[
-          {
-            label: "Accreditation document",
-            value: (
-              <button
-                onClick={handleFetchAccreditationUrl}
-                className="text-blue-500 underline disabled:opacity-50"
-                disabled={docLoading}
-              >
-                {docLoading ? "Loading..." : "View document"}
-              </button>
-            ),
-          },
-        ]}
-      />
-
-      <InfoCard
-        items={[
-          {
-            label: "University website",
-            value: (
+      {/* Profile Header Card */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
+        <div className="flex items-center gap-6">
+          <div className="w-20 h-20 rounded-xl overflow-hidden bg-purple-100 flex items-center justify-center">
+            {profileData.logo_url ? (
+              <img
+                src={profileData.logo_url}
+                alt="University Logo"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-2xl font-bold text-purple-600">
+                {profileData.name?.charAt(0) || "U"}
+              </span>
+            )}
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900">{profileData.name}</h3>
+            <p className="text-gray-500">{profileData.type} • {profileData.classification}</p>
+            {profileData.website && (
               <a
                 href={profileData.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-500 underline"
+                className="text-sm text-purple-600 hover:underline mt-1 inline-block"
               >
                 {profileData.website}
               </a>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <InfoCard
+        title="Location"
+        items={[
+          { label: "Address", value: profileData.address },
+          { label: "City", value: profileData.city },
+          { label: "Zip Code", value: profileData.zipCode },
+        ]}
+      />
+
+      <InfoCard
+        title="Contact Information"
+        items={[
+          { label: "Email", value: profileData.email },
+          { label: "Phone", value: profileData.telephone },
+          { label: "Representative", value: profileData.representativeName },
+          { label: "Representative Email", value: profileData.representativeEmail },
+        ]}
+      />
+
+      <InfoCard
+        title="Accreditation"
+        items={[
+          {
+            label: "Accreditation Number",
+            value: profileData.accreditationNumber,
+          },
+          {
+            label: "Document",
+            value: (
+              <button
+                onClick={handleFetchAccreditationUrl}
+                className="text-purple-600 hover:text-purple-700 font-medium disabled:opacity-50"
+                disabled={docLoading}
+              >
+                {docLoading ? "Loading..." : "View Document →"}
+              </button>
             ),
-          },
-          {
-            label: "Representative name",
-            value: profileData.representativeName,
-          },
-          {
-            label: "Representative email",
-            value: profileData.representativeEmail,
           },
         ]}
       />
@@ -231,6 +232,6 @@ export function ProfileSection() {
         initialData={profileData}
         onSave={handleSave}
       />
-    </>
+    </div>
   );
 }

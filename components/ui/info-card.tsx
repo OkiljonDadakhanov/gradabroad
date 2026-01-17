@@ -10,24 +10,29 @@ interface InfoItem {
 interface InfoCardProps {
   items: InfoItem[];
   className?: string;
+  title?: string;
 }
 
-export function InfoCard({ items, className = "" }: InfoCardProps) {
-  const gridCols =
-    items.length <= 3 ? `grid-cols-${items.length}` : "grid-cols-3";
-
+export function InfoCard({ items, className = "", title }: InfoCardProps) {
   return (
-    <Card className={`mb-6 overflow-hidden ${className}`}>
-      <div className={`grid ${gridCols} gap-4 p-4`}>
+    <Card className={`mb-4 overflow-hidden bg-white border border-gray-100 shadow-sm ${className}`}>
+      {title && (
+        <div className="px-5 py-3 border-b border-gray-100 bg-slate-50">
+          <h3 className="text-sm font-semibold text-gray-700">{title}</h3>
+        </div>
+      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-5">
         {items.map((item, index) => (
-          <div key={index}>
-            <p className="text-sm text-gray-500">{item.label}</p>
+          <div key={index} className="space-y-1">
+            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              {item.label}
+            </p>
             <p
-              className={`font-medium ${
-                item.highlight ? "text-purple-900" : ""
+              className={`text-sm font-medium ${
+                item.highlight ? "text-purple-700" : "text-gray-900"
               }`}
             >
-              {item.value}
+              {item.value || <span className="text-gray-300">Not provided</span>}
             </p>
           </div>
         ))}
