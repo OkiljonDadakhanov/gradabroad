@@ -6,7 +6,8 @@ import { CandidatesSection } from "@/components/candidates/candidates-section"
 export default function CandidatesPage() {
   return (
     <AppLayout>
-      <CandidatesSection />
+      {/* <CandidatesSection /> */}
+      <p>to be updated soon</p>
     </AppLayout>
   )
 }

@@ -23,7 +23,7 @@ export function CampusInfoSection() {
     setLoading(true);
     try {
       const res = await fetchWithAuth(
-        `${process.env.NEXT_PUBLIC_API_BASE || "http://localhost"}/api/information-about-campus/`
+        "https://api.gradabroad.net/api/information-about-campus/"
       );
 
       if (res.status === 404) {
@@ -79,7 +79,7 @@ export function CampusInfoSection() {
 
     try {
       const res = await fetchWithAuth(
-        `${process.env.NEXT_PUBLIC_API_BASE || "http://localhost"}/api/information-about-campus/`,
+        "https://api.gradabroad.net/api/information-about-campus/",
         {
           method: isEdit ? "PUT" : "POST",
           headers: {

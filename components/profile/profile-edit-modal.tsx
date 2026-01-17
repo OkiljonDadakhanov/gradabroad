@@ -80,7 +80,7 @@ export function ProfileEditModal({
 
     try {
       const response = await fetchWithAuth(
-        `${process.env.NEXT_PUBLIC_API_BASE || "http://localhost"}/api/auth/universities/me/`,
+        "https://api.gradabroad.net/api/auth/universities/me/",
         {
           method: "PUT",
           body: formData,
@@ -106,7 +106,7 @@ export function ProfileEditModal({
       let accreditationDocUrl = "";
       try {
         const docRes = await fetchWithAuth(
-          `${process.env.NEXT_PUBLIC_API_BASE || "http://localhost"}/api/auth/universities/me/accreditation-url/`
+          "https://api.gradabroad.net/api/auth/universities/me/accreditation-url/"
         );
 
         if (docRes.ok) {

@@ -137,7 +137,7 @@ export function AcademicProgramModal({
 
     try {
       const res = await fetchWithAuth(
-        `${process.env.NEXT_PUBLIC_API_BASE || "http://localhost"}/api/programmes/with-requirements/`,
+        "https://api.gradabroad.net/api/programmes/with-requirements/",
         {
           method: "POST",
           body: formData,

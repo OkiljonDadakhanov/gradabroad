@@ -35,7 +35,7 @@ export function AcademicProgramsSection() {
 
     try {
       const res = await fetchWithAuth(
-        `${process.env.NEXT_PUBLIC_API_BASE || "http://localhost"}/api/programmes/mine/`
+        "https://api.gradabroad.net/api/programmes/mine/"
       );
 
       if (!res.ok) {
