@@ -46,23 +46,23 @@ export function ProfileEditModal({
     setLoading(true);
     const formData = new FormData();
 
-    formData.append("university_name", values.name);
-    formData.append("types_of_schools", values.type);
-    formData.append("classification", values.classification);
-    formData.append("address", values.address);
-    formData.append("city", values.city);
-    formData.append("zip_code", values.zipCode);
-    formData.append("university_admission_email_address", values.email);
-    formData.append("university_office_phone", values.telephone);
-    formData.append("accreditation_number", values.accreditationNumber);
-    formData.append("website", values.website);
+    formData.append("university_name", values.name || "");
+    formData.append("types_of_schools", values.type || "");
+    formData.append("classification", values.classification || "");
+    formData.append("address", values.address || "");
+    formData.append("city", values.city || "");
+    formData.append("zip_code", values.zipCode || "");
+    formData.append("university_admission_email_address", values.email || "");
+    formData.append("university_office_phone", values.telephone || "");
+    formData.append("accreditation_number", values.accreditationNumber || "");
+    formData.append("website", values.website || "");
     formData.append(
       "university_admission_representetive_name",
-      values.representativeName
+      values.representativeName || ""
     );
     formData.append(
       "university_admission_representetive_email",
-      values.representativeEmail
+      values.representativeEmail || ""
     );
 
     if (values.signed_accreditation_document_url instanceof File) {
@@ -75,8 +75,6 @@ export function ProfileEditModal({
     if (values.logo_url instanceof File) {
       formData.append("logo", values.logo_url);
     }
-
-    const token = localStorage.getItem("accessToken");
 
     try {
       const response = await fetchWithAuth(
@@ -206,14 +204,14 @@ export function ProfileEditModal({
           <div className="space-y-4">
             <div>
               <Label>Name of the university or institution *</Label>
-              <Input name="name" value={values.name} onChange={handleChange} />
+              <Input name="name" value={values.name || ""} onChange={handleChange} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Type *</Label>
                 <Select
-                  value={values.type}
+                  value={values.type || ""}
                   onValueChange={(val) => handleSelectChange("type", val)}
                 >
                   <SelectTrigger>
@@ -236,7 +234,7 @@ export function ProfileEditModal({
               <div>
                 <Label>Classification *</Label>
                 <Select
-                  value={values.classification}
+                  value={values.classification || ""}
                   onValueChange={(val) =>
                     handleSelectChange("classification", val)
                   }
@@ -256,7 +254,7 @@ export function ProfileEditModal({
             <Label>Address *</Label>
             <Input
               name="address"
-              value={values.address}
+              value={values.address || ""}
               onChange={handleChange}
             />
 
@@ -265,7 +263,7 @@ export function ProfileEditModal({
                 <Label>City</Label>
                 <Input
                   name="city"
-                  value={values.city}
+                  value={values.city || ""}
                   onChange={handleChange}
                 />
               </div>
@@ -273,7 +271,7 @@ export function ProfileEditModal({
                 <Label>Zip code</Label>
                 <Input
                   name="zipCode"
-                  value={values.zipCode}
+                  value={values.zipCode || ""}
                   onChange={handleChange}
                 />
               </div>
@@ -283,7 +281,7 @@ export function ProfileEditModal({
             <div className="relative">
               <Input
                 name="email"
-                value={values.email}
+                value={values.email || ""}
                 onChange={handleChange}
               />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -299,7 +297,7 @@ export function ProfileEditModal({
               </div>
               <Input
                 name="telephone"
-                value={(values.telephone ?? "").replace("+", "")}
+                value={(values.telephone || "").replace("+", "")}
                 onChange={(e) =>
                   setValues({ ...values, telephone: "+" + e.target.value })
                 }
@@ -310,7 +308,7 @@ export function ProfileEditModal({
             <Label>Accreditation number *</Label>
             <Input
               name="accreditationNumber"
-              value={values.accreditationNumber}
+              value={values.accreditationNumber || ""}
               onChange={handleChange}
             />
 
@@ -328,21 +326,21 @@ export function ProfileEditModal({
             <Label>University Website</Label>
             <Input
               name="website"
-              value={values.website}
+              value={values.website || ""}
               onChange={handleChange}
             />
 
             <Label>Representative Name</Label>
             <Input
               name="representativeName"
-              value={values.representativeName}
+              value={values.representativeName || ""}
               onChange={handleChange}
             />
 
             <Label>Representative Email</Label>
             <Input
               name="representativeEmail"
-              value={values.representativeEmail}
+              value={values.representativeEmail || ""}
               onChange={handleChange}
             />
           </div>

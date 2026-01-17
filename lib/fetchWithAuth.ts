@@ -1,4 +1,16 @@
-const API_BASE = "https://api.gradabroad.net";
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://api.gradabroad.net";
+
+// Helper to resolve URL - prepends API_BASE if URL starts with /api or is relative
+function resolveUrl(url: string): string {
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    // Already absolute URL - replace production URL with configured base
+    return url.replace("https://api.gradabroad.net", API_BASE);
+  }
+  if (url.startsWith("/")) {
+    return `${API_BASE}${url}`;
+  }
+  return url;
+}
 
 export async function refreshToken(): Promise<boolean> {
   const refresh = localStorage.getItem("refreshToken");
@@ -34,8 +46,9 @@ export async function fetchWithAuth(
   options: RequestInit = {}
 ): Promise<Response> {
   let token = localStorage.getItem("accessToken");
+  const resolvedUrl = resolveUrl(url);
 
-  const res = await fetch(url, {
+  const res = await fetch(resolvedUrl, {
     ...options,
     headers: {
       ...options.headers,
@@ -55,7 +68,7 @@ export async function fetchWithAuth(
 
   token = localStorage.getItem("accessToken");
 
-  return fetch(url, {
+  return fetch(resolvedUrl, {
     ...options,
     headers: {
       ...options.headers,
