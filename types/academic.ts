@@ -5,6 +5,8 @@ export interface AcademicProgram {
   degreeType: string;
   languageRequirement: LanguageRequirement[];
   contractPrice: string;
+  platformApplicationFee?: string;
+  paymentInstructions?: string;
   admissionStart: string;
   results_announcement_date?: string | null;
   application_guide_url?: string | null;

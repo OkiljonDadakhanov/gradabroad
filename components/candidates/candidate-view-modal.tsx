@@ -15,14 +15,58 @@ import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { FileText, ExternalLink, Loader2, CheckCircle, XCircle, Clock, UserCheck, Calendar, Settings, Link } from "lucide-react"
+import { FileText, Loader2, CheckCircle, XCircle, Clock, UserCheck, Calendar, Settings, Link, User, Users, MapPin, Phone, Mail, Video, ExternalLink, Copy, Check } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { CandidateDetail, CandidateAttachment } from "@/types/candidate"
-import { FILE_TYPE_LABELS, DOCUMENT_CATEGORIES } from "@/types/candidate"
+import { FILE_TYPE_LABELS, DOCUMENT_CATEGORIES, PERSONAL_DOC_TYPE_LABELS, GENERAL_DOC_TYPE_LABELS, FINANCIAL_DOC_TYPE_LABELS, LANGUAGE_CERT_LABELS } from "@/types/candidate"
 import { STATUS_COLORS, STATUS_LABELS, VALID_STATUS_TRANSITIONS, ENDPOINTS } from "@/lib/constants"
 import { fetchWithAuth } from "@/lib/fetchWithAuth"
 import { formatDate } from "@/lib/utils"
 import { toast } from "sonner"
+
+// Parse interview details from remarks
+function parseInterviewDetails(remarks: string) {
+  const dateMatch = remarks.match(/Interview scheduled for ([^.]+)\./i)
+  const linkSectionMatch = remarks.match(/Interview link:\s*(.+)/i)
+
+  let link: string | null = null
+  let additionalInstructions: string | null = null
+
+  if (linkSectionMatch && linkSectionMatch[1]) {
+    const linkSection = linkSectionMatch[1].trim()
+    const urlMatch = linkSection.match(/^(https?:\/?\/?[^\s]+)/i)
+    if (urlMatch) {
+      let extractedUrl = urlMatch[1]
+      // Fix common URL issues
+      if (extractedUrl.match(/^https?:\/[^/]/i)) {
+        extractedUrl = extractedUrl.replace(/^(https?:)\/([^/])/i, '$1//$2')
+      }
+      if (extractedUrl.match(/^https?:[^/]/i)) {
+        extractedUrl = extractedUrl.replace(/^(https?:)([^/])/i, '$1//$2')
+      }
+      link = extractedUrl
+      const afterUrl = linkSection.substring(urlMatch[1].length).trim()
+      if (afterUrl) {
+        additionalInstructions = afterUrl
+      }
+    } else {
+      const parts = linkSection.split(/\s+/)
+      link = parts[0]
+      if (link && !link.startsWith('http') && link.includes('.')) {
+        link = 'https://' + link
+      }
+      if (parts.length > 1) {
+        additionalInstructions = parts.slice(1).join(' ')
+      }
+    }
+  }
+
+  return {
+    dateTime: dateMatch ? dateMatch[1] : null,
+    link,
+    additionalInstructions,
+  }
+}
 
 interface CandidateViewModalProps {
   isOpen: boolean
@@ -101,6 +145,21 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
   const [candidate, setCandidate] = useState<CandidateDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
+  const [copiedLink, setCopiedLink] = useState(false)
+
+  const handleCopyLink = (link: string) => {
+    navigator.clipboard.writeText(link)
+    setCopiedLink(true)
+    setTimeout(() => setCopiedLink(false), 2000)
+  }
+
+  const handleJoinInterview = (link: string) => {
+    let url = link
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://' + url
+    }
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
 
   // Confirmation dialog state
   const [showConfirm, setShowConfirm] = useState(false)
@@ -110,6 +169,11 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
   const [scheduledTime, setScheduledTime] = useState("")
   const [interviewLink, setInterviewLink] = useState("")
   const [isManualOverride, setIsManualOverride] = useState(false)
+  const [downloadingAttachment, setDownloadingAttachment] = useState<number | null>(null)
+  const [downloadingPersonalDoc, setDownloadingPersonalDoc] = useState<number | null>(null)
+  const [downloadingFamilyDoc, setDownloadingFamilyDoc] = useState<number | null>(null)
+  const [downloadingFinancialDoc, setDownloadingFinancialDoc] = useState<number | null>(null)
+  const [downloadingLanguageCert, setDownloadingLanguageCert] = useState<number | null>(null)
 
   // All available statuses for manual override
   const ALL_STATUSES = [
@@ -263,6 +327,109 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
   const availableActions = candidate ? VALID_STATUS_TRANSITIONS[candidate.status] || [] : []
   const currentAction = pendingStatus ? STATUS_ACTIONS[pendingStatus] : null
 
+  // Personal documents from PersonalDocument model
+  const personalDocs = candidate?.personal_documents || []
+
+  const handleViewAttachment = async (attachmentId: number) => {
+    setDownloadingAttachment(attachmentId)
+    try {
+      const response = await fetchWithAuth(
+        ENDPOINTS.ATTACHMENT_DOWNLOAD(candidateId, attachmentId)
+      )
+      if (response.ok) {
+        const data = await response.json()
+        window.open(data.signed_url, "_blank")
+      } else {
+        toast.error("Failed to get download URL")
+      }
+    } catch (error) {
+      console.error("Failed to get signed URL:", error)
+      toast.error("Failed to get download URL")
+    } finally {
+      setDownloadingAttachment(null)
+    }
+  }
+
+  const handleViewPersonalDocument = async (docId: number) => {
+    setDownloadingPersonalDoc(docId)
+    try {
+      const response = await fetchWithAuth(
+        ENDPOINTS.PERSONAL_DOCUMENT_DOWNLOAD(candidateId, docId)
+      )
+      if (response.ok) {
+        const data = await response.json()
+        window.open(data.signed_url, "_blank")
+      } else {
+        toast.error("Failed to get document URL")
+      }
+    } catch (error) {
+      console.error("Failed to get signed URL:", error)
+      toast.error("Failed to get document URL")
+    } finally {
+      setDownloadingPersonalDoc(null)
+    }
+  }
+
+  const handleViewFamilyPassport = async (memberId: number) => {
+    setDownloadingFamilyDoc(memberId)
+    try {
+      const response = await fetchWithAuth(
+        ENDPOINTS.FAMILY_PASSPORT_DOWNLOAD(candidateId, memberId)
+      )
+      if (response.ok) {
+        const data = await response.json()
+        window.open(data.signed_url, "_blank")
+      } else {
+        toast.error("Failed to get passport URL")
+      }
+    } catch (error) {
+      console.error("Failed to get signed URL:", error)
+      toast.error("Failed to get passport URL")
+    } finally {
+      setDownloadingFamilyDoc(null)
+    }
+  }
+
+  const handleViewFinancialDocument = async (docId: number) => {
+    setDownloadingFinancialDoc(docId)
+    try {
+      const response = await fetchWithAuth(
+        ENDPOINTS.FINANCIAL_DOCUMENT_DOWNLOAD(candidateId, docId)
+      )
+      if (response.ok) {
+        const data = await response.json()
+        window.open(data.signed_url, "_blank")
+      } else {
+        toast.error("Failed to get document URL")
+      }
+    } catch (error) {
+      console.error("Failed to get signed URL:", error)
+      toast.error("Failed to get document URL")
+    } finally {
+      setDownloadingFinancialDoc(null)
+    }
+  }
+
+  const handleViewLanguageCertificate = async (certId: number) => {
+    setDownloadingLanguageCert(certId)
+    try {
+      const response = await fetchWithAuth(
+        ENDPOINTS.LANGUAGE_CERTIFICATE_DOWNLOAD(candidateId, certId)
+      )
+      if (response.ok) {
+        const data = await response.json()
+        window.open(data.signed_url, "_blank")
+      } else {
+        toast.error("Failed to get certificate URL")
+      }
+    } catch (error) {
+      console.error("Failed to get signed URL:", error)
+      toast.error("Failed to get certificate URL")
+    } finally {
+      setDownloadingLanguageCert(null)
+    }
+  }
+
   // Check if confirm button should be disabled
   const isConfirmDisabled = () => {
     if (updating) return true
@@ -355,26 +522,301 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
                   </div>
                 </Card>
 
-                {candidate.remarks && (
+                {/* Personal Information Section */}
+                {candidate.student_profile && (
+                  <Card className="p-4">
+                    <h3 className="font-medium text-lg mb-4 dark:text-gray-100 flex items-center gap-2">
+                      <User className="h-5 w-5 text-purple-600" />
+                      Personal Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {candidate.student_profile.first_name && (
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">First Name</p>
+                          <p className="font-medium dark:text-gray-200">{candidate.student_profile.first_name}</p>
+                        </div>
+                      )}
+                      {candidate.student_profile.last_name && (
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Last Name</p>
+                          <p className="font-medium dark:text-gray-200">{candidate.student_profile.last_name}</p>
+                        </div>
+                      )}
+                      {candidate.student_profile.date_of_birth && (
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Date of Birth</p>
+                          <p className="font-medium dark:text-gray-200">{formatDate(candidate.student_profile.date_of_birth)}</p>
+                        </div>
+                      )}
+                      {candidate.student_profile.gender && (
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Gender</p>
+                          <p className="font-medium dark:text-gray-200 capitalize">{candidate.student_profile.gender}</p>
+                        </div>
+                      )}
+                      {candidate.student_profile.nationality && (
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Nationality</p>
+                          <p className="font-medium dark:text-gray-200">{candidate.student_profile.nationality}</p>
+                        </div>
+                      )}
+                      {candidate.student_profile.passport_number && (
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Passport Number</p>
+                          <p className="font-medium dark:text-gray-200">{candidate.student_profile.passport_number}</p>
+                        </div>
+                      )}
+                      {candidate.student_profile.passport_expiry_date && (
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Passport Expiry</p>
+                          <p className="font-medium dark:text-gray-200">{formatDate(candidate.student_profile.passport_expiry_date)}</p>
+                        </div>
+                      )}
+                      {candidate.student_profile.phone_number && (
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Phone</p>
+                          <p className="font-medium dark:text-gray-200">{candidate.student_profile.phone_number}</p>
+                        </div>
+                      )}
+                      {candidate.student_profile.email_contact && (
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Contact Email</p>
+                          <p className="font-medium dark:text-gray-200">{candidate.student_profile.email_contact}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Address */}
+                    {(candidate.student_profile.address_line1 || candidate.student_profile.city || candidate.student_profile.country) && (
+                      <div className="mt-4 pt-4 border-t dark:border-gray-700">
+                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                          <MapPin className="h-4 w-4" />
+                          Address
+                        </p>
+                        <p className="font-medium dark:text-gray-200">
+                          {[
+                            candidate.student_profile.address_line1,
+                            candidate.student_profile.address_line2,
+                            candidate.student_profile.city,
+                            candidate.student_profile.state_province,
+                            candidate.student_profile.postal_code,
+                            candidate.student_profile.country
+                          ].filter(Boolean).join(", ")}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Emergency Contact */}
+                    {candidate.student_profile.emergency_full_name && (
+                      <div className="mt-4 pt-4 border-t dark:border-gray-700">
+                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                          <Phone className="h-4 w-4" />
+                          Emergency Contact
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Name</p>
+                            <p className="font-medium dark:text-gray-200">{candidate.student_profile.emergency_full_name}</p>
+                          </div>
+                          {candidate.student_profile.emergency_relationship && (
+                            <div>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">Relationship</p>
+                              <p className="font-medium dark:text-gray-200">{candidate.student_profile.emergency_relationship}</p>
+                            </div>
+                          )}
+                          {candidate.student_profile.emergency_phone && (
+                            <div>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">Phone</p>
+                              <p className="font-medium dark:text-gray-200">{candidate.student_profile.emergency_phone}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+                )}
+
+                {/* Family Members Section */}
+                {candidate.family_members && candidate.family_members.length > 0 && (
+                  <Card className="p-4">
+                    <h3 className="font-medium text-lg mb-4 dark:text-gray-100 flex items-center gap-2">
+                      <Users className="h-5 w-5 text-purple-600" />
+                      Family Members ({candidate.family_members.length})
+                    </h3>
+                    <div className="space-y-3">
+                      {candidate.family_members.map((member) => (
+                        <div
+                          key={member.id}
+                          className={`p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg ${
+                            member.signed_file_url ? "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/50" : ""
+                          } transition-colors ${downloadingFamilyDoc === member.id ? "opacity-50" : ""}`}
+                          onClick={() => member.signed_file_url && handleViewFamilyPassport(member.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Name</p>
+                                <p className="font-medium dark:text-gray-200">{member.full_name}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Relation</p>
+                                <p className="font-medium dark:text-gray-200 capitalize">{member.relation}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Date of Birth</p>
+                                <p className="font-medium dark:text-gray-200">{formatDate(member.date_of_birth)}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Occupation</p>
+                                <p className="font-medium dark:text-gray-200">{member.occupation}</p>
+                              </div>
+                            </div>
+                            {member.signed_file_url && (
+                              <div className="ml-4 flex items-center gap-2">
+                                {downloadingFamilyDoc === member.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin text-purple-600" />
+                                ) : (
+                                  <Badge variant="outline" className="text-xs">Passport</Badge>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+
+                {/* Interview Details Section */}
+                {candidate.status === "interview" && candidate.remarks && (() => {
+                  const interviewDetails = parseInterviewDetails(candidate.remarks)
+                  return (
+                    <Card className="p-4 bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800">
+                      <h3 className="font-medium text-lg mb-4 dark:text-gray-100 flex items-center gap-2">
+                        <Video className="h-5 w-5 text-purple-600" />
+                        Interview Details
+                      </h3>
+                      <div className="space-y-4">
+                        {/* Date & Time */}
+                        {interviewDetails.dateTime && (
+                          <div className="bg-white dark:bg-purple-900/50 p-3 rounded-lg border border-purple-200 dark:border-purple-600">
+                            <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide mb-1">
+                              Date & Time
+                            </p>
+                            <p className="flex items-center gap-2 text-purple-800 dark:text-purple-200 font-medium">
+                              <Calendar className="h-4 w-4" />
+                              {interviewDetails.dateTime}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Meeting Link */}
+                        {interviewDetails.link && (
+                          <div className="bg-white dark:bg-purple-900/50 p-3 rounded-lg border border-purple-200 dark:border-purple-600">
+                            <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide mb-2">
+                              Meeting Link
+                            </p>
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2 p-2 bg-purple-50 dark:bg-purple-900/30 rounded border">
+                                <span className="text-purple-700 dark:text-purple-300 break-all text-sm flex-1">
+                                  {interviewDetails.link}
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="flex-shrink-0 text-purple-600 hover:text-purple-800 hover:bg-purple-100"
+                                  onClick={() => handleCopyLink(interviewDetails.link!)}
+                                >
+                                  {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                                </Button>
+                              </div>
+                              <Button
+                                className="bg-purple-600 hover:bg-purple-700 w-full"
+                                onClick={() => handleJoinInterview(interviewDetails.link!)}
+                              >
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                Join Interview
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Instructions */}
+                        {interviewDetails.additionalInstructions && (
+                          <div className="bg-white dark:bg-purple-900/50 p-3 rounded-lg border border-purple-200 dark:border-purple-600">
+                            <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide mb-2">
+                              Additional Instructions
+                            </p>
+                            <p className="text-purple-700 dark:text-purple-300 whitespace-pre-wrap text-sm">
+                              {interviewDetails.additionalInstructions}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Fallback if nothing parsed */}
+                        {!interviewDetails.dateTime && !interviewDetails.link && (
+                          <p className="text-gray-700 dark:text-gray-300">{candidate.remarks}</p>
+                        )}
+                      </div>
+                    </Card>
+                  )
+                })()}
+
+                {/* Regular Remarks for non-interview statuses */}
+                {candidate.status !== "interview" && candidate.remarks && (
                   <Card className="p-4 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
                     <h3 className="font-medium text-lg mb-3 dark:text-gray-100">Latest Remarks</h3>
                     <p className="text-gray-700 dark:text-gray-300">{candidate.remarks}</p>
                   </Card>
                 )}
 
-                {/* Documents Section - Grouped by Category */}
+                {/* Documents Section */}
                 <Card className="p-4">
-                  <h3 className="font-medium text-lg mb-4 dark:text-gray-100">Documents ({candidate.attachments?.length || 0})</h3>
-                  {candidate.attachments && candidate.attachments.length > 0 ? (
+                  <h3 className="font-medium text-lg mb-4 dark:text-gray-100">
+                    Documents ({(candidate.attachments?.length || 0) + personalDocs.length + (candidate.financial_documents?.length || 0) + (candidate.language_certificates?.length || 0)})
+                  </h3>
+                  {(candidate.attachments && candidate.attachments.length > 0) || personalDocs.length > 0 || (candidate.financial_documents && candidate.financial_documents.length > 0) || (candidate.language_certificates && candidate.language_certificates.length > 0) ? (
                     <div className="space-y-6">
+                      {/* Personal Documents (from PersonalDocument model) */}
+                      {personalDocs.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
+                            Personal Documents ({personalDocs.length})
+                          </h4>
+                          <div className="space-y-2">
+                            {personalDocs.map((doc) => (
+                              <div
+                                key={`personal-${doc.id}`}
+                                className={`flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer ${
+                                  downloadingPersonalDoc === doc.id ? "opacity-50" : ""
+                                }`}
+                                onClick={() => handleViewPersonalDocument(doc.id)}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <FileText className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                                  <div>
+                                    <p className="font-medium dark:text-gray-200">
+                                      {PERSONAL_DOC_TYPE_LABELS[doc.doc_type] || doc.doc_type}
+                                    </p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                      Uploaded: {formatDate(doc.uploaded_at)}
+                                    </p>
+                                  </div>
+                                </div>
+                                {downloadingPersonalDoc === doc.id && (
+                                  <Loader2 className="h-4 w-4 animate-spin text-purple-600" />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Application Attachments by Category */}
                       {Object.entries(DOCUMENT_CATEGORIES).map(([categoryKey, category]) => {
-                        const categoryDocs = candidate.attachments.filter(
-                          (att) => category.types.includes(att.file_type) ||
-                            (categoryKey === "other" && !Object.values(DOCUMENT_CATEGORIES)
-                              .flatMap(c => c.types)
-                              .filter(t => t !== "other")
-                              .includes(att.file_type))
-                        )
+                        const categoryDocs = candidate.attachments?.filter(
+                          (att) => category.types.includes(att.file_type)
+                        ) || []
 
                         if (categoryDocs.length === 0) return null
 
@@ -387,7 +829,10 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
                               {categoryDocs.map((attachment) => (
                                 <div
                                   key={attachment.id}
-                                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
+                                  className={`flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer ${
+                                    downloadingAttachment === attachment.id ? "opacity-50" : ""
+                                  }`}
+                                  onClick={() => handleViewAttachment(attachment.id)}
                                 >
                                   <div className="flex items-center gap-3">
                                     <FileText className="h-5 w-5 text-purple-600 dark:text-purple-400" />
@@ -400,22 +845,87 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
                                       </p>
                                     </div>
                                   </div>
-                                  <Button variant="outline" size="sm" asChild>
-                                    <a
-                                      href={attachment.signed_file_url || attachment.file}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <ExternalLink className="h-4 w-4 mr-2" />
-                                      View
-                                    </a>
-                                  </Button>
+                                  {downloadingAttachment === attachment.id && (
+                                    <Loader2 className="h-4 w-4 animate-spin text-purple-600" />
+                                  )}
                                 </div>
                               ))}
                             </div>
                           </div>
                         )
                       })}
+
+                      {/* Financial Documents */}
+                      {candidate.financial_documents && candidate.financial_documents.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
+                            Financial Documents ({candidate.financial_documents.length})
+                          </h4>
+                          <div className="space-y-2">
+                            {candidate.financial_documents.map((doc) => (
+                              <div
+                                key={`financial-${doc.id}`}
+                                className={`flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer ${
+                                  downloadingFinancialDoc === doc.id ? "opacity-50" : ""
+                                }`}
+                                onClick={() => handleViewFinancialDocument(doc.id)}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <FileText className="h-5 w-5 text-green-600 dark:text-green-400" />
+                                  <div>
+                                    <p className="font-medium dark:text-gray-200">
+                                      {FINANCIAL_DOC_TYPE_LABELS[doc.doc_type] || doc.doc_type}
+                                    </p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                      Uploaded: {formatDate(doc.uploaded_at)}
+                                    </p>
+                                  </div>
+                                </div>
+                                {downloadingFinancialDoc === doc.id && (
+                                  <Loader2 className="h-4 w-4 animate-spin text-green-600" />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Language Certificates */}
+                      {candidate.language_certificates && candidate.language_certificates.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
+                            Language Certificates ({candidate.language_certificates.length})
+                          </h4>
+                          <div className="space-y-2">
+                            {candidate.language_certificates.map((cert) => (
+                              <div
+                                key={`cert-${cert.id}`}
+                                className={`flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer ${
+                                  downloadingLanguageCert === cert.id ? "opacity-50" : ""
+                                }`}
+                                onClick={() => handleViewLanguageCertificate(cert.id)}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                  <div>
+                                    <p className="font-medium dark:text-gray-200">
+                                      {LANGUAGE_CERT_LABELS[cert.name] || cert.name}
+                                      {cert.score_or_level && ` - ${cert.score_or_level}`}
+                                    </p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                      Issued: {formatDate(cert.issue_date)}
+                                      {cert.expires_at && ` | Expires: ${formatDate(cert.expires_at)}`}
+                                    </p>
+                                  </div>
+                                </div>
+                                {downloadingLanguageCert === cert.id && (
+                                  <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <p className="text-gray-500 dark:text-gray-400 text-center py-4">No documents uploaded yet</p>

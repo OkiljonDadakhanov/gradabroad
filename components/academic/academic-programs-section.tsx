@@ -76,6 +76,7 @@ export function AcademicProgramsSection() {
           documentTypes,
           contractPrice: p.contractPrice || p.tuition_fee || "",
           platformApplicationFee: p.platformApplicationFee || "0.00",
+          paymentInstructions: p.payment_instructions || "",
           results_announcement_date: p.results_announcement_date || null,
           application_guide_url: p.application_guide_url || null,
           application_form_url: p.application_form_url || null,

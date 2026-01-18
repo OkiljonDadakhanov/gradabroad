@@ -70,6 +70,9 @@ export function AcademicProgramModal({
   const [guideFile, setGuideFile] = useState<File | null>(null);
   const [formFile, setFormFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [hasApplicationFee, setHasApplicationFee] = useState(false);
+  const [applicationFee, setApplicationFee] = useState("");
+  const [paymentInstructions, setPaymentInstructions] = useState("");
 
   const {
     values,
@@ -96,7 +99,10 @@ export function AcademicProgramModal({
     formData.append("field_of_study", values.category);
     formData.append("degreeType", values.degreeType);
     formData.append("contractPrice", values.contractPrice);
-    formData.append("platformApplicationFee", "0.00");
+    formData.append("platformApplicationFee", hasApplicationFee ? applicationFee : "0.00");
+    if (hasApplicationFee && paymentInstructions) {
+      formData.append("payment_instructions", paymentInstructions);
+    }
     formData.append("about_program", values.description.english);
     formData.append("active", String(values.active));
     formData.append("start_date", format(values.start_date, "yyyy-MM-dd"));
@@ -154,6 +160,9 @@ export function AcademicProgramModal({
       onSave({ ...values, id: `api-${created.id}` });
       onClose();
       reset();
+      setHasApplicationFee(false);
+      setApplicationFee("");
+      setPaymentInstructions("");
     } catch (err: any) {
       console.error("POST error", err);
       alert("Unexpected error: " + (err?.message || "Unknown"));
@@ -164,6 +173,9 @@ export function AcademicProgramModal({
 
   const handleCancel = () => {
     reset();
+    setHasApplicationFee(false);
+    setApplicationFee("");
+    setPaymentInstructions("");
     onClose();
   };
 
@@ -271,6 +283,54 @@ export function AcademicProgramModal({
                 />
               </div>
             </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="hasApplicationFee"
+                checked={hasApplicationFee}
+                onCheckedChange={(val) => setHasApplicationFee(Boolean(val))}
+              />
+              <Label htmlFor="hasApplicationFee">This program has an application fee</Label>
+            </div>
+
+            {hasApplicationFee && (
+              <>
+                <div>
+                  <Label htmlFor="applicationFee">Application Fee (USD)</Label>
+                  <div className="flex items-center mt-1">
+                    <span className="bg-gray-100 border border-r-0 rounded-l px-3 py-2">
+                      $
+                    </span>
+                    <Input
+                      id="applicationFee"
+                      value={applicationFee}
+                      onChange={(e) => setApplicationFee(e.target.value)}
+                      className="rounded-l-none"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="paymentInstructions">Payment Instructions</Label>
+                  <textarea
+                    id="paymentInstructions"
+                    value={paymentInstructions}
+                    onChange={(e) => setPaymentInstructions(e.target.value)}
+                    className="w-full mt-1 border border-gray-300 rounded px-3 py-2 min-h-[100px]"
+                    placeholder="Provide payment instructions for students (e.g., bank account details, payment methods, etc.)"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    These instructions will be shown to students when they apply.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

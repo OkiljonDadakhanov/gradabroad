@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { User, LogOut, Settings } from "lucide-react";
 import {
   DropdownMenu,
@@ -66,9 +67,21 @@ export function UserDropdown() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white font-medium text-sm">
-            {university ? getInitials(university.name) : "U"}
-          </div>
+          {university?.logo_url ? (
+            <div className="w-8 h-8 rounded-full overflow-hidden">
+              <Image
+                src={university.logo_url}
+                alt={university.name}
+                width={32}
+                height={32}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white font-medium text-sm">
+              {university ? getInitials(university.name) : "U"}
+            </div>
+          )}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56 dark:bg-gray-900 dark:border-gray-800">

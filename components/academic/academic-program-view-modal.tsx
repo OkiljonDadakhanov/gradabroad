@@ -49,12 +49,28 @@ export function AcademicProgramViewModal({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-500">Contract Price (USD)</p>
-                <p className="font-medium">{program.contractPrice}</p>
+                <p className="font-medium">${program.contractPrice}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Active</p>
-                <p className="font-medium">{program.active ? "Yes" : "No"}</p>
+                <p className="text-sm text-gray-500">Application Fee</p>
+                <p className="font-medium">
+                  {program.platformApplicationFee && parseFloat(program.platformApplicationFee) > 0
+                    ? `$${parseFloat(program.platformApplicationFee).toFixed(2)} USD`
+                    : "No application fee"}
+                </p>
               </div>
+            </div>
+            {program.platformApplicationFee && parseFloat(program.platformApplicationFee) > 0 && (
+              <div className="mt-4">
+                <p className="text-sm text-gray-500">Payment Instructions</p>
+                <p className="font-medium whitespace-pre-wrap">
+                  {program.paymentInstructions || "No payment instructions provided"}
+                </p>
+              </div>
+            )}
+            <div className="mt-4">
+              <p className="text-sm text-gray-500">Active</p>
+              <p className="font-medium">{program.active ? "Yes" : "No"}</p>
             </div>
           </Card>
 

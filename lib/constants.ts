@@ -32,6 +32,16 @@ export const ENDPOINTS = {
 
   // Documents
   APPLICATION_DOCS: "/api/application-docs/",
+  ATTACHMENT_DOWNLOAD: (applicationId: number, attachmentId: number) =>
+    `/api/applications/${applicationId}/attachments/${attachmentId}/download/`,
+  PERSONAL_DOCUMENT_DOWNLOAD: (applicationId: number, documentId: number) =>
+    `/api/applications/candidates/${applicationId}/personal-documents/${documentId}/download/`,
+  FAMILY_PASSPORT_DOWNLOAD: (applicationId: number, memberId: number) =>
+    `/api/applications/candidates/${applicationId}/family-members/${memberId}/passport/download/`,
+  FINANCIAL_DOCUMENT_DOWNLOAD: (applicationId: number, documentId: number) =>
+    `/api/applications/candidates/${applicationId}/financial-documents/${documentId}/download/`,
+  LANGUAGE_CERTIFICATE_DOWNLOAD: (applicationId: number, certificateId: number) =>
+    `/api/applications/candidates/${applicationId}/language-certificates/${certificateId}/download/`,
 
   // Chat
   CHAT_MESSAGES: (applicationId: number) =>

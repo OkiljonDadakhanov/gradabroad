@@ -20,9 +20,75 @@ export interface CandidateAttachment {
   signed_file_url: string;
 }
 
+// Student profile information
+export interface CandidateStudentProfile {
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+  additional_phone: string;
+  email_contact: string;
+  nationality: string;
+  date_of_birth: string | null;
+  gender: string;
+  passport_number: string;
+  passport_expiry_date: string | null;
+  address_line1: string;
+  address_line2: string;
+  city: string;
+  state_province: string;
+  postal_code: string;
+  country: string;
+  emergency_full_name: string;
+  emergency_relationship: string;
+  emergency_phone: string;
+}
+
+// Family member information
+export interface CandidateFamilyMember {
+  id: number;
+  full_name: string;
+  relation: string;
+  date_of_birth: string;
+  phone_number: string;
+  occupation: string;
+  signed_file_url: string | null;
+}
+
+// Personal document (passport, birth certificate, etc.)
+export interface CandidatePersonalDocument {
+  id: number;
+  doc_type: string;
+  signed_file_url: string;
+  uploaded_at: string;
+}
+
+// Financial document
+export interface CandidateFinancialDocument {
+  id: number;
+  doc_type: string;
+  signed_file_url: string;
+  uploaded_at: string;
+}
+
+// Language certificate
+export interface CandidateLanguageCertificate {
+  id: number;
+  name: string;
+  score_or_level: string;
+  issue_date: string;
+  expires_at: string | null;
+  signed_file_url: string;
+  uploaded_at: string;
+}
+
 // Candidate detail (from /api/applications/candidates/{id}/)
 export interface CandidateDetail extends CandidateListItem {
   applicant_email: string;
+  student_profile: CandidateStudentProfile | null;
+  family_members: CandidateFamilyMember[];
+  personal_documents: CandidatePersonalDocument[];
+  financial_documents: CandidateFinancialDocument[];
+  language_certificates: CandidateLanguageCertificate[];
   attachments: CandidateAttachment[];
   application_documents: any[];
 }
@@ -41,67 +107,66 @@ export const STATUS_OPTIONS: { value: ApplicationStatus; label: string }[] = [
   { value: "studying", label: "Studying" },
 ];
 
-// File type labels
+// File type labels for ApplicationAttachment
 export const FILE_TYPE_LABELS: Record<string, string> = {
-  // Personal Documents
-  cv: "CV / Resume",
-  passport: "Passport",
-  photo: "Photo",
-
-  // Academic Documents
-  diploma: "Diploma",
+  // ApplicationAttachment types (from backend)
   transcript: "Transcript",
-  degree_certificate: "Degree Certificate",
-
-  // Application Documents
+  recommendation_letter: "Recommendation Letter",
   motivation_letter: "Motivation Letter",
+  cv: "CV / Resume",
+  payment_receipt: "Payment Receipt",
+};
+
+// General application document type labels (from GeneralApplicationDocument model)
+export const GENERAL_DOC_TYPE_LABELS: Record<string, string> = {
   sop: "Statement of Purpose",
   study_plan: "Study Plan",
-  recommendation: "Recommendation Letter",
+  motivation: "Motivation",
+  motivation_letter: "Motivation Letter",
   recommendation_letter_1: "Recommendation Letter #1",
   recommendation_letter_2: "Recommendation Letter #2",
   portfolio: "Portfolio",
   research_proposal: "Research Proposal",
-
-  // Certificates
-  language_certificate: "Language Certificate",
-  ielts: "IELTS Certificate",
-  toefl: "TOEFL Certificate",
-  topik: "TOPIK Certificate",
-
-  // Financial Documents
-  bank_statement: "Bank Statement",
-  financial_guarantee: "Financial Guarantee",
-  scholarship_letter: "Scholarship Letter",
-
-  // Other
-  other: "Other Document",
 };
 
-// Document categories for grouping
+// Personal document type labels (from PersonalDocument model)
+export const PERSONAL_DOC_TYPE_LABELS: Record<string, string> = {
+  passport_copy: "Passport Copy",
+  passport_photo: "Passport Photo",
+  medical_exam_report: "Medical Exam Report",
+  national_id_or_birth_certificate: "National ID / Birth Certificate",
+  apostille_birth_certificate: "Apostille Birth Certificate",
+};
+
+// Financial document type labels (profile-level documents from FinancialDocument model)
+export const FINANCIAL_DOC_TYPE_LABELS: Record<string, string> = {
+  bank_balance: "Bank Balance",
+  financial_support_letter: "Financial Support Letter",
+  family_relationship_certificate: "Family Relationship Certificate",
+  sponsor_tax_documents: "Sponsor Tax Documents",
+};
+
+// Language certificate name labels
+export const LANGUAGE_CERT_LABELS: Record<string, string> = {
+  TOPIK: "TOPIK",
+  IELTS: "IELTS",
+  TOEFL: "TOEFL",
+  JLPT: "JLPT",
+  OTHER: "Other",
+};
+
+// Document categories for grouping ApplicationAttachments
 export const DOCUMENT_CATEGORIES: Record<string, { label: string; types: string[] }> = {
-  personal: {
-    label: "Personal Documents",
-    types: ["cv", "passport", "photo"],
-  },
   academic: {
     label: "Academic Documents",
-    types: ["diploma", "transcript", "degree_certificate"],
+    types: ["transcript"],
   },
   application: {
     label: "Application Documents",
-    types: ["motivation_letter", "sop", "study_plan", "recommendation", "recommendation_letter_1", "recommendation_letter_2", "portfolio", "research_proposal"],
+    types: ["motivation_letter", "recommendation_letter", "cv"],
   },
-  certificates: {
-    label: "Certificates",
-    types: ["language_certificate", "ielts", "toefl", "topik"],
-  },
-  financial: {
-    label: "Financial Documents",
-    types: ["bank_statement", "financial_guarantee", "scholarship_letter"],
-  },
-  other: {
-    label: "Other Documents",
-    types: ["other"],
+  payment: {
+    label: "Payment Documents",
+    types: ["payment_receipt"],
   },
 };
