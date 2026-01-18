@@ -1,11 +1,10 @@
 "use client"
 
-import { Eye } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import type { Payment } from "@/types/billing"
 import { formatDate, formatCurrency } from "@/lib/utils"
+import { useTranslations } from "@/lib/i18n"
 
 interface BillingTableProps {
   payments: Payment[]
@@ -13,6 +12,8 @@ interface BillingTableProps {
 }
 
 export function BillingTable({ payments, onView }: BillingTableProps) {
+  const t = useTranslations("billing")
+  const tCommon = useTranslations("common")
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Accepted":
@@ -35,18 +36,21 @@ export function BillingTable({ payments, onView }: BillingTableProps) {
       <Table>
         <TableHeader className="bg-purple-50">
           <TableRow>
-            <TableHead>Service type</TableHead>
-            <TableHead>Paid price($)</TableHead>
-            <TableHead>Start date</TableHead>
-            <TableHead>Expire date</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">View</TableHead>
+            <TableHead>{t("serviceType")}</TableHead>
+            <TableHead>{t("paidPrice")}</TableHead>
+            <TableHead>{t("startDate")}</TableHead>
+            <TableHead>{t("expireDate")}</TableHead>
+            <TableHead>{tCommon("status")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {payments.length > 0 ? (
             payments.map((payment) => (
-              <TableRow key={payment.id}>
+              <TableRow
+                key={payment.id}
+                className="cursor-pointer hover:bg-purple-50 transition-colors"
+                onClick={() => onView(payment)}
+              >
                 <TableCell className="font-medium">{payment.serviceType}</TableCell>
                 <TableCell>{formatCurrency(payment.pricePaid)}</TableCell>
                 <TableCell>{formatDate(payment.startDate)}</TableCell>
@@ -54,22 +58,12 @@ export function BillingTable({ payments, onView }: BillingTableProps) {
                 <TableCell>
                   <Badge className={getStatusColor(payment.status)}>{payment.status}</Badge>
                 </TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="bg-purple-200 hover:bg-purple-300"
-                    onClick={() => onView(payment)}
-                  >
-                    <Eye className="h-5 w-5 text-purple-700" />
-                  </Button>
-                </TableCell>
               </TableRow>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
-                No payment records found.
+              <TableCell colSpan={5} className="h-24 text-center">
+                {t("noPayments")}
               </TableCell>
             </TableRow>
           )}

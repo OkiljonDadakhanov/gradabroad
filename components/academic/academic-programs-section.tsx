@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Eye, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { AcademicProgramViewModal } from "./academic-program-view-modal";
@@ -9,11 +9,14 @@ import { AcademicProgramDeleteDialog } from "./academic-program-delete-dialog";
 import { AcademicProgramModal } from "./academic-program-modal"; // For adding
 import { AcademicProgramEditModal } from "./academic-program-edit-modal"; // For editing
 import { generateId } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n";
 import type { AcademicProgram } from "@/types/academic";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 export function AcademicProgramsSection() {
   const { toast } = useToast();
+  const t = useTranslations("programs");
+  const tCommon = useTranslations("common");
 
   const [programs, setPrograms] = useState<AcademicProgram[]>([]);
   const [loading, setLoading] = useState(true);
@@ -149,63 +152,58 @@ export function AcademicProgramsSection() {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-purple-900">
-          Academic programs
+        <h2 className="text-2xl font-bold text-purple-900 dark:text-purple-300">
+          {t("title")}
         </h2>
         <Button
           onClick={() => setIsAddModalOpen(true)}
           className="bg-purple-900 hover:bg-purple-800 text-white"
         >
-          <Plus className="mr-2 h-4 w-4" /> Add
+          <Plus className="mr-2 h-4 w-4" /> {tCommon("add")}
         </Button>
       </div>
 
       <div className="space-y-4">
         {!loading && programs.length === 0 && (
           <div className="text-center py-8 text-gray-500 text-sm">
-            No academic programs found.
+            {t("noPrograms")}
           </div>
         )}
 
         {programs.map((program) => (
           <div
             key={program.id}
-            className="bg-purple-50 p-4 rounded-md flex justify-between items-center"
+            className="bg-purple-50 dark:bg-purple-950/30 p-4 rounded-md flex justify-between items-center cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+            onClick={() => {
+              setCurrentProgram(program);
+              setIsViewModalOpen(true);
+            }}
           >
-            <span className="font-medium text-purple-900">{program.name}</span>
+            <span className="font-medium text-purple-900 dark:text-purple-300">{program.name}</span>
             <div className="flex gap-2">
               <Button
                 variant="ghost"
                 size="icon"
-                className="bg-purple-200 hover:bg-purple-300"
-                onClick={() => {
-                  setCurrentProgram(program);
-                  setIsViewModalOpen(true);
-                }}
-              >
-                <Eye className="h-5 w-5 text-purple-700" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="bg-purple-200 hover:bg-purple-300"
-                onClick={() => {
+                className="bg-purple-200 dark:bg-purple-800/40 hover:bg-purple-300 dark:hover:bg-purple-700/50"
+                onClick={(e) => {
+                  e.stopPropagation();
                   setCurrentProgram(program);
                   setIsEditModalOpen(true);
                 }}
               >
-                <Pencil className="h-5 w-5 text-purple-700" />
+                <Pencil className="h-5 w-5 text-purple-700 dark:text-purple-400" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                className="bg-purple-200 hover:bg-purple-300"
-                onClick={() => {
+                className="bg-purple-200 dark:bg-purple-800/40 hover:bg-purple-300 dark:hover:bg-purple-700/50"
+                onClick={(e) => {
+                  e.stopPropagation();
                   setCurrentProgram(program);
                   setIsDeleteDialogOpen(true);
                 }}
               >
-                <Trash2 className="h-5 w-5 text-purple-700" />
+                <Trash2 className="h-5 w-5 text-purple-700 dark:text-purple-400" />
               </Button>
             </div>
           </div>

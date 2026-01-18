@@ -10,9 +10,12 @@ import { useToast } from "@/hooks/use-toast"
 import type { Payment, PaymentFormData, PaymentHistoryItem } from "@/types/billing"
 import { ServiceType, PaymentStatus } from "@/types/billing"
 import { generateId } from "@/lib/utils"
+import { useTranslations } from "@/lib/i18n"
 
 export function BillingAndPaymentsSection() {
   const { toast } = useToast()
+  const t = useTranslations("billing")
+  const tCommon = useTranslations("common")
   const [payments, setPayments] = useState<Payment[]>([
     {
       id: "pay-1",
@@ -74,8 +77,8 @@ export function BillingAndPaymentsSection() {
     setIsAddModalOpen(false)
 
     toast({
-      title: "Payment added",
-      description: `Payment for ${formData.serviceType} service has been successfully added.`,
+      title: t("paymentAdded"),
+      description: t("paymentAddedDesc"),
       variant: "success",
     })
   }
@@ -83,9 +86,9 @@ export function BillingAndPaymentsSection() {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-purple-900">Billing and Payments</h2>
+        <h2 className="text-2xl font-bold text-purple-900">{t("title")}</h2>
         <Button onClick={() => setIsAddModalOpen(true)} className="bg-purple-900 hover:bg-purple-800">
-          <Plus className="mr-2 h-4 w-4" /> Add
+          <Plus className="mr-2 h-4 w-4" /> {tCommon("add")}
         </Button>
       </div>
 

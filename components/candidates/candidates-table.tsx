@@ -1,72 +1,58 @@
 "use client"
-import { Eye, Pencil, Search } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import type { Candidate } from "@/types/candidate"
-import { CandidateStatus, FACULTIES } from "@/types/candidate"
+import type { CandidateListItem } from "@/types/candidate"
+import { STATUS_OPTIONS } from "@/types/candidate"
+import { STATUS_COLORS, STATUS_LABELS } from "@/lib/constants"
 import { formatDate } from "@/lib/utils"
+import { useTranslations } from "@/lib/i18n"
 
 interface CandidatesTableProps {
-  candidates: Candidate[]
-  onView: (candidate: Candidate) => void
-  onEdit: (candidate: Candidate) => void
-  onStatusChange: (candidateId: string, status: CandidateStatus) => void
+  candidates: CandidateListItem[]
+  onView: (candidate: CandidateListItem) => void
   searchTerm: string
   onSearchChange: (term: string) => void
-  statusFilter: CandidateStatus | ""
-  onStatusFilterChange: (status: CandidateStatus | "") => void
-  facultyFilter: string
-  onFacultyFilterChange: (faculty: string) => void
+  statusFilter: string
+  onStatusFilterChange: (status: string) => void
+  loading?: boolean
 }
 
 export function CandidatesTable({
   candidates,
   onView,
-  onEdit,
-  onStatusChange,
   searchTerm,
   onSearchChange,
   statusFilter,
   onStatusFilterChange,
-  facultyFilter,
-  onFacultyFilterChange,
+  loading = false,
 }: CandidatesTableProps) {
+  const t = useTranslations("candidates")
+  const tCommon = useTranslations("common")
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
           <Input
-            placeholder="Search candidates..."
+            placeholder={t("searchPlaceholder")}
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-8"
           />
         </div>
-        <Select value={statusFilter} onValueChange={(value) => onStatusFilterChange(value as CandidateStatus | "")}>
+        <Select value={statusFilter} onValueChange={onStatusFilterChange}>
           <SelectTrigger className="w-full md:w-[200px]">
-            <SelectValue placeholder="Filter by status" />
+            <SelectValue placeholder={t("filterByStatus")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            {Object.values(CandidateStatus).map((status) => (
-              <SelectItem key={status} value={status}>
-                {status}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={facultyFilter} onValueChange={onFacultyFilterChange}>
-          <SelectTrigger className="w-full md:w-[200px]">
-            <SelectValue placeholder="Filter by faculty" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All faculties</SelectItem>
-            {FACULTIES.map((faculty) => (
-              <SelectItem key={faculty} value={faculty}>
-                {faculty}
+            <SelectItem value="all">{t("allStatuses")}</SelectItem>
+            {STATUS_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -75,65 +61,46 @@ export function CandidatesTable({
 
       <div className="rounded-md border">
         <Table>
-          <TableHeader className="bg-purple-50">
+          <TableHeader className="bg-purple-50 dark:bg-purple-950/30">
             <TableRow>
-              <TableHead className="w-[250px]">Full Name</TableHead>
-              <TableHead>Faculty</TableHead>
-              <TableHead>Applied Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-[200px] dark:text-gray-300">{t("studentName")}</TableHead>
+              <TableHead className="dark:text-gray-300">{t("program")}</TableHead>
+              <TableHead className="dark:text-gray-300">{t("applicationDate")}</TableHead>
+              <TableHead className="dark:text-gray-300">{t("status")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {candidates.length > 0 ? (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={4} className="h-24 text-center">
+                  {tCommon("loading")}
+                </TableCell>
+              </TableRow>
+            ) : candidates.length > 0 ? (
               candidates.map((candidate) => (
-                <TableRow key={candidate.id}>
-                  <TableCell className="font-medium">{candidate.fullName}</TableCell>
-                  <TableCell>{candidate.faculty}</TableCell>
-                  <TableCell>{formatDate(candidate.appliedDate)}</TableCell>
-                  <TableCell>
-                    <Select
-                      value={candidate.status}
-                      onValueChange={(value) => onStatusChange(candidate.id, value as CandidateStatus)}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue>{candidate.status}</SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.values(CandidateStatus).map((status) => (
-                          <SelectItem key={status} value={status}>
-                            {status}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                <TableRow
+                  key={candidate.id}
+                  className="cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-colors"
+                  onClick={() => onView(candidate)}
+                >
+                  <TableCell className="font-medium">
+                    {candidate.applicant_full_name}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="bg-purple-200 hover:bg-purple-300"
-                        onClick={() => onView(candidate)}
-                      >
-                        <Eye className="h-5 w-5 text-purple-700" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="bg-purple-200 hover:bg-purple-300"
-                        onClick={() => onEdit(candidate)}
-                      >
-                        <Pencil className="h-5 w-5 text-purple-700" />
-                      </Button>
-                    </div>
+                  <TableCell>{candidate.programme_name}</TableCell>
+                  <TableCell>
+                    {candidate.applied_date ? formatDate(candidate.applied_date) : "-"}
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={STATUS_COLORS[candidate.status] || "bg-gray-100 text-gray-700"}>
+                      {STATUS_LABELS[candidate.status] || candidate.status}
+                    </Badge>
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center bg-purple-100">
-                  No candidates right now
+                <TableCell colSpan={4} className="h-24 text-center text-gray-500">
+                  {t("noApplications")}
                 </TableCell>
               </TableRow>
             )}

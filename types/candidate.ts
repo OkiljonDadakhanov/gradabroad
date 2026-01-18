@@ -1,57 +1,34 @@
 import { ApplicationStatus } from "./application";
 
-export interface CandidateStudent {
+// Candidate list item (from /api/applications/candidates/)
+export interface CandidateListItem {
   id: number;
-  email: string;
-  first_name: string;
-  last_name: string;
-  phone?: string;
-  country?: string;
-  date_of_birth?: string;
-}
-
-export interface CandidateProgramme {
-  id: number;
-  name: string;
-  field_of_study: string;
-  degree_type: string;
-}
-
-export interface CandidateDocument {
-  id: number;
-  document_type: string;
-  document_type_name: string;
-  file_url: string;
-  status: "pending" | "approved" | "rejected";
-  uploaded_at: string;
-  notes?: string;
-}
-
-export interface Candidate {
-  id: number;
-  student: CandidateStudent;
-  programme: CandidateProgramme;
+  applicant_full_name: string;
+  programme_name: string;
+  applied_date: string | null;
   status: ApplicationStatus;
-  created_at: string;
-  updated_at: string;
-  submitted_at?: string;
-  documents: CandidateDocument[];
-  notes?: string;
+  remarks: string;
 }
 
-// For backward compatibility with old components
-export enum CandidateStatus {
-  DRAFT = "draft",
-  DOCUMENT_SAVED = "document_saved",
-  SUBMITTED = "submitted",
-  UNDER_REVIEW = "under_review",
-  INTERVIEW = "interview",
-  ACCEPTED = "accepted",
-  REJECTED = "rejected",
-  CONFIRMED = "confirmed",
-  VISA_TAKEN = "visa_taken",
-  STUDYING = "studying",
+// Attachment in candidate detail
+export interface CandidateAttachment {
+  id: number;
+  application_id: number;
+  file_type: string;
+  file: string;
+  uploaded_at: string;
+  signed_file_url: string;
 }
+
+// Candidate detail (from /api/applications/candidates/{id}/)
+export interface CandidateDetail extends CandidateListItem {
+  applicant_email: string;
+  attachments: CandidateAttachment[];
+  application_documents: any[];
+}
+
+// For backward compatibility
+export type Candidate = CandidateListItem;
 
 export const STATUS_OPTIONS: { value: ApplicationStatus; label: string }[] = [
   { value: "submitted", label: "Submitted" },
@@ -64,50 +41,67 @@ export const STATUS_OPTIONS: { value: ApplicationStatus; label: string }[] = [
   { value: "studying", label: "Studying" },
 ];
 
-export const FACULTIES = [
-  "Engineering",
-  "Computer Science",
-  "Business",
-  "Medicine",
-  "Arts",
-  "Social Sciences",
-  "Natural Sciences",
-  "Mathematics",
-  "Law",
-  "Education",
-];
+// File type labels
+export const FILE_TYPE_LABELS: Record<string, string> = {
+  // Personal Documents
+  cv: "CV / Resume",
+  passport: "Passport",
+  photo: "Photo",
 
-export const COUNTRIES = [
-  "Afghanistan",
-  "Albania",
-  "Algeria",
-  "Argentina",
-  "Australia",
-  "Bangladesh",
-  "Brazil",
-  "Canada",
-  "China",
-  "Egypt",
-  "France",
-  "Germany",
-  "India",
-  "Indonesia",
-  "Iran",
-  "Italy",
-  "Japan",
-  "Kazakhstan",
-  "Kenya",
-  "Malaysia",
-  "Mexico",
-  "Nigeria",
-  "Pakistan",
-  "Russia",
-  "Saudi Arabia",
-  "South Korea",
-  "Spain",
-  "Turkey",
-  "United Kingdom",
-  "United States",
-  "Uzbekistan",
-  "Vietnam",
-];
+  // Academic Documents
+  diploma: "Diploma",
+  transcript: "Transcript",
+  degree_certificate: "Degree Certificate",
+
+  // Application Documents
+  motivation_letter: "Motivation Letter",
+  sop: "Statement of Purpose",
+  study_plan: "Study Plan",
+  recommendation: "Recommendation Letter",
+  recommendation_letter_1: "Recommendation Letter #1",
+  recommendation_letter_2: "Recommendation Letter #2",
+  portfolio: "Portfolio",
+  research_proposal: "Research Proposal",
+
+  // Certificates
+  language_certificate: "Language Certificate",
+  ielts: "IELTS Certificate",
+  toefl: "TOEFL Certificate",
+  topik: "TOPIK Certificate",
+
+  // Financial Documents
+  bank_statement: "Bank Statement",
+  financial_guarantee: "Financial Guarantee",
+  scholarship_letter: "Scholarship Letter",
+
+  // Other
+  other: "Other Document",
+};
+
+// Document categories for grouping
+export const DOCUMENT_CATEGORIES: Record<string, { label: string; types: string[] }> = {
+  personal: {
+    label: "Personal Documents",
+    types: ["cv", "passport", "photo"],
+  },
+  academic: {
+    label: "Academic Documents",
+    types: ["diploma", "transcript", "degree_certificate"],
+  },
+  application: {
+    label: "Application Documents",
+    types: ["motivation_letter", "sop", "study_plan", "recommendation", "recommendation_letter_1", "recommendation_letter_2", "portfolio", "research_proposal"],
+  },
+  certificates: {
+    label: "Certificates",
+    types: ["language_certificate", "ielts", "toefl", "topik"],
+  },
+  financial: {
+    label: "Financial Documents",
+    types: ["bank_statement", "financial_guarantee", "scholarship_letter"],
+  },
+  other: {
+    label: "Other Documents",
+    types: ["other"],
+  },
+};

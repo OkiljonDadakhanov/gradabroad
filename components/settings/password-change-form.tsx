@@ -7,10 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { fetchWithAuth } from "@/lib/fetchWithAuth"
+import { useTranslations } from "@/lib/i18n"
 
 export function PasswordChangeForm() {
   const { toast } = useToast()
+  const t = useTranslations("settings")
+  const tCommon = useTranslations("common")
   const [formData, setFormData] = useState({
     oldPassword: "",
     newPassword: "",
@@ -20,6 +24,7 @@ export function PasswordChangeForm() {
   const [showOldPassword, setShowOldPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -35,53 +40,88 @@ export function PasswordChangeForm() {
     const newErrors: Record<string, string> = {}
 
     if (!formData.oldPassword) {
-      newErrors.oldPassword = "Old password is required"
+      newErrors.oldPassword = t("oldPassword") + " required"
     }
 
     if (!formData.newPassword) {
-      newErrors.newPassword = "New password is required"
+      newErrors.newPassword = t("newPassword") + " required"
     } else if (formData.newPassword.length < 8) {
-      newErrors.newPassword = "Password must be at least 8 characters"
+      newErrors.newPassword = t("passwordRequirements")
     }
 
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password"
+      newErrors.confirmPassword = t("confirmPassword") + " required"
     } else if (formData.newPassword !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match"
+      newErrors.confirmPassword = t("passwordMismatch")
     }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (validateForm()) {
-      // In a real app, this would call an API to change the password
-      toast({
-        title: "Password updated",
-        description: "Your password has been successfully updated.",
-        variant: "success",
+    if (!validateForm()) return
+
+    setIsSubmitting(true)
+    try {
+      const res = await fetchWithAuth("/api/settings/password/", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          old_password: formData.oldPassword,
+          new_password: formData.newPassword,
+          confirm_password: formData.confirmPassword,
+        }),
       })
 
-      // Reset form
-      setFormData({
-        oldPassword: "",
-        newPassword: "",
-        confirmPassword: "",
+      if (res.ok) {
+        toast({
+          title: tCommon("success"),
+          description: t("passwordUpdated"),
+          variant: "success",
+        })
+        setFormData({
+          oldPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        })
+      } else {
+        const data = await res.json()
+        if (data.old_password) {
+          setErrors({ oldPassword: data.old_password[0] || t("invalidOldPassword") })
+        } else if (data.new_password) {
+          setErrors({ newPassword: data.new_password[0] })
+        } else if (data.confirm_password) {
+          setErrors({ confirmPassword: data.confirm_password[0] })
+        } else {
+          toast({
+            title: tCommon("error"),
+            description: data.detail || tCommon("error"),
+            variant: "destructive",
+          })
+        }
+      }
+    } catch (err) {
+      toast({
+        title: tCommon("error"),
+        description: tCommon("error"),
+        variant: "destructive",
       })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
     <div>
-      <h3 className="text-xl font-semibold mb-4">Change Password</h3>
+      <h3 className="text-xl font-semibold mb-4">{t("changePassword")}</h3>
 
       <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
         <div>
           <Label htmlFor="oldPassword">
-            Old password <span className="text-red-500">*</span>
+            {t("oldPassword")} <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
             <Input
@@ -105,7 +145,7 @@ export function PasswordChangeForm() {
 
         <div>
           <Label htmlFor="newPassword">
-            New password <span className="text-red-500">*</span>
+            {t("newPassword")} <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
             <Input
@@ -129,7 +169,7 @@ export function PasswordChangeForm() {
 
         <div>
           <Label htmlFor="confirmPassword">
-            Confirm password <span className="text-red-500">*</span>
+            {t("confirmPassword")} <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
             <Input
@@ -151,8 +191,15 @@ export function PasswordChangeForm() {
           {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
         </div>
 
-        <Button type="submit" className="bg-purple-900 hover:bg-purple-800">
-          Save
+        <Button type="submit" className="bg-purple-900 hover:bg-purple-800" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {tCommon("loading")}
+            </>
+          ) : (
+            tCommon("save")
+          )}
         </Button>
       </form>
     </div>

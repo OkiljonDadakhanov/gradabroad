@@ -15,8 +15,8 @@ export function SectionHeader({ title, onEdit, rightContent, subtitle }: Section
   return (
     <div className="flex justify-between items-start mb-8">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-        {subtitle && <p className="text-gray-500 mt-1">{subtitle}</p>}
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{title}</h2>
+        {subtitle && <p className="text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>}
       </div>
       <div className="flex items-center gap-3">
         {rightContent}

@@ -1,18 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Eye, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ScholarshipModal } from "./scholarship-modal";
 import { ScholarshipViewModal } from "./scholarship-view-modal";
 import { ScholarshipDeleteDialog } from "./scholarship-delete-dialog";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
+import { useTranslations } from "@/lib/i18n";
 import type { Scholarship } from "@/types/scholarship";
 import type { AcademicProgram } from "@/types/academic";
 
 export function ScholarshipsSection() {
   const { toast } = useToast();
+  const t = useTranslations("scholarships");
+  const tCommon = useTranslations("common");
   const [scholarships, setScholarships] = useState<Scholarship[]>([]);
   const [programs, setPrograms] = useState<AcademicProgram[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,26 +95,30 @@ export function ScholarshipsSection() {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-purple-900">Scholarships</h2>
+        <h2 className="text-2xl font-bold text-purple-900">{t("title")}</h2>
         <Button
           onClick={() => setIsAddModalOpen(true)}
           className="bg-purple-900 text-white"
         >
-          <Plus className="mr-2 h-4 w-4" /> Add
+          <Plus className="mr-2 h-4 w-4" /> {tCommon("add")}
         </Button>
       </div>
 
       <div className="space-y-4">
         {!loading && scholarships.length === 0 && (
           <div className="text-gray-500 text-center">
-            No scholarships found.
+            {t("noScholarships")}
           </div>
         )}
 
         {scholarships.map((sch) => (
           <div
             key={sch.id}
-            className="bg-purple-50 p-4 rounded-md flex justify-between items-center"
+            className="bg-purple-50 p-4 rounded-md flex justify-between items-center cursor-pointer hover:bg-purple-100 transition-colors"
+            onClick={() => {
+              setCurrentScholarship(sch);
+              setIsViewModalOpen(true);
+            }}
           >
             <span className="text-purple-900 font-medium">
               {sch.name} — {getProgramName(sch.programme_id)}
@@ -121,18 +128,8 @@ export function ScholarshipsSection() {
                 variant="ghost"
                 size="icon"
                 className="bg-purple-200"
-                onClick={() => {
-                  setCurrentScholarship(sch);
-                  setIsViewModalOpen(true);
-                }}
-              >
-                <Eye className="text-purple-700" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="bg-purple-200"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   setCurrentScholarship(sch);
                   setIsEditModalOpen(true);
                 }}
@@ -143,7 +140,8 @@ export function ScholarshipsSection() {
                 variant="ghost"
                 size="icon"
                 className="bg-purple-200"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   setCurrentScholarship(sch);
                   setIsDeleteDialogOpen(true);
                 }}
@@ -163,7 +161,7 @@ export function ScholarshipsSection() {
           setScholarships([...scholarships, newSch]);
           setIsAddModalOpen(false);
         }}
-        title="Add Scholarship"
+        title={t("addScholarship")}
         programs={programs}
       />
 
@@ -179,7 +177,7 @@ export function ScholarshipsSection() {
               setIsEditModalOpen(false);
             }}
             initialData={currentScholarship}
-            title="Edit Scholarship"
+            title={t("editScholarship")}
             programs={programs}
           />
           <ScholarshipViewModal

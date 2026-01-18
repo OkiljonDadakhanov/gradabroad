@@ -6,8 +6,7 @@ import { StatisticsSection } from "@/components/statistics/statistics-section"
 export default function StatisticsPage() {
   return (
     <AppLayout>
-      {/* <StatisticsSection /> */}
-       <p>to be updated soon</p>
+      <StatisticsSection />
     </AppLayout>
   )
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import type { GalleryImage } from "@/types/gallery";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/lib/i18n";
 
 interface GalleryGridProps {
   images: GalleryImage[];
@@ -12,12 +13,13 @@ interface GalleryGridProps {
 }
 
 export function GalleryGrid({ images, onEdit, onDelete }: GalleryGridProps) {
+  const t = useTranslations("media");
   const [hoveredImageId, setHoveredImageId] = useState<string | null>(null);
 
   if (images.length === 0) {
     return (
       <div className="col-span-3 text-center py-12 text-gray-500">
-        No images found. Click the Add button to upload images to the gallery.
+        {t("noImages")}
       </div>
     );
   }
@@ -69,7 +71,7 @@ export function GalleryGrid({ images, onEdit, onDelete }: GalleryGridProps) {
               {image.title || "Untitled"}
             </h3> */}
             <p className="text-gray-600 text-sm mt-1 line-clamp-2">
-              {image.description || "No description provided."}
+              {image.description || t("noDescription")}
             </p>
             {/* <p className="text-gray-500 text-xs mt-2">
               {new Date(image.date).toLocaleDateString()}

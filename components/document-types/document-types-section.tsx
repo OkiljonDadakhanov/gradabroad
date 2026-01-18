@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Pencil, Trash2 } from "lucide-react"
+import { Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DocumentTypeModal } from "./document-type-modal"
 import { DocumentTypeDeleteDialog } from "./document-type-delete-dialog"
@@ -9,9 +9,12 @@ import { useToast } from "@/hooks/use-toast"
 import type { DocumentType } from "@/types/document"
 import { generateId } from "@/lib/utils"
 import { FileText } from "lucide-react"
+import { useTranslations } from "@/lib/i18n"
 
 export function DocumentTypesSection() {
   const { toast } = useToast()
+  const t = useTranslations("documentTypes")
+  const tCommon = useTranslations("common")
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([])
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -28,8 +31,8 @@ export function DocumentTypesSection() {
     setIsAddModalOpen(false)
 
     toast({
-      title: "Document type added",
-      description: `${documentType.name.english} has been successfully added.`,
+      title: t("documentTypeAdded"),
+      description: `${documentType.name.english} ${t("documentTypeAddedDesc")}`,
       variant: "success",
     })
   }
@@ -39,8 +42,8 @@ export function DocumentTypesSection() {
     setIsEditModalOpen(false)
 
     toast({
-      title: "Document type updated",
-      description: `${documentType.name.english} has been successfully updated.`,
+      title: t("documentTypeUpdated"),
+      description: `${documentType.name.english} ${t("documentTypeUpdatedDesc")}`,
       variant: "success",
     })
   }
@@ -51,8 +54,8 @@ export function DocumentTypesSection() {
       setIsDeleteDialogOpen(false)
 
       toast({
-        title: "Document type deleted",
-        description: `${currentDocumentType.name.english} has been successfully deleted.`,
+        title: t("documentTypeDeleted"),
+        description: `${currentDocumentType.name.english} ${t("documentTypeDeletedDesc")}`,
         variant: "success",
       })
 
@@ -73,31 +76,30 @@ export function DocumentTypesSection() {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-purple-900">Document types</h2>
+        <h2 className="text-2xl font-bold text-purple-900">{t("title")}</h2>
         <Button onClick={() => setIsAddModalOpen(true)} className="bg-purple-900 hover:bg-purple-800">
-          <Plus className="mr-2 h-4 w-4" /> Add
+          <Plus className="mr-2 h-4 w-4" /> {tCommon("add")}
         </Button>
       </div>
 
       {documentTypes.length > 0 ? (
         <div className="space-y-4">
           {documentTypes.map((documentType) => (
-            <div key={documentType.id} className="bg-purple-50 p-4 rounded-md flex justify-between items-center">
+            <div
+              key={documentType.id}
+              className="bg-purple-50 p-4 rounded-md flex justify-between items-center cursor-pointer hover:bg-purple-100 transition-colors"
+              onClick={() => handleOpenEditModal(documentType)}
+            >
               <span className="font-medium text-purple-900">{documentType.name.english}</span>
               <div className="flex gap-2">
                 <Button
                   variant="ghost"
                   size="icon"
                   className="bg-purple-200 hover:bg-purple-300"
-                  onClick={() => handleOpenEditModal(documentType)}
-                >
-                  <Pencil className="h-5 w-5 text-purple-700" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="bg-purple-200 hover:bg-purple-300"
-                  onClick={() => handleOpenDeleteDialog(documentType)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleOpenDeleteDialog(documentType)
+                  }}
                 >
                   <Trash2 className="h-5 w-5 text-purple-700" />
                 </Button>
@@ -110,8 +112,8 @@ export function DocumentTypesSection() {
           <div className="bg-purple-100 p-6 rounded-full mb-4">
             <FileText className="h-12 w-12 text-purple-700" />
           </div>
-          <h3 className="text-xl font-medium text-purple-900 mb-2">No matching data found</h3>
-          <p className="text-gray-500 max-w-md">Add your first document type by clicking the Add button above.</p>
+          <h3 className="text-xl font-medium text-purple-900 mb-2">{t("noDocumentTypes")}</h3>
+          <p className="text-gray-500 max-w-md">{t("noDocumentTypesDesc")}</p>
         </div>
       )}
 
@@ -120,7 +122,7 @@ export function DocumentTypesSection() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSave={handleAddDocumentType}
-        title="Add Document Type"
+        title={t("addType")}
       />
 
       {/* Edit Document Type Modal */}
@@ -130,7 +132,7 @@ export function DocumentTypesSection() {
           onClose={() => setIsEditModalOpen(false)}
           onSave={handleEditDocumentType}
           initialData={currentDocumentType}
-          title="Edit Document Type"
+          title={t("editType")}
         />
       )}
 

@@ -8,21 +8,28 @@ import { InfoCard } from "@/components/ui/info-card";
 import { ProfileEditModal } from "./profile-edit-modal";
 import type { ProfileData } from "@/types/profile";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
+import { useTranslations } from "@/lib/i18n";
 
 export function ProfileSection() {
   const router = useRouter();
+  const t = useTranslations("profile");
+  const tCommon = useTranslations("common");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [docLoading, setDocLoading] = useState(false);
 
-  // Step 1: Extract and store token, clean URL
+  // Step 1: Extract and store tokens, clean URL
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const queryToken = searchParams.get("token");
+    const queryRefresh = searchParams.get("refresh");
 
     if (queryToken) {
       localStorage.setItem("accessToken", queryToken);
+      if (queryRefresh) {
+        localStorage.setItem("refreshToken", queryRefresh);
+      }
       const cleanUrl = window.location.origin + window.location.pathname;
       document.title = "GradAbroad – University Application";
       window.history.replaceState({}, document.title, cleanUrl);
@@ -49,6 +56,7 @@ export function ProfileSection() {
         if (res.status === 401) {
           toast.error("Session expired. Please log in again.");
           localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
           router.push("/login");
           return;
         }
@@ -147,15 +155,15 @@ export function ProfileSection() {
   return (
     <div className="max-w-4xl">
       <SectionHeader
-        title="University Profile"
-        subtitle="Manage your institution's information"
+        title={t("title")}
+        subtitle={t("subtitle")}
         onEdit={handleEditClick}
       />
 
       {/* Profile Header Card */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6 mb-6">
         <div className="flex items-center gap-6">
-          <div className="w-20 h-20 rounded-xl overflow-hidden bg-purple-100 flex items-center justify-center">
+          <div className="w-20 h-20 rounded-xl overflow-hidden bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
             {profileData.logo_url ? (
               <img
                 src={profileData.logo_url}
@@ -163,20 +171,20 @@ export function ProfileSection() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="text-2xl font-bold text-purple-600">
+              <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                 {profileData.name?.charAt(0) || "U"}
               </span>
             )}
           </div>
           <div>
-            <h3 className="text-xl font-semibold text-gray-900">{profileData.name}</h3>
-            <p className="text-gray-500">{profileData.type} • {profileData.classification}</p>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{profileData.name}</h3>
+            <p className="text-gray-500 dark:text-gray-400">{profileData.type} • {profileData.classification}</p>
             {profileData.website && (
               <a
                 href={profileData.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-purple-600 hover:underline mt-1 inline-block"
+                className="text-sm text-purple-600 dark:text-purple-400 hover:underline mt-1 inline-block"
               >
                 {profileData.website}
               </a>
@@ -186,40 +194,40 @@ export function ProfileSection() {
       </div>
 
       <InfoCard
-        title="Location"
+        title={t("location")}
         items={[
-          { label: "Address", value: profileData.address },
-          { label: "City", value: profileData.city },
-          { label: "Zip Code", value: profileData.zipCode },
+          { label: t("address"), value: profileData.address },
+          { label: t("city"), value: profileData.city },
+          { label: t("zipCode"), value: profileData.zipCode },
         ]}
       />
 
       <InfoCard
-        title="Contact Information"
+        title={t("contactInfo")}
         items={[
-          { label: "Email", value: profileData.email },
-          { label: "Phone", value: profileData.telephone },
-          { label: "Representative", value: profileData.representativeName },
-          { label: "Representative Email", value: profileData.representativeEmail },
+          { label: tCommon("email"), value: profileData.email },
+          { label: tCommon("phone"), value: profileData.telephone },
+          { label: t("representative"), value: profileData.representativeName },
+          { label: t("representativeEmail"), value: profileData.representativeEmail },
         ]}
       />
 
       <InfoCard
-        title="Accreditation"
+        title={t("accreditation")}
         items={[
           {
-            label: "Accreditation Number",
+            label: t("accreditationNumber"),
             value: profileData.accreditationNumber,
           },
           {
-            label: "Document",
+            label: t("document"),
             value: (
               <button
                 onClick={handleFetchAccreditationUrl}
                 className="text-purple-600 hover:text-purple-700 font-medium disabled:opacity-50"
                 disabled={docLoading}
               >
-                {docLoading ? "Loading..." : "View Document →"}
+                {docLoading ? tCommon("loading") : `${t("viewDocument")} →`}
               </button>
             ),
           },

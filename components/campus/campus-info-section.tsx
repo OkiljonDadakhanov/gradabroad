@@ -9,8 +9,11 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { CampusInfoData } from "@/types/profile";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
+import { useTranslations } from "@/lib/i18n";
 
 export function CampusInfoSection() {
+  const t = useTranslations("campus");
+  const tCommon = useTranslations("common");
   const [campusData, setCampusData] = useState<CampusInfoData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -97,7 +100,7 @@ export function CampusInfoSection() {
         return;
       }
 
-      toast.success("Campus information saved.");
+      toast.success(t("campusSaved"));
       await fetchCampusData();
     } catch (err: any) {
       toast.error("Unexpected error occurred.");
@@ -107,52 +110,52 @@ export function CampusInfoSection() {
 
   return (
     <>
-      <SectionHeader title="Information about campus" />
+      <SectionHeader title={t("title")} />
 
       {loading ? (
-        <div className="text-center text-sm text-gray-500">Loading...</div>
+        <div className="text-center text-sm text-gray-500">{tCommon("loading")}</div>
       ) : campusData ? (
         <>
           <div className="bg-white border rounded-lg p-6 shadow-sm">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
               <div>
-                <p className="text-sm text-gray-500">Year of establishment</p>
+                <p className="text-sm text-gray-500">{t("yearOfEstablishment")}</p>
                 <p className="text-base font-medium text-gray-900">
                   {campusData.yearOfEstablishment}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Number of graduates</p>
+                <p className="text-sm text-gray-500">{t("numberOfGraduates")}</p>
                 <p className="text-base font-medium text-gray-900">
                   {campusData.numberOfGraduates}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Employed graduates (%)</p>
+                <p className="text-sm text-gray-500">{t("employedGraduates")}</p>
                 <p className="text-base font-medium text-gray-900">
                   {campusData.proportionOfEmployedGraduates}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Ranking (Local)</p>
+                <p className="text-sm text-gray-500">{t("rankingLocal")}</p>
                 <p className="text-base font-medium text-gray-900">
                   {campusData.rankingWithinCountry}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Ranking (Global)</p>
+                <p className="text-sm text-gray-500">{t("rankingGlobal")}</p>
                 <p className="text-base font-medium text-gray-900">
                   {campusData.globalRankingPosition}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Dormitory?</p>
+                <p className="text-sm text-gray-500">{t("dormitory")}</p>
                 <p className="text-base font-medium text-gray-900">
-                  {campusData.hasDormitories ? "Yes" : "No"}
+                  {campusData.hasDormitories ? tCommon("yes") : tCommon("no")}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Dormitory Fee</p>
+                <p className="text-sm text-gray-500">{t("dormitoryFee")}</p>
                 <p className="text-base font-medium text-gray-900">
                   {campusData.dormitoryFeeRangeMin} -{" "}
                   {campusData.dormitoryFeeRangeMax} USD
@@ -160,7 +163,7 @@ export function CampusInfoSection() {
               </div>
 
               <div className="sm:col-span-2">
-                <p className="text-sm text-gray-500">About the university</p>
+                <p className="text-sm text-gray-500">{t("aboutUniversity")}</p>
                 <p className="text-base font-medium text-gray-900 whitespace-pre-line">
                   {campusData.aboutUniversity.english}
                 </p>
@@ -169,14 +172,14 @@ export function CampusInfoSection() {
           </div>
 
           <div className="text-right mt-4">
-            <Button onClick={() => setIsEditModalOpen(true)}>Edit</Button>
+            <Button onClick={() => setIsEditModalOpen(true)}>{tCommon("edit")}</Button>
           </div>
         </>
       ) : (
         <div className="text-center mt-6">
-          <p className="text-gray-600 mb-4">No campus information found.</p>
+          <p className="text-gray-600 mb-4">{t("noCampusInfo")}</p>
           <Button onClick={() => setIsAddModalOpen(true)}>
-            Add Information
+            {t("addInformation")}
           </Button>
         </div>
       )}

@@ -9,6 +9,7 @@ import { GalleryGrid } from "./gallery-grid";
 import { GalleryDeleteDialog } from "./gallery-delete-dialog";
 import { GalleryImageModal } from "./gallery-image-modal";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
+import { useTranslations } from "@/lib/i18n";
 
 interface CategoryGallery {
   id: number;
@@ -18,6 +19,8 @@ interface CategoryGallery {
 
 export function GallerySection() {
   const { toast } = useToast();
+  const t = useTranslations("media");
+  const tCommon = useTranslations("common");
 
   const [categories, setCategories] = useState<CategoryGallery[]>([]);
   const [selectedCategory, setSelectedCategory] =
@@ -55,7 +58,7 @@ export function GallerySection() {
       setCategories(mapped);
     } catch (error) {
       toast({
-        title: "Error",
+        title: tCommon("error"),
         description: "Failed to fetch gallery categories",
         variant: "destructive",
       });
@@ -100,8 +103,8 @@ export function GallerySection() {
     }
 
     toast({
-      title: "Upload successful",
-      description: `Uploaded ${images.length} image(s) to ${selectedCategory.name}`,
+      title: t("uploadSuccessful"),
+      description: `${t("uploadedImages")} ${selectedCategory.name}`,
       variant: "success",
     });
 
@@ -138,7 +141,7 @@ export function GallerySection() {
 
       if (!res.ok) throw new Error("Failed to update image");
 
-      toast({ title: "Image updated", variant: "success" });
+      toast({ title: t("imageUpdated"), variant: "success" });
       await fetchCategories();
     } catch (err) {
       toast({
@@ -165,7 +168,7 @@ export function GallerySection() {
       );
 
       if (!res.ok) throw new Error("Delete failed");
-      toast({ title: "Image deleted", variant: "success" });
+      toast({ title: t("imageDeleted"), variant: "success" });
       await fetchCategories();
       setCurrentImage(null);
     } catch (err) {
@@ -200,7 +203,7 @@ export function GallerySection() {
         { id: data.id, name: data.name, images: [] },
       ]);
       setNewCategoryName("");
-      toast({ title: "Category added", variant: "success" });
+      toast({ title: t("categoryAdded"), variant: "success" });
     } catch {
       toast({
         title: "Error",
@@ -213,17 +216,17 @@ export function GallerySection() {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-purple-900">Gallery</h2>
+        <h2 className="text-2xl font-bold text-purple-900">{t("title")}</h2>
         <div className="flex items-center gap-4">
           <input
             type="text"
-            placeholder="New category name"
+            placeholder={t("newCategoryPlaceholder")}
             className="border px-3 py-1 rounded-md"
             value={newCategoryName}
             onChange={(e) => setNewCategoryName(e.target.value)}
           />
           <Button onClick={handleAddCategory} variant="outline">
-            Add Category
+            {t("addCategory")}
           </Button>
         </div>
       </div>
@@ -241,7 +244,7 @@ export function GallerySection() {
               }}
               className="bg-purple-900 hover:bg-purple-800"
             >
-              <Plus className="mr-2 h-4 w-4" /> Upload Images
+              <Plus className="mr-2 h-4 w-4" /> {t("uploadImage")}
             </Button>
           </div>
           <GalleryGrid
@@ -262,7 +265,7 @@ export function GallerySection() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSave={handleAddImage}
-        title={`Add Images to ${selectedCategory?.name}`}
+        title={`${t("addImagesTo")} ${selectedCategory?.name}`}
         isMultiple
       />
 
@@ -273,7 +276,7 @@ export function GallerySection() {
             onClose={() => setIsEditModalOpen(false)}
             onSave={handleEditImage}
             initialData={currentImage}
-            title="Edit Image"
+            title={t("editImage")}
           />
 
           <GalleryDeleteDialog

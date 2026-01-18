@@ -12,6 +12,8 @@ import {
   Legend,
   type ChartOptions,
 } from "chart.js"
+import { fetchWithAuth } from "@/lib/fetchWithAuth"
+import { useTranslations } from "@/lib/i18n"
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
@@ -28,48 +30,95 @@ interface ChartData {
   }[]
 }
 
+interface DegreeStats {
+  degree_type: string
+  applied: number
+  accepted: number
+  rejected: number
+  visa_approved: number
+  studying: number
+}
+
 export function CandidateStatisticsChart() {
+  const t = useTranslations("statistics")
+  const tCommon = useTranslations("common")
   const [chartData, setChartData] = useState<ChartData>({
     labels: [],
     datasets: [],
   })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // In a real app, this would fetch data from an API
-    // For now, we'll use mock data
-    const mockData: ChartData = {
-      labels: ["Bachelor", "Master's degree", "MBA", "PhD"],
-      datasets: [
-        {
-          label: "Applied",
-          data: [65, 42, 28, 15],
-          backgroundColor: "rgba(54, 162, 235, 0.6)",
-        },
-        {
-          label: "Accepted",
-          data: [40, 30, 20, 10],
-          backgroundColor: "rgba(75, 192, 192, 0.6)",
-        },
-        {
-          label: "Rejected",
-          data: [25, 12, 8, 5],
-          backgroundColor: "rgba(255, 99, 132, 0.6)",
-        },
-        {
-          label: "Visa Approved",
-          data: [35, 25, 15, 8],
-          backgroundColor: "rgba(255, 206, 86, 0.6)",
-        },
-        {
-          label: "Started Studying",
-          data: [30, 20, 12, 6],
-          backgroundColor: "rgba(153, 102, 255, 0.6)",
-        },
-      ],
+    const fetchStats = async () => {
+      try {
+        setLoading(true)
+        console.log("Fetching statistics...")
+        const res = await fetchWithAuth("/api/statistics/")
+        console.log("Statistics response status:", res.status)
+
+        if (!res.ok) {
+          const errorText = await res.text()
+          console.error("Statistics API error:", errorText)
+          throw new Error("Failed to fetch statistics")
+        }
+
+        const data = await res.json()
+        console.log("Statistics data:", data)
+        const degreeStats: DegreeStats[] = data.by_degree_type || []
+
+        if (degreeStats.length === 0) {
+          setChartData({
+            labels: [tCommon("noData")],
+            datasets: [{ label: tCommon("noData"), data: [0], backgroundColor: "rgba(200, 200, 200, 0.6)" }]
+          })
+          return
+        }
+
+        const labels = degreeStats.map((d) => d.degree_type)
+
+        const chartDataFormatted: ChartData = {
+          labels,
+          datasets: [
+            {
+              label: t("applied"),
+              data: degreeStats.map((d) => d.applied),
+              backgroundColor: "rgba(54, 162, 235, 0.6)",
+            },
+            {
+              label: t("accepted"),
+              data: degreeStats.map((d) => d.accepted),
+              backgroundColor: "rgba(75, 192, 192, 0.6)",
+            },
+            {
+              label: t("rejected"),
+              data: degreeStats.map((d) => d.rejected),
+              backgroundColor: "rgba(255, 99, 132, 0.6)",
+            },
+            {
+              label: t("visaApproved"),
+              data: degreeStats.map((d) => d.visa_approved),
+              backgroundColor: "rgba(255, 206, 86, 0.6)",
+            },
+            {
+              label: t("studying"),
+              data: degreeStats.map((d) => d.studying),
+              backgroundColor: "rgba(153, 102, 255, 0.6)",
+            },
+          ],
+        }
+
+        setChartData(chartDataFormatted)
+      } catch (err: any) {
+        console.error("Error fetching statistics:", err?.message || err)
+        setError(`${tCommon("error")}: ${err?.message || "Unknown error"}`)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    setChartData(mockData)
-  }, [])
+    fetchStats()
+  }, [t, tCommon])
 
   const options: ChartOptions<"bar"> = {
     responsive: true,
@@ -79,7 +128,7 @@ export function CandidateStatisticsChart() {
       },
       title: {
         display: true,
-        text: "Candidate Statistics by Degree Type",
+        text: t("byDegreeType"),
       },
       tooltip: {
         callbacks: {
@@ -95,17 +144,25 @@ export function CandidateStatisticsChart() {
       x: {
         title: {
           display: true,
-          text: "Degrees",
+          text: t("byDegreeType"),
         },
       },
       y: {
         title: {
           display: true,
-          text: "Candidates",
+          text: t("totalApplicants"),
         },
         beginAtZero: true,
       },
     },
+  }
+
+  if (loading) {
+    return <div className="flex justify-center py-8 text-gray-500">{tCommon("loading")}</div>
+  }
+
+  if (error) {
+    return <div className="flex justify-center py-8 text-red-500">{error}</div>
   }
 
   return <Bar data={chartData} options={options} />

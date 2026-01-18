@@ -119,9 +119,7 @@ export const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
   submitted: ["under_review", "rejected"],
   under_review: ["interview", "accepted", "rejected"],
   interview: ["accepted", "rejected"],
-  accepted: ["confirmed", "rejected"],
-  confirmed: ["visa_taken"],
-  visa_taken: ["studying"],
+  accepted: ["studying", "rejected"],
 };
 
 // Document Status

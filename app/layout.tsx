@@ -1,6 +1,7 @@
 import React from "react"
 import "@/app/globals.css"
 import { Toaster } from "@/components/ui/toaster"
+import { Providers } from "@/components/providers"
 
 export default function RootLayout({
   children,
@@ -8,10 +9,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        {children}
-        <Toaster />
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   )
