@@ -1,5 +1,6 @@
 import React from "react"
 import "@/app/globals.css"
+import "flag-icons/css/flag-icons.min.css"
 import { Toaster } from "@/components/ui/toaster"
 import { Providers } from "@/components/providers"
 

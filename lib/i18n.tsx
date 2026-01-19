@@ -164,8 +164,8 @@ export function useTranslations(namespace?: string) {
 }
 
 export const SUPPORTED_LOCALES = [
-  { code: "en", name: "English", flag: "🇺🇸" },
-  { code: "ko", name: "한국어", flag: "🇰🇷" },
-  { code: "ru", name: "Русский", flag: "🇷🇺" },
-  { code: "uz", name: "O'zbek", flag: "🇺🇿" },
+  { code: "en", name: "English", countryCode: "us" },
+  { code: "ko", name: "한국어", countryCode: "kr" },
+  { code: "ru", name: "Русский", countryCode: "ru" },
+  { code: "uz", name: "O'zbek", countryCode: "uz" },
 ];

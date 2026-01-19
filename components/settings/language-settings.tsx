@@ -9,10 +9,10 @@ import { Loader2 } from "lucide-react"
 import { fetchWithAuth } from "@/lib/fetchWithAuth"
 
 const LANGUAGES = [
-  { id: "en", name: "English", flag: "🇺🇸" },
-  { id: "ko", name: "한국어 (Korean)", flag: "🇰🇷" },
-  { id: "ru", name: "Русский (Russian)", flag: "🇷🇺" },
-  { id: "uz", name: "O'zbek (Uzbek)", flag: "🇺🇿" },
+  { id: "en", name: "English", countryCode: "us" },
+  { id: "ko", name: "한국어 (Korean)", countryCode: "kr" },
+  { id: "ru", name: "Русский (Russian)", countryCode: "ru" },
+  { id: "uz", name: "O'zbek (Uzbek)", countryCode: "uz" },
 ]
 
 export function LanguageSettings() {
@@ -87,7 +87,7 @@ export function LanguageSettings() {
               <div key={lang.id} className={`flex items-center space-x-2 border p-3 rounded-md ${isLoading ? "opacity-50" : ""}`}>
                 <RadioGroupItem value={lang.id} id={`lang-${lang.id}`} disabled={isLoading} />
                 <Label htmlFor={`lang-${lang.id}`} className="flex items-center cursor-pointer">
-                  <span className="mr-2 text-xl">{lang.flag}</span>
+                  <span className={`fi fi-${lang.countryCode} mr-2 text-lg`}></span>
                   {lang.name}
                 </Label>
               </div>
