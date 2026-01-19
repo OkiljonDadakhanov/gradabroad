@@ -7,7 +7,8 @@
       "Bash(npm run build:*)",
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nrefactor: remove unused dependencies and optimize codebase\n\nRemoved unused npm packages:\n- chartjs, next-intl, recharts, react-day-picker\n- embla-carousel-react, input-otp, vaul, react-resizable-panels, cmdk\n- Unused radix-ui packages \\(aspect-ratio, collapsible, context-menu, etc.\\)\n\nRemoved 15 unused UI components:\n- calendar, carousel, chart, command, drawer, input-otp, resizable\n- aspect-ratio, collapsible, context-menu, hover-card, menubar\n- navigation-menu, slider, toggle-group\n\nAdded reusable patterns:\n- DeleteConfirmDialog: Generic delete confirmation component\n- useModalState hook: Reduces modal state boilerplate in sections\n\nRefactored scholarships-section to use new patterns as example.\n\nResult: Removed 83 packages, reduced bundle size significantly.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(git commit:*)"
     ]
   }
 }

@@ -1,5 +1,30 @@
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://api.gradabroad.net";
 
+// Check if user is authenticated (has valid access token)
+export function isAuthenticated(): boolean {
+  if (typeof window === "undefined") return false;
+  const token = localStorage.getItem("accessToken");
+  return !!token;
+}
+
+// Logout user by clearing tokens
+export function logout(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("universityId");
+  window.location.href = "/";
+}
+
+// Fetch without authentication for public endpoints
+export async function fetchPublic(
+  url: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  const resolvedUrl = resolveUrl(url);
+  return fetch(resolvedUrl, options);
+}
+
 // Helper to resolve URL - prepends API_BASE if URL starts with /api or is relative
 function resolveUrl(url: string): string {
   if (url.startsWith("http://") || url.startsWith("https://")) {
