@@ -5,16 +5,18 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Accordion,
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
+import { DocumentRequirement } from "@/types/academic";
 
 interface Props {
-  value: string[];
-  onChange: (value: string[]) => void;
+  value: DocumentRequirement[];
+  onChange: (value: DocumentRequirement[]) => void;
 }
 
 const DOCUMENT_GROUPS: Record<string, string[]> = {
@@ -27,8 +29,8 @@ const DOCUMENT_GROUPS: Record<string, string[]> = {
   ],
   "Academic Documents": [
     "High School Diploma and Transcript",
-    "Bachelor’s Degree Certificate and Transcript",
-    "Master’s Degree Certificate and Transcript",
+    "Bachelor's Degree Certificate and Transcript",
+    "Master's Degree Certificate and Transcript",
     "Apostille Certification",
   ],
   "Financial Documents": [
@@ -50,26 +52,38 @@ const DOCUMENT_GROUPS: Record<string, string[]> = {
 export function DocumentTypeInput({ value, onChange }: Props) {
   const [customDoc, setCustomDoc] = useState("");
 
-  const isSelected = (name: string) =>
-    value.some((v) => v.toLowerCase() === name.toLowerCase());
+  const findDocument = (name: string) =>
+    value.find((v) => v.name.toLowerCase() === name.toLowerCase());
+
+  const isSelected = (name: string) => !!findDocument(name);
 
   const toggleDocument = (name: string) => {
     if (isSelected(name)) {
-      onChange(value.filter((v) => v.toLowerCase() !== name.toLowerCase()));
+      onChange(value.filter((v) => v.name.toLowerCase() !== name.toLowerCase()));
     } else {
-      onChange([...value, name]);
+      onChange([...value, { name, description: "" }]);
     }
+  };
+
+  const updateDescription = (name: string, description: string) => {
+    onChange(
+      value.map((v) =>
+        v.name.toLowerCase() === name.toLowerCase()
+          ? { ...v, description }
+          : v
+      )
+    );
   };
 
   const handleAddCustom = () => {
     const trimmed = customDoc.trim();
     if (!trimmed || isSelected(trimmed)) return;
-    onChange([...value, trimmed]);
+    onChange([...value, { name: trimmed, description: "" }]);
     setCustomDoc("");
   };
 
   const handleRemove = (name: string) => {
-    onChange(value.filter((v) => v.toLowerCase() !== name.toLowerCase()));
+    onChange(value.filter((v) => v.name.toLowerCase() !== name.toLowerCase()));
   };
 
   return (
@@ -83,22 +97,38 @@ export function DocumentTypeInput({ value, onChange }: Props) {
             <AccordionTrigger className="px-4 py-2 bg-gray-100 text-sm font-semibold">
               {group}
             </AccordionTrigger>
-            <AccordionContent className="p-4 space-y-2">
-              {docs.map((doc) => (
-                <div key={doc} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={doc}
-                    checked={isSelected(doc)}
-                    onCheckedChange={() => toggleDocument(doc)}
-                  />
-                  <label
-                    htmlFor={doc}
-                    className="text-sm cursor-pointer leading-none"
-                  >
-                    {doc}
-                  </label>
-                </div>
-              ))}
+            <AccordionContent className="p-4 space-y-3">
+              {docs.map((doc) => {
+                const selected = isSelected(doc);
+                const docData = findDocument(doc);
+                return (
+                  <div key={doc} className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={doc}
+                        checked={selected}
+                        onCheckedChange={() => toggleDocument(doc)}
+                      />
+                      <label
+                        htmlFor={doc}
+                        className="text-sm cursor-pointer leading-none"
+                      >
+                        {doc}
+                      </label>
+                    </div>
+                    {selected && (
+                      <div className="ml-6">
+                        <Textarea
+                          placeholder={`Specify requirements for ${doc} (e.g., format, content guidelines, specific details needed)`}
+                          value={docData?.description || ""}
+                          onChange={(e) => updateDescription(doc, e.target.value)}
+                          className="text-sm min-h-[60px]"
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </AccordionContent>
           </AccordionItem>
         ))}
@@ -127,22 +157,30 @@ export function DocumentTypeInput({ value, onChange }: Props) {
       {/* Selected Document List */}
       {value.length > 0 && (
         <div className="mt-4">
-          <Label className="mb-1 text-sm font-semibold">
+          <Label className="mb-2 text-sm font-semibold block">
             Selected Documents:
           </Label>
-          <ul className="space-y-1">
+          <ul className="space-y-3">
             {value.map((item, index) => (
               <li
                 key={index}
-                className="flex items-center justify-between bg-purple-50 rounded px-3 py-1 text-sm border"
+                className="bg-purple-50 rounded px-3 py-3 text-sm border space-y-2"
               >
-                <span>{item}</span>
-                <button
-                  onClick={() => handleRemove(item)}
-                  className="text-red-500 text-xs hover:underline"
-                >
-                  Remove
-                </button>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">{item.name}</span>
+                  <button
+                    onClick={() => handleRemove(item.name)}
+                    className="text-red-500 text-xs hover:underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <Textarea
+                  placeholder={`Describe what should be included in this ${item.name} (e.g., required format, specific content, page limits)`}
+                  value={item.description}
+                  onChange={(e) => updateDescription(item.name, e.target.value)}
+                  className="text-sm min-h-[60px] bg-white"
+                />
               </li>
             ))}
           </ul>

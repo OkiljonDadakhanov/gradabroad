@@ -65,7 +65,7 @@ export function AcademicProgramsSection() {
 
         const documentTypes = (p.requirements || [])
           .filter((r: any) => r.requirementType === "document")
-          .map((r: any) => r.label);
+          .map((r: any) => ({ name: r.label, description: r.note || "" }));
 
         return {
           id: `api-${p.id}`,

@@ -137,7 +137,8 @@ export function AcademicProgramModal({
     values.documentTypes.forEach((doc, index) => {
       const idx = values.languageRequirement.length + index;
       formData.append(`requirements[${idx}][requirementType]`, "document");
-      formData.append(`requirements[${idx}][label]`, doc);
+      formData.append(`requirements[${idx}][label]`, doc.name);
+      formData.append(`requirements[${idx}][note]`, doc.description || "");
       formData.append(`requirements[${idx}][required]`, "true");
     });
 
