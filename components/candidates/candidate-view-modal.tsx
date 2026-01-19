@@ -24,9 +24,20 @@ import { fetchWithAuth } from "@/lib/fetchWithAuth"
 import { formatDate } from "@/lib/utils"
 import { toast } from "sonner"
 
+// Convert Korean time (KST, UTC+9) to Uzbekistan time (UZT, UTC+5)
+function convertKSTtoUZT(time: string): string {
+  const [hours, minutes] = time.split(':').map(Number)
+  // KST is UTC+9, UZT is UTC+5, so UZT = KST - 4 hours
+  let uztHours = hours - 4
+  if (uztHours < 0) uztHours += 24
+  return `${uztHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+}
+
 // Parse interview details from remarks
 function parseInterviewDetails(remarks: string) {
   const dateMatch = remarks.match(/Interview scheduled for ([^.]+)\./i)
+  const koreanTimeMatch = remarks.match(/Korean Time \(KST\):\s*(\d{2}:\d{2})/i)
+  const uzbekTimeMatch = remarks.match(/Uzbekistan Time \(UZT\):\s*(\d{2}:\d{2})/i)
   const linkSectionMatch = remarks.match(/Interview link:\s*(.+)/i)
 
   let link: string | null = null
@@ -63,6 +74,8 @@ function parseInterviewDetails(remarks: string) {
 
   return {
     dateTime: dateMatch ? dateMatch[1] : null,
+    koreanTime: koreanTimeMatch ? koreanTimeMatch[1] : null,
+    uzbekTime: uzbekTimeMatch ? uzbekTimeMatch[1] : null,
     link,
     additionalInstructions,
   }
@@ -273,7 +286,8 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
         day: 'numeric'
       })
       if (pendingStatus === "interview") {
-        finalRemarks = `Interview scheduled for ${dateStr} at ${scheduledTime}. Interview link: ${interviewLink.trim()}`
+        const uzbekTime = convertKSTtoUZT(scheduledTime)
+        finalRemarks = `Interview scheduled for ${dateStr}. Korean Time (KST): ${scheduledTime} | Uzbekistan Time (UZT): ${uzbekTime}. Interview link: ${interviewLink.trim()}`
       } else if (pendingStatus === "studying") {
         finalRemarks = `Started studies on ${dateStr}.`
       }
@@ -701,12 +715,35 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
                         {interviewDetails.dateTime && (
                           <div className="bg-white dark:bg-purple-900/50 p-3 rounded-lg border border-purple-200 dark:border-purple-600">
                             <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide mb-1">
-                              Date & Time
+                              Date
                             </p>
                             <p className="flex items-center gap-2 text-purple-800 dark:text-purple-200 font-medium">
                               <Calendar className="h-4 w-4" />
                               {interviewDetails.dateTime}
                             </p>
+                          </div>
+                        )}
+
+                        {/* Times */}
+                        {(interviewDetails.koreanTime || interviewDetails.uzbekTime) && (
+                          <div className="bg-white dark:bg-purple-900/50 p-3 rounded-lg border border-purple-200 dark:border-purple-600">
+                            <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide mb-2">
+                              Interview Time
+                            </p>
+                            <div className="space-y-2">
+                              {interviewDetails.koreanTime && (
+                                <p className="flex items-center gap-2 text-purple-800 dark:text-purple-200">
+                                  <Clock className="h-4 w-4" />
+                                  <span>🇰🇷 Korean Time (KST): <span className="font-semibold">{interviewDetails.koreanTime}</span></span>
+                                </p>
+                              )}
+                              {interviewDetails.uzbekTime && (
+                                <p className="flex items-center gap-2 text-purple-800 dark:text-purple-200">
+                                  <Clock className="h-4 w-4" />
+                                  <span>🇺🇿 Uzbekistan Time (UZT): <span className="font-semibold">{interviewDetails.uzbekTime}</span></span>
+                                </p>
+                              )}
+                            </div>
                           </div>
                         )}
 
@@ -1015,13 +1052,18 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
                 {pendingStatus === "interview" && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="scheduled-time">Interview Time *</Label>
+                      <Label htmlFor="scheduled-time">Interview Time - Korean Time (KST) *</Label>
                       <Input
                         id="scheduled-time"
                         type="time"
                         value={scheduledTime}
                         onChange={(e) => setScheduledTime(e.target.value)}
                       />
+                      {scheduledTime && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/30 p-2 rounded">
+                          🇺🇿 Uzbekistan Time (UZT): <span className="font-semibold">{convertKSTtoUZT(scheduledTime)}</span>
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="interview-link" className="flex items-center gap-2">
