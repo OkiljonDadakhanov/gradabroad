@@ -526,9 +526,14 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-            </div>
+            <>
+              <DialogHeader>
+                <DialogTitle>Loading Candidate Details</DialogTitle>
+              </DialogHeader>
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+              </div>
+            </>
           ) : candidate ? (
             <>
               <DialogHeader>
@@ -1074,9 +1079,14 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
               </div>
             </>
           ) : (
-            <div className="py-12 text-center text-gray-500 dark:text-gray-400">
-              Failed to load candidate details
-            </div>
+            <>
+              <DialogHeader>
+                <DialogTitle>Error</DialogTitle>
+              </DialogHeader>
+              <div className="py-12 text-center text-gray-500 dark:text-gray-400">
+                Failed to load candidate details
+              </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
