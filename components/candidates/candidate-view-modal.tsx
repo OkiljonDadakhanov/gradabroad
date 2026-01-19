@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { FileText, Loader2, CheckCircle, XCircle, Clock, UserCheck, Calendar, Settings, Link, User, Users, MapPin, Phone, Mail, Video, ExternalLink, Copy, Check, Upload, Download } from "lucide-react"
+import { FileText, Loader2, CheckCircle, XCircle, Clock, UserCheck, Calendar, Settings, Link, User, Users, MapPin, Phone, Mail, Video, ExternalLink, Copy, Check, Upload, Download, MessageSquare } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { CandidateDetail, CandidateAttachment } from "@/types/candidate"
 import { FILE_TYPE_LABELS, DOCUMENT_CATEGORIES, PERSONAL_DOC_TYPE_LABELS, GENERAL_DOC_TYPE_LABELS, FINANCIAL_DOC_TYPE_LABELS, LANGUAGE_CERT_LABELS } from "@/types/candidate"
@@ -23,6 +23,7 @@ import { STATUS_COLORS, STATUS_LABELS, VALID_STATUS_TRANSITIONS, ENDPOINTS } fro
 import { fetchWithAuth } from "@/lib/fetchWithAuth"
 import { formatDate } from "@/lib/utils"
 import { toast } from "sonner"
+import { CandidateChatModal } from "./candidate-chat-modal"
 
 // Convert Korean time (KST, UTC+9) to Uzbekistan time (UZT, UTC+5)
 function convertKSTtoUZT(time: string): string {
@@ -192,6 +193,7 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
   const [acceptanceLetterFile, setAcceptanceLetterFile] = useState<File | null>(null)
   const [uploadingAcceptanceLetter, setUploadingAcceptanceLetter] = useState(false)
   const [downloadingAcceptanceLetter, setDownloadingAcceptanceLetter] = useState(false)
+  const [chatModalOpen, setChatModalOpen] = useState(false)
 
   // All available statuses for manual override
   const ALL_STATUSES = [
@@ -577,6 +579,15 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
                     >
                       <Settings className="h-4 w-4 mr-2" />
                       Change Status
+                    </Button>
+                    <div className="w-px bg-gray-300 dark:bg-gray-600 mx-2" />
+                    <Button
+                      variant="outline"
+                      onClick={() => setChatModalOpen(true)}
+                      className="text-blue-600 dark:text-blue-400 border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Chat
                     </Button>
                   </div>
                 </Card>
@@ -1276,6 +1287,15 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Chat Modal */}
+      {candidate && (
+        <CandidateChatModal
+          candidate={candidate}
+          open={chatModalOpen}
+          onOpenChange={setChatModalOpen}
+        />
+      )}
     </>
   )
 }

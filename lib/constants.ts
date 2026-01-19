@@ -50,6 +50,12 @@ export const ENDPOINTS = {
   // Chat
   CHAT_MESSAGES: (applicationId: number) =>
     `/api/chat/applications/${applicationId}/messages/`,
+  CHAT_INITIATE: (applicationId: number) =>
+    `/api/chat/applications/${applicationId}/initiate/`,
+  CHAT_STATUS: (applicationId: number) =>
+    `/api/chat/applications/${applicationId}/status/`,
+  CHAT_MARK_READ: (applicationId: number) =>
+    `/api/chat/applications/${applicationId}/mark-read/`,
 
   // University Profile
   UNIVERSITY_PROFILE: "/api/auth/universities/me/",

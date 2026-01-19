@@ -8,13 +8,16 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ChatContainer } from "@/components/chat/chat-container";
-import { Candidate } from "@/types/candidate";
+import { CandidateDetail, CandidateListItem } from "@/types/candidate";
 import { STATUS_COLORS, STATUS_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { User, GraduationCap } from "lucide-react";
 
+// Accept both CandidateDetail and CandidateListItem for flexibility
+type CandidateType = CandidateDetail | CandidateListItem;
+
 interface CandidateChatModalProps {
-  candidate: Candidate | null;
+  candidate: CandidateType | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -26,10 +29,8 @@ export function CandidateChatModal({
 }: CandidateChatModalProps) {
   if (!candidate) return null;
 
-  const studentName = candidate.student
-    ? `${candidate.student.first_name || ""} ${candidate.student.last_name || ""}`.trim() ||
-      candidate.student.email
-    : "Unknown Student";
+  // Handle both CandidateDetail (has applicant_full_name) and legacy format
+  const studentName = candidate.applicant_full_name || "Unknown Student";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -44,7 +45,7 @@ export function CandidateChatModal({
                 <DialogTitle className="text-left">{studentName}</DialogTitle>
                 <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
                   <GraduationCap size={14} />
-                  {candidate.programme?.name || "Unknown Program"}
+                  {candidate.programme_name || "Unknown Program"}
                 </p>
               </div>
             </div>

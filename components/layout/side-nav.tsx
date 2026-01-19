@@ -20,6 +20,7 @@ import {
   Building2,
 } from "lucide-react";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
+import { API_BASE } from "@/lib/constants";
 import { ContactSupportModal } from "./contact-support-modal";
 
 interface NavItem {
@@ -39,7 +40,7 @@ export function SideNav() {
     const fetchProfile = async () => {
       try {
         const res = await fetchWithAuth(
-          "https://api.gradabroad.net/api/auth/universities/me/"
+          `${API_BASE}/api/auth/universities/me/`
         );
         if (res.ok) {
           const data = await res.json();

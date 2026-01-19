@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
 import { useTranslations } from "@/lib/i18n";
+import { API_BASE } from "@/lib/constants";
 
 interface UniversityData {
   name: string;
@@ -30,7 +31,7 @@ export function UserDropdown() {
     const fetchUniversity = async () => {
       try {
         const res = await fetchWithAuth(
-          "https://api.gradabroad.net/api/auth/universities/me/"
+          `${API_BASE}/api/auth/universities/me/`
         );
         if (res.ok) {
           const data = await res.json();
