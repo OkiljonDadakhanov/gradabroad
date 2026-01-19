@@ -91,6 +91,8 @@ export interface CandidateDetail extends CandidateListItem {
   language_certificates: CandidateLanguageCertificate[];
   attachments: CandidateAttachment[];
   application_documents: any[];
+  acceptance_letter_url: string | null;
+  acceptance_letter_uploaded_at: string | null;
 }
 
 // For backward compatibility

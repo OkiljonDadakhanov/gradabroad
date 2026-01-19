@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { FileText, Loader2, CheckCircle, XCircle, Clock, UserCheck, Calendar, Settings, Link, User, Users, MapPin, Phone, Mail, Video, ExternalLink, Copy, Check } from "lucide-react"
+import { FileText, Loader2, CheckCircle, XCircle, Clock, UserCheck, Calendar, Settings, Link, User, Users, MapPin, Phone, Mail, Video, ExternalLink, Copy, Check, Upload, Download } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { CandidateDetail, CandidateAttachment } from "@/types/candidate"
 import { FILE_TYPE_LABELS, DOCUMENT_CATEGORIES, PERSONAL_DOC_TYPE_LABELS, GENERAL_DOC_TYPE_LABELS, FINANCIAL_DOC_TYPE_LABELS, LANGUAGE_CERT_LABELS } from "@/types/candidate"
@@ -97,6 +97,7 @@ const STATUS_ACTIONS: Record<string, {
   description: string
   requiresDate?: boolean
   requiresReason?: boolean
+  requiresAcceptanceLetter?: boolean
   reasonLabel?: string
   reasonPlaceholder?: string
 }> = {
@@ -126,8 +127,9 @@ const STATUS_ACTIONS: Record<string, {
     icon: <CheckCircle className="h-4 w-4 mr-2" />,
     variant: "default",
     confirmTitle: "Accept Application",
-    description: "Accept this candidate's application.",
+    description: "Accept this candidate's application. You must upload an acceptance letter.",
     requiresReason: false,
+    requiresAcceptanceLetter: true,
     reasonLabel: "Acceptance Message (optional)",
     reasonPlaceholder: "e.g., Congratulations! We are pleased to offer you admission..."
   },
@@ -187,6 +189,9 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
   const [downloadingFamilyDoc, setDownloadingFamilyDoc] = useState<number | null>(null)
   const [downloadingFinancialDoc, setDownloadingFinancialDoc] = useState<number | null>(null)
   const [downloadingLanguageCert, setDownloadingLanguageCert] = useState<number | null>(null)
+  const [acceptanceLetterFile, setAcceptanceLetterFile] = useState<File | null>(null)
+  const [uploadingAcceptanceLetter, setUploadingAcceptanceLetter] = useState(false)
+  const [downloadingAcceptanceLetter, setDownloadingAcceptanceLetter] = useState(false)
 
   // All available statuses for manual override
   const ALL_STATUSES = [
@@ -225,6 +230,7 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
     setScheduledDate("")
     setScheduledTime("")
     setInterviewLink("")
+    setAcceptanceLetterFile(null)
     setIsManualOverride(false)
     setShowConfirm(true)
   }
@@ -235,6 +241,7 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
     setScheduledDate("")
     setScheduledTime("")
     setInterviewLink("")
+    setAcceptanceLetterFile(null)
     setIsManualOverride(true)
     setShowConfirm(true)
   }
@@ -270,6 +277,12 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
         toast.error("Please provide an interview link")
         return
       }
+    }
+
+    // Acceptance requires acceptance letter
+    if (!isManualOverride && action?.requiresAcceptanceLetter && !acceptanceLetterFile) {
+      toast.error("Please upload an acceptance letter")
+      return
     }
 
     // Build remarks message
@@ -308,6 +321,31 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
 
     try {
       setUpdating(true)
+
+      // Upload acceptance letter first if required
+      if (!isManualOverride && action?.requiresAcceptanceLetter && acceptanceLetterFile) {
+        setUploadingAcceptanceLetter(true)
+        const formData = new FormData()
+        formData.append("acceptance_letter", acceptanceLetterFile)
+
+        const uploadResponse = await fetchWithAuth(
+          ENDPOINTS.ACCEPTANCE_LETTER_UPLOAD(candidateId),
+          {
+            method: "POST",
+            body: formData,
+          }
+        )
+
+        if (!uploadResponse.ok) {
+          const error = await uploadResponse.json()
+          toast.error(error.detail || "Failed to upload acceptance letter")
+          setUploadingAcceptanceLetter(false)
+          setUpdating(false)
+          return
+        }
+        setUploadingAcceptanceLetter(false)
+      }
+
       const response = await fetchWithAuth(ENDPOINTS.CANDIDATE(candidateId), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -324,6 +362,7 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
         setScheduledDate("")
         setScheduledTime("")
         setInterviewLink("")
+        setAcceptanceLetterFile(null)
         setIsManualOverride(false)
         onStatusUpdated?.()
       } else {
@@ -335,6 +374,7 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
       toast.error("Failed to update status")
     } finally {
       setUpdating(false)
+      setUploadingAcceptanceLetter(false)
     }
   }
 
@@ -454,7 +494,31 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
     if (currentAction?.requiresDate && !scheduledDate) return true
     // Interview requires time and link
     if (pendingStatus === "interview" && (!scheduledTime || !interviewLink.trim())) return true
+    // Acceptance requires acceptance letter
+    if (currentAction?.requiresAcceptanceLetter && !acceptanceLetterFile) return true
     return false
+  }
+
+  // Handle acceptance letter download
+  const handleDownloadAcceptanceLetter = async () => {
+    if (!candidate) return
+    setDownloadingAcceptanceLetter(true)
+    try {
+      const response = await fetchWithAuth(
+        ENDPOINTS.ACCEPTANCE_LETTER_DOWNLOAD(candidateId)
+      )
+      if (response.ok) {
+        const data = await response.json()
+        window.open(data.signed_url, "_blank")
+      } else {
+        toast.error("Failed to get acceptance letter URL")
+      }
+    } catch (error) {
+      console.error("Failed to get acceptance letter URL:", error)
+      toast.error("Failed to get acceptance letter URL")
+    } finally {
+      setDownloadingAcceptanceLetter(false)
+    }
   }
 
   return (
@@ -807,6 +871,39 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
                   </Card>
                 )}
 
+                {/* Acceptance Letter Section */}
+                {candidate.acceptance_letter_url && (
+                  <Card className="p-4 bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
+                    <h3 className="font-medium text-lg mb-3 dark:text-gray-100 flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-green-600" />
+                      Acceptance Letter
+                    </h3>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Uploaded: {candidate.acceptance_letter_uploaded_at
+                            ? formatDate(candidate.acceptance_letter_uploaded_at)
+                            : "Unknown"}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDownloadAcceptanceLetter}
+                        disabled={downloadingAcceptanceLetter}
+                        className="text-green-600 border-green-300 hover:bg-green-100 dark:hover:bg-green-900/30"
+                      >
+                        {downloadingAcceptanceLetter ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Download className="h-4 w-4 mr-2" />
+                        )}
+                        Download
+                      </Button>
+                    </div>
+                  </Card>
+                )}
+
                 {/* Documents Section */}
                 <Card className="p-4">
                   <h3 className="font-medium text-lg mb-4 dark:text-gray-100">
@@ -1080,6 +1177,34 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
                     </div>
                   </>
                 )}
+              </div>
+            )}
+
+            {/* Acceptance Letter Upload */}
+            {!isManualOverride && currentAction?.requiresAcceptanceLetter && (
+              <div className="space-y-2">
+                <Label htmlFor="acceptance-letter" className="flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Acceptance Letter *
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="acceptance-letter"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => setAcceptanceLetterFile(e.target.files?.[0] || null)}
+                    className="flex-1"
+                  />
+                </div>
+                {acceptanceLetterFile && (
+                  <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+                    <Check className="h-4 w-4" />
+                    {acceptanceLetterFile.name}
+                  </p>
+                )}
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Accepted formats: PDF, JPG, PNG
+                </p>
               </div>
             )}
 

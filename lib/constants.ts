@@ -42,6 +42,10 @@ export const ENDPOINTS = {
     `/api/applications/candidates/${applicationId}/financial-documents/${documentId}/download/`,
   LANGUAGE_CERTIFICATE_DOWNLOAD: (applicationId: number, certificateId: number) =>
     `/api/applications/candidates/${applicationId}/language-certificates/${certificateId}/download/`,
+  ACCEPTANCE_LETTER_UPLOAD: (applicationId: number) =>
+    `/api/applications/candidates/${applicationId}/acceptance-letter/`,
+  ACCEPTANCE_LETTER_DOWNLOAD: (applicationId: number) =>
+    `/api/applications/${applicationId}/acceptance-letter/download/`,
 
   // Chat
   CHAT_MESSAGES: (applicationId: number) =>
