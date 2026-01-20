@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Bell, CheckCheck, FileText, MessageSquare, Info, Inbox } from "lucide-react";
 import {
   Popover,
@@ -14,54 +14,23 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { fetchWithAuth } from "@/lib/fetchWithAuth";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-
-interface NotificationTranslation {
-  lang: string;
-  title: string;
-  message: string;
-}
-
-interface Notification {
-  id: number;
-  type: "system" | "application" | "message" | string;
-  is_read: boolean;
-  created_at: string;
-  translations: NotificationTranslation[];
-}
+import { useNotifications, Notification } from "@/hooks/useNotifications";
 
 export function NotificationDropdown() {
   const { locale, t } = useI18n();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    notifications,
+    unreadCount,
+    loading,
+    markAsRead,
+    markAllAsRead,
+  } = useNotifications();
+
   const [open, setOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
-
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
-
-  const fetchNotifications = async () => {
-    try {
-      const res = await fetchWithAuth("/api/notifications/");
-      if (res.ok) {
-        const data = await res.json();
-        const notificationList = Array.isArray(data) ? data : (data.results || []);
-        setNotifications(notificationList);
-      }
-    } catch (err) {
-      console.error("Error fetching notifications:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, []);
 
   const getNotificationContent = (notification: Notification) => {
     const translation = notification.translations.find((t) => t.lang === locale)
@@ -76,34 +45,6 @@ export function NotificationDropdown() {
       title: t("notifications.notification"),
       message: "",
     };
-  };
-
-  const markAsRead = async (id: number) => {
-    try {
-      const res = await fetchWithAuth(`/api/notifications/${id}/read/`, {
-        method: "POST",
-      });
-      if (res.ok) {
-        setNotifications((prev) =>
-          prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
-        );
-      }
-    } catch (err) {
-      console.error("Error marking notification as read:", err);
-    }
-  };
-
-  const markAllAsRead = async () => {
-    try {
-      const res = await fetchWithAuth("/api/notifications/read-all/", {
-        method: "POST",
-      });
-      if (res.ok) {
-        setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-      }
-    } catch (err) {
-      console.error("Error marking all as read:", err);
-    }
   };
 
   const formatDate = (dateString: string) => {
