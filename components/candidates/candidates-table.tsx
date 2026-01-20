@@ -59,8 +59,8 @@ export function CandidatesTable({
         </Select>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border overflow-x-auto">
+        <Table className="min-w-[600px]">
           <TableHeader className="bg-purple-50 dark:bg-purple-950/30">
             <TableRow>
               <TableHead className="w-[200px] dark:text-gray-300">{t("studentName")}</TableHead>

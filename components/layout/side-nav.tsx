@@ -7,6 +7,9 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { useSidebar } from "./sidebar-context";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   LogOut,
   Home,
@@ -32,9 +35,10 @@ interface NavItem {
 export function SideNav() {
   const pathname = usePathname();
   const t = useTranslations("nav");
-  const tCommon = useTranslations("common");
   const [universityName, setUniversityName] = useState<string>("");
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const { isOpen, close } = useSidebar();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -52,6 +56,13 @@ export function SideNav() {
     };
     fetchProfile();
   }, []);
+
+  // Close sidebar on navigation (mobile)
+  useEffect(() => {
+    if (isMobile) {
+      close();
+    }
+  }, [pathname, isMobile, close]);
 
   const navItems: NavItem[] = [
     { icon: User, labelKey: "profile", path: "/profile" },
@@ -71,10 +82,10 @@ export function SideNav() {
     window.location.href = "https://www.gradabroad.net/login/university";
   };
 
-  return (
-    <aside className="fixed top-0 left-0 h-screen w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-sm dark:shadow-gray-950/50 flex flex-col z-50">
+  const sidebarContent = (
+    <>
       {/* Profile */}
-      <div className="p-6 text-center border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 sticky top-0 z-50">
+      <div className="p-6 text-center border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
         <div className="relative w-20 h-20 mx-auto mb-3 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-500/15 dark:to-purple-500/10 flex items-center justify-center shadow-inner">
           <Building2 className="h-8 w-8 text-purple-700 dark:text-purple-400" />
         </div>
@@ -150,6 +161,24 @@ export function SideNav() {
         isOpen={isContactModalOpen}
         onClose={() => setIsContactModalOpen(false)}
       />
+    </>
+  );
+
+  // Mobile: render as Sheet drawer
+  if (isMobile) {
+    return (
+      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
+        <SheetContent side="left" className="w-64 p-0 flex flex-col">
+          {sidebarContent}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // Desktop: render as fixed sidebar
+  return (
+    <aside className="hidden md:flex fixed top-0 left-0 h-screen w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-sm dark:shadow-gray-950/50 flex-col z-50">
+      {sidebarContent}
     </aside>
   );
 }
