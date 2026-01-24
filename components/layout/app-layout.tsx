@@ -64,9 +64,9 @@ function AppLayoutContent({ children }: AppLayoutProps) {
           {/* Language Selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-1" title={t("header.language")}>
+              <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-2" title={t("header.language")}>
                 <Globe size={20} className="text-gray-600 dark:text-gray-400" />
-                <span className="text-sm text-gray-600 dark:text-gray-400 hidden sm:inline">{currentLang.flag}</span>
+                <span className={`fi fi-${currentLang.countryCode} hidden sm:inline`}></span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="dark:bg-gray-900 dark:border-gray-800">
@@ -76,7 +76,7 @@ function AppLayoutContent({ children }: AppLayoutProps) {
                   onClick={() => setLocale(lang.code)}
                   className={locale === lang.code ? "bg-purple-50 dark:bg-purple-500/10" : ""}
                 >
-                  <span className="mr-2">{lang.flag}</span>
+                  <span className={`fi fi-${lang.countryCode} mr-2`}></span>
                   {lang.name}
                 </DropdownMenuItem>
               ))}

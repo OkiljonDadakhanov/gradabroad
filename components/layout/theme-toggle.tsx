@@ -1,6 +1,6 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Monitor } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
   DropdownMenu,
@@ -34,6 +34,8 @@ export function ThemeToggle() {
         <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors">
           {theme === "dark" ? (
             <Moon size={20} className="text-gray-600 dark:text-gray-400" />
+          ) : theme === "system" ? (
+            <Monitor size={20} className="text-gray-600 dark:text-gray-400" />
           ) : (
             <Sun size={20} className="text-gray-600" />
           )}
@@ -58,7 +60,7 @@ export function ThemeToggle() {
           onClick={() => setTheme("system")}
           className={theme === "system" ? "bg-purple-50 dark:bg-purple-500/10" : ""}
         >
-          <Sun size={16} className="mr-2" />
+          <Monitor size={16} className="mr-2" />
           {t("theme.system")}
         </DropdownMenuItem>
       </DropdownMenuContent>

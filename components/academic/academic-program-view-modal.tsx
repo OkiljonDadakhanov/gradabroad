@@ -106,15 +106,22 @@ export function AcademicProgramViewModal({
 
           <Card className="p-4">
             <p className="text-sm text-gray-500">Required Documents</p>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-2 space-y-3">
               {program.documentTypes.length > 0 ? (
                 program.documentTypes.map((doc, index) => (
-                  <span
+                  <div
                     key={index}
-                    className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm"
+                    className="bg-purple-50 border border-purple-200 rounded-lg p-3"
                   >
-                    {doc}
-                  </span>
+                    <span className="font-medium text-purple-800">
+                      {doc.name}
+                    </span>
+                    {doc.description && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        {doc.description}
+                      </p>
+                    )}
+                  </div>
                 ))
               ) : (
                 <p className="text-gray-500">No documents specified</p>

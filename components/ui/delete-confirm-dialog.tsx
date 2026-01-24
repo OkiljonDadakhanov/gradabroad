@@ -11,21 +11,32 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-interface ScholarshipDeleteDialogProps {
+interface DeleteConfirmDialogProps {
   isOpen: boolean
   onClose: () => void
   onConfirm: () => void
-  scholarshipType: string
+  title?: string
+  itemName: string
+  itemType?: string
 }
 
-export function ScholarshipDeleteDialog({ isOpen, onClose, onConfirm, scholarshipType }: ScholarshipDeleteDialogProps) {
+export function DeleteConfirmDialog({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  itemName,
+  itemType = "item",
+}: DeleteConfirmDialogProps) {
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you sure you want to delete this scholarship?</AlertDialogTitle>
+          <AlertDialogTitle>
+            {title || `Are you sure you want to delete this ${itemType}?`}
+          </AlertDialogTitle>
           <AlertDialogDescription>
-            This will permanently delete the "{scholarshipType}" scholarship and cannot be undone.
+            This will permanently delete "{itemName}" and cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -38,4 +49,3 @@ export function ScholarshipDeleteDialog({ isOpen, onClose, onConfirm, scholarshi
     </AlertDialog>
   )
 }
-

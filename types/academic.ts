@@ -12,7 +12,7 @@ export interface AcademicProgram {
   application_guide_url?: string | null;
   application_form_url?: string | null;
   admissionEnd: string;
-  documentTypes: string[];
+  documentTypes: DocumentRequirement[];
   description: {
     english: string;
     korean: string;
@@ -24,6 +24,11 @@ export interface AcademicProgram {
 export interface LanguageRequirement {
   name: string; // e.g., "IELTS"
   requirement: string; // e.g., "Minimum Score: 6.5"
+}
+
+export interface DocumentRequirement {
+  name: string;
+  description: string;
 }
 
 export type AcademicProgramFormData = Omit<AcademicProgram, "id">;

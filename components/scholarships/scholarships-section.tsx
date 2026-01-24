@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useModalState } from "@/hooks/use-modal-state";
 import { ScholarshipModal } from "./scholarship-modal";
 import { ScholarshipViewModal } from "./scholarship-view-modal";
-import { ScholarshipDeleteDialog } from "./scholarship-delete-dialog";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
 import { useTranslations } from "@/lib/i18n";
 import type { Scholarship } from "@/types/scholarship";
@@ -20,12 +21,7 @@ export function ScholarshipsSection() {
   const [programs, setPrograms] = useState<AcademicProgram[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [currentScholarship, setCurrentScholarship] =
-    useState<Scholarship | null>(null);
+  const modal = useModalState<Scholarship>();
 
   useEffect(() => {
     fetchData();
@@ -67,17 +63,17 @@ export function ScholarshipsSection() {
     programs.find((p) => p.id === id)?.name || "Unknown";
 
   const handleDeleteScholarship = async () => {
-    if (!currentScholarship) return;
+    if (!modal.currentItem) return;
 
     try {
       const res = await fetchWithAuth(
-        `https://api.gradabroad.net/api/scholarships/${currentScholarship.id}/`,
+        `https://api.gradabroad.net/api/scholarships/${modal.currentItem.id}/`,
         { method: "DELETE" }
       );
       if (!res.ok) throw new Error("Delete failed");
 
       setScholarships((prev) =>
-        prev.filter((s) => s.id !== currentScholarship.id)
+        prev.filter((s) => s.id !== modal.currentItem!.id)
       );
       toast({ title: "Deleted", variant: "success" });
     } catch (err) {
@@ -87,8 +83,7 @@ export function ScholarshipsSection() {
         variant: "destructive",
       });
     } finally {
-      setCurrentScholarship(null);
-      setIsDeleteDialogOpen(false);
+      modal.closeDeleteDialog();
     }
   };
 
@@ -97,7 +92,7 @@ export function ScholarshipsSection() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-purple-900">{t("title")}</h2>
         <Button
-          onClick={() => setIsAddModalOpen(true)}
+          onClick={modal.openAddModal}
           className="bg-purple-900 text-white"
         >
           <Plus className="mr-2 h-4 w-4" /> {tCommon("add")}
@@ -115,10 +110,7 @@ export function ScholarshipsSection() {
           <div
             key={sch.id}
             className="bg-purple-50 p-4 rounded-md flex justify-between items-center cursor-pointer hover:bg-purple-100 transition-colors"
-            onClick={() => {
-              setCurrentScholarship(sch);
-              setIsViewModalOpen(true);
-            }}
+            onClick={() => modal.openViewModal(sch)}
           >
             <span className="text-purple-900 font-medium">
               {sch.name} — {getProgramName(sch.programme_id)}
@@ -130,8 +122,7 @@ export function ScholarshipsSection() {
                 className="bg-purple-200"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setCurrentScholarship(sch);
-                  setIsEditModalOpen(true);
+                  modal.openEditModal(sch);
                 }}
               >
                 <Pencil className="text-purple-700" />
@@ -142,8 +133,7 @@ export function ScholarshipsSection() {
                 className="bg-purple-200"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setCurrentScholarship(sch);
-                  setIsDeleteDialogOpen(true);
+                  modal.openDeleteDialog(sch);
                 }}
               >
                 <Trash2 className="text-purple-700" />
@@ -155,42 +145,43 @@ export function ScholarshipsSection() {
 
       {/* Modals */}
       <ScholarshipModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        isOpen={modal.isAddModalOpen}
+        onClose={modal.closeAddModal}
         onSave={(newSch) => {
           setScholarships([...scholarships, newSch]);
-          setIsAddModalOpen(false);
+          modal.closeAddModal();
         }}
         title={t("addScholarship")}
         programs={programs}
       />
 
-      {currentScholarship && (
+      {modal.currentItem && (
         <>
           <ScholarshipModal
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
+            isOpen={modal.isEditModalOpen}
+            onClose={modal.closeEditModal}
             onSave={(updated) => {
               setScholarships((prev) =>
                 prev.map((s) => (s.id === updated.id ? updated : s))
               );
-              setIsEditModalOpen(false);
+              modal.closeEditModal();
             }}
-            initialData={currentScholarship}
+            initialData={modal.currentItem}
             title={t("editScholarship")}
             programs={programs}
           />
           <ScholarshipViewModal
-            isOpen={isViewModalOpen}
-            onClose={() => setIsViewModalOpen(false)}
-            scholarship={currentScholarship}
-            programName={getProgramName(currentScholarship.programme_id)}
+            isOpen={modal.isViewModalOpen}
+            onClose={modal.closeViewModal}
+            scholarship={modal.currentItem}
+            programName={getProgramName(modal.currentItem.programme_id)}
           />
-          <ScholarshipDeleteDialog
-            isOpen={isDeleteDialogOpen}
-            onClose={() => setIsDeleteDialogOpen(false)}
+          <DeleteConfirmDialog
+            isOpen={modal.isDeleteDialogOpen}
+            onClose={modal.closeDeleteDialog}
             onConfirm={handleDeleteScholarship}
-            scholarshipType={currentScholarship.name}
+            itemName={modal.currentItem.name}
+            itemType="scholarship"
           />
         </>
       )}
