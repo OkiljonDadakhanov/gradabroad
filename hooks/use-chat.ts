@@ -41,6 +41,7 @@ export function useChat({ applicationId, enabled = true }: UseChatOptions): UseC
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const typingTimeoutRef = useRef<Map<number, NodeJS.Timeout>>(new Map());
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch initial messages
   const fetchMessages = useCallback(async () => {
@@ -99,6 +100,11 @@ export function useChat({ applicationId, enabled = true }: UseChatOptions): UseC
       console.log("WebSocket connected for application", applicationId);
       setConnected(true);
       setError(null);
+      // Stop polling when WebSocket connects
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
     };
 
     ws.onmessage = (event) => {
@@ -189,7 +195,13 @@ export function useChat({ applicationId, enabled = true }: UseChatOptions): UseC
     ws.onerror = () => {
       // WebSocket errors are typically followed by onclose, so we don't set error here
       // to avoid showing transient connection issues to users
-      console.log("WebSocket connection issue - will retry");
+      // Start polling fallback when WebSocket fails
+      if (!pollingIntervalRef.current && enabled) {
+        console.log("WebSocket unavailable - starting polling fallback");
+        pollingIntervalRef.current = setInterval(() => {
+          fetchMessages();
+        }, 5000); // Poll every 5 seconds
+      }
     };
 
     wsRef.current = ws;
@@ -323,6 +335,10 @@ export function useChat({ applicationId, enabled = true }: UseChatOptions): UseC
       // Cleanup
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
       }
       typingTimeoutRef.current.forEach((timeout) => clearTimeout(timeout));
       typingTimeoutRef.current.clear();
