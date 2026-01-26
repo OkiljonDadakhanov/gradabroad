@@ -46,10 +46,10 @@ export function ProfileSection() {
         localStorage.setItem("refreshToken", queryRefresh);
       }
       const cleanUrl = window.location.origin + window.location.pathname;
-      document.title = "GradAbroad – University Application";
+      document.title = "K-GradAbroad – University Application";
       window.history.replaceState({}, document.title, cleanUrl);
     } else {
-      document.title = "GradAbroad – University Application";
+      document.title = "K-GradAbroad – University Application";
     }
   }, []);
 

@@ -22,6 +22,6 @@ export default function RootLayout({
 }
 
 export const metadata = {
-      generator: 'GradAbroad',
-      applicationName: 'GradAbroad',
+      generator: 'K-GradAbroad',
+      applicationName: 'K-GradAbroad',
     };

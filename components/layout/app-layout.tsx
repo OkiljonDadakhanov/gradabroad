@@ -52,7 +52,7 @@ function AppLayoutContent({ children }: AppLayoutProps) {
             />
           </div>
           <div className="hidden sm:block">
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">GradAbroad</h1>
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">K-GradAbroad</h1>
             <p className="text-xs text-gray-500 dark:text-gray-400">{t("header.universityDashboard")}</p>
           </div>
         </div>
