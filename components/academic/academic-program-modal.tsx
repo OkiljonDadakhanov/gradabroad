@@ -30,10 +30,21 @@ import {
   type AcademicProgramFormData,
   CATEGORIES,
   DEGREE_TYPES,
+  TUITION_PERIODS,
 } from "@/types/academic";
 import { format } from "date-fns";
 import { TermsAndConditionsModal } from "./TermsAndConditionsModal";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
+import {
+  GraduationCap,
+  DollarSign,
+  Calendar,
+  FileText,
+  Languages,
+  ClipboardList,
+  Info,
+  Upload,
+} from "lucide-react";
 
 const defaultFormData: AcademicProgramFormData = {
   name: "",
@@ -41,7 +52,8 @@ const defaultFormData: AcademicProgramFormData = {
   degree_type: "",
   languageRequirement: [],
   documentTypes: [],
-  contract_price: "",
+  contractPrice: "",
+  tuitionPeriod: "Per Semester",
   description: { english: "", korean: "", russian: "", uzbek: "" },
   active: true,
   start_date: new Date(),
@@ -97,9 +109,10 @@ export function AcademicProgramModal({
 
     formData.append("name", values.name);
     formData.append("field_of_study", values.category);
-    formData.append("degree_type", values.degree_type);
-    formData.append("contract_price", values.contract_price);
-    formData.append("platform_application_fee", hasApplicationFee ? applicationFee : "0.00");
+    formData.append("degreeType", values.degreeType);
+    formData.append("contractPrice", values.contractPrice);
+    formData.append("tuition_period", values.tuitionPeriod || "Per Semester");
+    formData.append("platformApplicationFee", hasApplicationFee ? applicationFee : "0.00");
     if (hasApplicationFee && paymentInstructions) {
       formData.append("payment_instructions", paymentInstructions);
     }
@@ -140,6 +153,9 @@ export function AcademicProgramModal({
       formData.append(`requirements[${idx}][label]`, doc.name);
       formData.append(`requirements[${idx}][note]`, doc.description || "");
       formData.append(`requirements[${idx}][required]`, "true");
+      if (doc.sampleFile) {
+        formData.append(`requirements[${idx}][sample_document]`, doc.sampleFile);
+      }
     });
 
     try {
@@ -187,312 +203,461 @@ export function AcademicProgramModal({
     onClose();
   };
 
+  const SectionHeader = ({ icon, title, description }: { icon: React.ReactNode; title: string; description?: string }) => (
+    <div className="flex items-center gap-3 pb-3 border-b border-gray-200 mb-4">
+      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-700">
+        {icon}
+      </div>
+      <div>
+        <h3 className="text-base font-semibold text-gray-900">{title}</h3>
+        {description && <p className="text-sm text-gray-500">{description}</p>}
+      </div>
+    </div>
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">{title}</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-white border-b px-6 py-4">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-3">
+              <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+                <GraduationCap className="h-5 w-5 text-white" />
+              </div>
+              {title}
+            </DialogTitle>
+          </DialogHeader>
 
-        <Tabs
-          defaultValue="english"
-          className="mt-2"
-          onValueChange={setActiveTab}
-        >
-          <TabsList className="bg-purple-100">
-            {["english", "korean", "russian", "uzbek"].map((lang) => (
-              <TabsTrigger
-                key={lang}
-                value={lang}
-                className="data-[state=active]:bg-purple-700 data-[state=active]:text-white"
-              >
-                {lang === "english"
-                  ? "English"
-                  : lang === "korean"
-                  ? "한국어"
-                  : lang === "russian"
-                  ? "Русский"
-                  : "O'zbek"}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+          {/* Language Tabs */}
+          <Tabs
+            defaultValue="english"
+            className="mt-4"
+            onValueChange={setActiveTab}
+          >
+            <TabsList className="bg-purple-50 p-1">
+              {["english", "korean", "russian", "uzbek"].map((lang) => (
+                <TabsTrigger
+                  key={lang}
+                  value={lang}
+                  className="data-[state=active]:bg-purple-600 data-[state=active]:text-white rounded-md px-4"
+                >
+                  {lang === "english"
+                    ? "English"
+                    : lang === "korean"
+                    ? "한국어"
+                    : lang === "russian"
+                    ? "Русский"
+                    : "O'zbek"}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
 
-        <div className="space-y-6 mt-4">
-          <div>
-            <Label htmlFor="category">Fields of studies *</Label>
-            <Select
-              value={values.category}
-              onValueChange={(value) => handleSelectChange("category", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="name">Name of the academic program *</Label>
-            <Input
-              id="name"
-              name="name"
-              value={values.name}
-              onChange={handleChange}
-              className="mt-1"
-              required
+        <div className="px-6 py-6 space-y-8">
+          {/* Basic Information Section */}
+          <section className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <SectionHeader
+              icon={<GraduationCap className="h-5 w-5" />}
+              title="Program Information"
+              description="Basic details about the academic program"
             />
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="degree_type">Degree type</Label>
-              <Select
-                value={values.degree_type}
-                onValueChange={(value) =>
-                  handleSelectChange("degree_type", value)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select degree type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DEGREE_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="category" className="text-sm font-medium text-gray-700">
+                  Field of Study <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={values.category}
+                  onValueChange={(value) => handleSelectChange("category", value)}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div>
-              <Label htmlFor="contract_price">
-                Contract price per semester approximately ($)
-              </Label>
-              <div className="flex items-center mt-1">
-                <span className="bg-gray-100 border border-r-0 rounded-l px-3 py-2">
-                  $
-                </span>
+              <div>
+                <Label htmlFor="name" className="text-sm font-medium text-gray-700">
+                  Program Name <span className="text-red-500">*</span>
+                </Label>
                 <Input
-                  id="contract_price"
-                  name="contract_price"
-                  value={values.contract_price}
+                  id="name"
+                  name="name"
+                  value={values.name}
                   onChange={handleChange}
-                  className="rounded-l-none"
-                  type="number"
+                  className="mt-1"
+                  placeholder="e.g., Computer Science, Business Administration"
                   required
                 />
               </div>
-            </div>
-          </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="hasApplicationFee"
-                checked={hasApplicationFee}
-                onCheckedChange={(val) => setHasApplicationFee(Boolean(val))}
-              />
-              <Label htmlFor="hasApplicationFee">This program has an application fee</Label>
-            </div>
-
-            {hasApplicationFee && (
-              <>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="applicationFee">Application Fee (USD)</Label>
-                  <div className="flex items-center mt-1">
-                    <span className="bg-gray-100 border border-r-0 rounded-l px-3 py-2">
+                  <Label htmlFor="degreeType" className="text-sm font-medium text-gray-700">
+                    Degree Type
+                  </Label>
+                  <Select
+                    value={values.degreeType}
+                    onValueChange={(value) =>
+                      handleSelectChange("degreeType", value)
+                    }
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select degree type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DEGREE_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <Checkbox
+                      id="active"
+                      checked={values.active}
+                      onCheckedChange={(val) =>
+                        setValues({ ...values, active: Boolean(val) })
+                      }
+                    />
+                    Program is Active
+                  </Label>
+                  <p className="text-xs text-gray-500 mt-2 ml-6">
+                    Active programs are visible to applicants
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Pricing Section */}
+          <section className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <SectionHeader
+              icon={<DollarSign className="h-5 w-5" />}
+              title="Pricing & Fees"
+              description="Set tuition and application fees"
+            />
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="contractPrice" className="text-sm font-medium text-gray-700">
+                  Tuition Fee (USD) <span className="text-red-500">*</span>
+                </Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center flex-1">
+                    <span className="bg-gray-100 border border-r-0 border-gray-300 rounded-l-md px-3 py-2 text-gray-500">
                       $
                     </span>
                     <Input
-                      id="applicationFee"
-                      value={applicationFee}
-                      onChange={(e) => setApplicationFee(e.target.value)}
-                      className="rounded-l-none"
+                      id="contractPrice"
+                      name="contractPrice"
+                      value={values.contractPrice}
+                      onChange={handleChange}
+                      className="rounded-l-none rounded-r-none border-r-0"
                       type="number"
-                      step="0.01"
-                      min="0"
                       placeholder="0.00"
                       required
                     />
                   </div>
+                  <Select
+                    value={values.tuitionPeriod}
+                    onValueChange={(value) => handleSelectChange("tuitionPeriod", value)}
+                  >
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="Period" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TUITION_PERIODS.map((period) => (
+                        <SelectItem key={period} value={period}>
+                          {period}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div>
-                  <Label htmlFor="paymentInstructions">Payment Instructions</Label>
-                  <textarea
-                    id="paymentInstructions"
-                    value={paymentInstructions}
-                    onChange={(e) => setPaymentInstructions(e.target.value)}
-                    className="w-full mt-1 border border-gray-300 rounded px-3 py-2 min-h-[100px]"
-                    placeholder="Provide payment instructions for students (e.g., bank account details, payment methods, etc.)"
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="hasApplicationFee"
+                    checked={hasApplicationFee}
+                    onCheckedChange={(val) => setHasApplicationFee(Boolean(val))}
+                    className="data-[state=checked]:bg-purple-600"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    These instructions will be shown to students when they apply.
-                  </p>
+                  <div>
+                    <Label htmlFor="hasApplicationFee" className="text-sm font-medium text-gray-900 cursor-pointer">
+                      This program has an application fee
+                    </Label>
+                    <p className="text-xs text-gray-500">Students will be required to pay before submitting</p>
+                  </div>
                 </div>
-              </>
-            )}
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Admission Start Date *</Label>
-              <DatePicker
-                selected={values.start_date}
-                onChange={(date: Date | null) =>
-                  setValues({ ...values, start_date: date ?? new Date() })
-                }
-                dateFormat="yyyy-MM-dd"
-                className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
-                placeholderText="Select start date"
-              />
+                {hasApplicationFee && (
+                  <div className="mt-4 pl-7 space-y-4 border-l-2 border-purple-200">
+                    <div>
+                      <Label htmlFor="applicationFee" className="text-sm font-medium text-gray-700">
+                        Application Fee (USD)
+                      </Label>
+                      <div className="flex items-center mt-1">
+                        <span className="bg-gray-100 border border-r-0 border-gray-300 rounded-l-md px-3 py-2 text-gray-500">
+                          $
+                        </span>
+                        <Input
+                          id="applicationFee"
+                          value={applicationFee}
+                          onChange={(e) => setApplicationFee(e.target.value)}
+                          className="rounded-l-none max-w-[200px]"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="0.00"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="paymentInstructions" className="text-sm font-medium text-gray-700">
+                        Payment Instructions
+                      </Label>
+                      <textarea
+                        id="paymentInstructions"
+                        value={paymentInstructions}
+                        onChange={(e) => setPaymentInstructions(e.target.value)}
+                        className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 min-h-[80px] text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="Bank details, payment methods, etc."
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
+          </section>
 
-            <div>
-              <Label>Admission End Date *</Label>
-              <DatePicker
-                selected={values.end_date}
-                onChange={(date: Date | null) =>
-                  setValues({ ...values, end_date: date ?? new Date() })
-                }
-                dateFormat="yyyy-MM-dd"
-                className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
-                placeholderText="Select end date"
-              />
+          {/* Dates Section */}
+          <section className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <SectionHeader
+              icon={<Calendar className="h-5 w-5" />}
+              title="Important Dates"
+              description="Application period and result announcement"
+            />
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label className="text-sm font-medium text-gray-700">
+                  Admission Start <span className="text-red-500">*</span>
+                </Label>
+                <DatePicker
+                  selected={values.start_date}
+                  onChange={(date: Date) =>
+                    setValues({ ...values, start_date: date })
+                  }
+                  dateFormat="yyyy-MM-dd"
+                  className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500"
+                  placeholderText="Start date"
+                />
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-gray-700">
+                  Admission End <span className="text-red-500">*</span>
+                </Label>
+                <DatePicker
+                  selected={values.end_date}
+                  onChange={(date: Date) =>
+                    setValues({ ...values, end_date: date })
+                  }
+                  dateFormat="yyyy-MM-dd"
+                  className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500"
+                  placeholderText="End date"
+                />
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-gray-700">
+                  Results Announcement
+                </Label>
+                <DatePicker
+                  selected={values.results_announcement_date}
+                  onChange={(date) =>
+                    setValues({
+                      ...values,
+                      results_announcement_date: date || new Date(),
+                    })
+                  }
+                  dateFormat="yyyy-MM-dd"
+                  className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500"
+                  placeholderText="Announcement date"
+                />
+              </div>
             </div>
-          </div>
+          </section>
 
-          <div>
-            <Label>Application Guide (PDF/PNG)</Label>
-            <Input
-              type="file"
-              accept=".pdf,.png"
-              onChange={(e) => setGuideFile(e.target.files?.[0] || null)}
+          {/* Application Materials Section */}
+          <section className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <SectionHeader
+              icon={<Upload className="h-5 w-5" />}
+              title="Application Materials"
+              description="Upload guides and forms for applicants"
             />
-          </div>
 
-          <div>
-            <Label>Application Form (PDF/PNG)</Label>
-            <Input
-              type="file"
-              accept=".pdf,.png"
-              onChange={(e) => setFormFile(e.target.files?.[0] || null)}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 hover:border-purple-300 transition-colors">
+                <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Application Guide
+                </Label>
+                <Input
+                  type="file"
+                  accept=".pdf,.png"
+                  onChange={(e) => setGuideFile(e.target.files?.[0] || null)}
+                  className="text-sm"
+                />
+                <p className="text-xs text-gray-400 mt-2">PDF or PNG, max 10MB</p>
+                {guideFile && (
+                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                    <FileText className="h-3 w-3" />
+                    {guideFile.name}
+                  </p>
+                )}
+              </div>
+
+              <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 hover:border-purple-300 transition-colors">
+                <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Application Form
+                </Label>
+                <Input
+                  type="file"
+                  accept=".pdf,.png"
+                  onChange={(e) => setFormFile(e.target.files?.[0] || null)}
+                  className="text-sm"
+                />
+                <p className="text-xs text-gray-400 mt-2">PDF or PNG, max 10MB</p>
+                {formFile && (
+                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                    <FileText className="h-3 w-3" />
+                    {formFile.name}
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* Language Requirements Section */}
+          <section className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <SectionHeader
+              icon={<Languages className="h-5 w-5" />}
+              title="Language Requirements"
+              description="Set language proficiency requirements"
             />
-          </div>
-
-          <div>
-            <Label>Results Announcement Date</Label>
-            <DatePicker
-              selected={values.results_announcement_date}
-              onChange={(date) =>
-                setValues({
-                  ...values,
-                  results_announcement_date: date || new Date(),
-                })
+            <LanguageRequirementInput
+              value={values.languageRequirement}
+              onChange={(updated) =>
+                setValues({ ...values, languageRequirement: updated })
               }
-              dateFormat="yyyy-MM-dd"
-              className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
             />
-          </div>
+          </section>
 
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="active"
-              checked={values.active}
-              onCheckedChange={(val) =>
-                setValues({ ...values, active: Boolean(val) })
-              }
-            />
-            <Label htmlFor="active">Program is active</Label>
-          </div>
-
-          <LanguageRequirementInput
-            value={values.languageRequirement}
-            onChange={(updated) =>
-              setValues({ ...values, languageRequirement: updated })
-            }
-          />
-
-          <div>
-            <Label>Document Types</Label>
+          {/* Document Requirements Section */}
+          <section className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
             <DocumentTypeInput
               value={values.documentTypes}
               onChange={(updated) =>
                 setValues({ ...values, documentTypes: updated })
               }
             />
-          </div>
+          </section>
 
-          <div>
-            <Label>About the program</Label>
+          {/* Program Description Section */}
+          <section className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <SectionHeader
+              icon={<Info className="h-5 w-5" />}
+              title="Program Description"
+              description="Detailed information about the program"
+            />
             <RichTextEditor
               value={values.description}
               onChange={handleRichTextChange}
             />
-          </div>
+          </section>
 
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="terms"
-              checked={termsAccepted}
-              onCheckedChange={(val) => setTermsAccepted(Boolean(val))}
-            />
-            <Label htmlFor="terms">
-              I agree to the{" "}
-              <button
-                type="button"
-                onClick={() => setIsTermsModalOpen(true)}
-                className="underline text-purple-700 hover:text-purple-900"
-              >
-                Terms and Conditions
-              </button>
-            </Label>
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              className="bg-purple-900 hover:bg-purple-800"
-              disabled={!termsAccepted || loading}
-            >
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <svg
-                    className="animate-spin h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
+          {/* Terms and Actions */}
+          <div className="bg-gray-50 rounded-xl border border-gray-200 p-5">
+            <div className="flex items-start gap-3 mb-4">
+              <Checkbox
+                id="terms"
+                checked={termsAccepted}
+                onCheckedChange={(val) => setTermsAccepted(Boolean(val))}
+                className="mt-0.5 data-[state=checked]:bg-purple-600"
+              />
+              <div>
+                <Label htmlFor="terms" className="text-sm text-gray-700 cursor-pointer">
+                  I agree to the{" "}
+                  <button
+                    type="button"
+                    onClick={() => setIsTermsModalOpen(true)}
+                    className="text-purple-700 hover:text-purple-900 underline font-medium"
                   >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 11-8 8h4z"
-                    />
-                  </svg>
-                  Saving...
-                </div>
-              ) : (
-                "Save"
-              )}
-            </Button>
+                    Terms and Conditions
+                  </button>
+                </Label>
+                <p className="text-xs text-gray-500 mt-1">
+                  By creating this program, you confirm all information is accurate.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <Button variant="outline" onClick={handleCancel} className="px-6">
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                className="bg-purple-700 hover:bg-purple-800 px-8"
+                disabled={!termsAccepted || loading}
+              >
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="animate-spin h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 11-8 8h4z"
+                      />
+                    </svg>
+                    Saving...
+                  </div>
+                ) : (
+                  "Create Program"
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>

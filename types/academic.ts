@@ -4,8 +4,9 @@ export interface AcademicProgram {
   category: string;
   degree_type: string;
   languageRequirement: LanguageRequirement[];
-  contract_price: string;
-  platform_application_fee?: string;
+  contractPrice: string;
+  tuitionPeriod?: string;
+  platformApplicationFee?: string;
   paymentInstructions?: string;
   admissionStart: string;
   results_announcement_date?: string | null;
@@ -30,6 +31,8 @@ export interface LanguageRequirement {
 export interface DocumentRequirement {
   name: string;
   description: string;
+  sampleFile?: File | null;
+  sampleFileUrl?: string;
 }
 
 export interface AcademicProgramFormData extends Omit<AcademicProgram, "id" | "admissionStart" | "admissionEnd" | "results_announcement_date"> {
@@ -93,6 +96,11 @@ export const DEGREE_TYPES = [
   "PhD",
   "Certificate",
   "Diploma",
+];
+
+export const TUITION_PERIODS = [
+  "Per Semester",
+  "Per Year",
 ];
 
 export const DOCUMENT_TYPES = [

@@ -174,7 +174,7 @@ export default function ProgramDetailPage() {
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2">
               <GraduationCap className="h-8 w-8 text-purple-700" />
-              <span className="font-bold text-xl text-gray-900">GradAbroad</span>
+              <span className="font-bold text-xl text-gray-900">K-GradAbroad</span>
             </Link>
             <nav className="flex items-center gap-4">
               <Link href="/programs" className="text-gray-600 hover:text-gray-900">
@@ -616,10 +616,10 @@ export default function ProgramDetailPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <GraduationCap className="h-6 w-6 text-purple-700" />
-              <span className="font-semibold text-gray-900">GradAbroad</span>
+              <span className="font-semibold text-gray-900">K-GradAbroad</span>
             </div>
             <p className="text-sm text-gray-500">
-              © {new Date().getFullYear()} GradAbroad. All rights reserved.
+              © {new Date().getFullYear()} K-GradAbroad. All rights reserved.
             </p>
           </div>
         </div>
