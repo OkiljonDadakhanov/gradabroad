@@ -57,11 +57,11 @@ export function ProfileEditModal({
     formData.append("accreditation_number", values.accreditationNumber || "");
     formData.append("website", values.website || "");
     formData.append(
-      "university_admission_representetive_name",
+      "university_admission_representative_name",
       values.representativeName || ""
     );
     formData.append(
-      "university_admission_representetive_email",
+      "university_admission_representative_email",
       values.representativeEmail || ""
     );
 
@@ -128,8 +128,8 @@ export function ProfileEditModal({
         signed_accreditation_document_url: accreditationDocUrl,
         logo_url: raw.logo_url ?? raw.logo ?? null,
         website: raw.website,
-        representativeName: raw.university_admission_representetive_name,
-        representativeEmail: raw.university_admission_representetive_email,
+        representativeName: raw.university_admission_representative_name,
+        representativeEmail: raw.university_admission_representative_email,
         telegramLink: "",
         instagramLink: "",
         youtubeLink: "",

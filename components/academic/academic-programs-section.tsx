@@ -54,12 +54,12 @@ export function AcademicProgramsSection() {
         major?: string;
         field_of_study?: string;
         code?: string;
-        degreeType?: string;
+        degree_type?: string;
         degree_level?: string;
         requirements?: RequirementResponse[];
-        contractPrice?: string;
+        contract_price?: string;
         tuition_fee?: string;
-        platformApplicationFee?: string;
+        platform_application_fee?: string;
         payment_instructions?: string;
         results_announcement_date?: string | null;
         application_guide_url?: string | null;
@@ -100,11 +100,11 @@ export function AcademicProgramsSection() {
           id: `api-${p.id}`,
           name: p.name || p.major || "Unnamed",
           category: p.field_of_study || p.code || "",
-          degreeType: p.degreeType || p.degree_level || "",
+          degree_type: p.degree_type || p.degree_level || "",
           languageRequirement,
           documentTypes,
-          contractPrice: p.contractPrice || p.tuition_fee || "",
-          platformApplicationFee: p.platformApplicationFee || "0.00",
+          contract_price: p.contract_price || p.tuition_fee || "",
+          platform_application_fee: p.platform_application_fee || "0.00",
           paymentInstructions: p.payment_instructions || "",
           results_announcement_date: p.results_announcement_date || null,
           application_guide_url: p.application_guide_url || null,

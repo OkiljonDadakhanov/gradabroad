@@ -86,8 +86,8 @@ export function ProfileSection() {
           accreditationNumber: raw.accreditation_number,
           signed_accreditation_document_url: null, // will fetch on demand
           logo_url: raw.logo_url || null,
-          representativeName: raw.university_admission_representetive_name,
-          representativeEmail: raw.university_admission_representetive_email,
+          representativeName: raw.university_admission_representative_name,
+          representativeEmail: raw.university_admission_representative_email,
           website: raw.website,
           telegramLink: "",
           instagramLink: "",

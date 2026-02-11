@@ -87,7 +87,7 @@
     "editProgram": "프로그램 수정",
     "deleteProgram": "프로그램 삭제",
     "programName": "프로그램명",
-    "degreeType": "학위 유형",
+    "degree_type": "학위 유형",
     "duration": "기간",
     "tuitionFee": "수업료",
     "deadline": "지원 마감일",

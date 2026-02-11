@@ -87,7 +87,7 @@
     "editProgram": "Edit Program",
     "deleteProgram": "Delete Program",
     "programName": "Program Name",
-    "degreeType": "Degree Type",
+    "degree_type": "Degree Type",
     "duration": "Duration",
     "tuitionFee": "Tuition Fee",
     "deadline": "Application Deadline",

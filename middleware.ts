@@ -26,6 +26,11 @@ export function middleware(request: NextRequest) {
   // if the user has visited before via a cookie marker
   const accessToken = request.cookies.get("accessToken")?.value;
 
+  // Allow /profile with token query param (login callback flow)
+  if (pathname === "/profile" && request.nextUrl.searchParams.has("token")) {
+    return NextResponse.next();
+  }
+
   // For the root page, let it through (it handles its own redirect)
   if (pathname === "/") {
     return NextResponse.next();

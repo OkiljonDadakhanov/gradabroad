@@ -68,11 +68,11 @@ export function AcademicProgramEditModal({
   const [guideFile, setGuideFile] = useState<File | null>(null);
   const [formFile, setFormFile] = useState<File | null>(null);
   const [hasApplicationFee, setHasApplicationFee] = useState(
-    initialData.platformApplicationFee ? parseFloat(initialData.platformApplicationFee) > 0 : false
+    initialData.platform_application_fee ? parseFloat(initialData.platform_application_fee) > 0 : false
   );
   const [applicationFee, setApplicationFee] = useState(
-    initialData.platformApplicationFee && parseFloat(initialData.platformApplicationFee) > 0
-      ? initialData.platformApplicationFee
+    initialData.platform_application_fee && parseFloat(initialData.platform_application_fee) > 0
+      ? initialData.platform_application_fee
       : ""
   );
   const [paymentInstructions, setPaymentInstructions] = useState(
@@ -93,10 +93,10 @@ export function AcademicProgramEditModal({
 
     formData.append("name", values.name);
     formData.append("field_of_study", values.category);
-    formData.append("degreeType", values.degreeType);
-    formData.append("contractPrice", values.contractPrice);
+    formData.append("degree_type", values.degree_type);
+    formData.append("contract_price", values.contract_price);
     formData.append(
-      "platformApplicationFee",
+      "platform_application_fee",
       hasApplicationFee ? applicationFee : "0.00"
     );
     if (hasApplicationFee && paymentInstructions) {
@@ -226,8 +226,8 @@ export function AcademicProgramEditModal({
             <div>
               <Label>Degree Type</Label>
               <Select
-                value={values.degreeType}
-                onValueChange={(val) => handleSelectChange("degreeType", val)}
+                value={values.degree_type}
+                onValueChange={(val) => handleSelectChange("degree_type", val)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select degree type" />
@@ -245,8 +245,8 @@ export function AcademicProgramEditModal({
             <div>
               <Label>Contract Price ($)</Label>
               <Input
-                name="contractPrice"
-                value={values.contractPrice}
+                name="contract_price"
+                value={values.contract_price}
                 onChange={handleChange}
                 type="number"
               />

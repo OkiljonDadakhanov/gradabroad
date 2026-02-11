@@ -41,7 +41,7 @@ export function AcademicProgramViewModal({
               </div>
               <div>
                 <p className="text-sm text-gray-500">Degree Type</p>
-                <p className="font-medium">{program.degreeType}</p>
+                <p className="font-medium">{program.degree_type}</p>
               </div>
             </div>
           </Card>
@@ -50,18 +50,18 @@ export function AcademicProgramViewModal({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-500">Contract Price (USD)</p>
-                <p className="font-medium">${program.contractPrice}</p>
+                <p className="font-medium">${program.contract_price}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Application Fee</p>
                 <p className="font-medium">
-                  {program.platformApplicationFee && parseFloat(program.platformApplicationFee) > 0
-                    ? `$${parseFloat(program.platformApplicationFee).toFixed(2)} USD`
+                  {program.platform_application_fee && parseFloat(program.platform_application_fee) > 0
+                    ? `$${parseFloat(program.platform_application_fee).toFixed(2)} USD`
                     : "No application fee"}
                 </p>
               </div>
             </div>
-            {program.platformApplicationFee && parseFloat(program.platformApplicationFee) > 0 && (
+            {program.platform_application_fee && parseFloat(program.platform_application_fee) > 0 && (
               <div className="mt-4">
                 <p className="text-sm text-gray-500">Payment Instructions</p>
                 <p className="font-medium whitespace-pre-wrap">

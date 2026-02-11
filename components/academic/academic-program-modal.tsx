@@ -38,10 +38,10 @@ import { fetchWithAuth } from "@/lib/fetchWithAuth";
 const defaultFormData: AcademicProgramFormData = {
   name: "",
   category: "",
-  degreeType: "",
+  degree_type: "",
   languageRequirement: [],
   documentTypes: [],
-  contractPrice: "",
+  contract_price: "",
   description: { english: "", korean: "", russian: "", uzbek: "" },
   active: true,
   start_date: new Date(),
@@ -97,9 +97,9 @@ export function AcademicProgramModal({
 
     formData.append("name", values.name);
     formData.append("field_of_study", values.category);
-    formData.append("degreeType", values.degreeType);
-    formData.append("contractPrice", values.contractPrice);
-    formData.append("platformApplicationFee", hasApplicationFee ? applicationFee : "0.00");
+    formData.append("degree_type", values.degree_type);
+    formData.append("contract_price", values.contract_price);
+    formData.append("platform_application_fee", hasApplicationFee ? applicationFee : "0.00");
     if (hasApplicationFee && paymentInstructions) {
       formData.append("payment_instructions", paymentInstructions);
     }
@@ -252,11 +252,11 @@ export function AcademicProgramModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="degreeType">Degree type</Label>
+              <Label htmlFor="degree_type">Degree type</Label>
               <Select
-                value={values.degreeType}
+                value={values.degree_type}
                 onValueChange={(value) =>
-                  handleSelectChange("degreeType", value)
+                  handleSelectChange("degree_type", value)
                 }
               >
                 <SelectTrigger>
@@ -273,7 +273,7 @@ export function AcademicProgramModal({
             </div>
 
             <div>
-              <Label htmlFor="contractPrice">
+              <Label htmlFor="contract_price">
                 Contract price per semester approximately ($)
               </Label>
               <div className="flex items-center mt-1">
@@ -281,9 +281,9 @@ export function AcademicProgramModal({
                   $
                 </span>
                 <Input
-                  id="contractPrice"
-                  name="contractPrice"
-                  value={values.contractPrice}
+                  id="contract_price"
+                  name="contract_price"
+                  value={values.contract_price}
                   onChange={handleChange}
                   className="rounded-l-none"
                   type="number"

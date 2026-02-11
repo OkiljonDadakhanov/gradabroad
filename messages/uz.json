@@ -87,7 +87,7 @@
     "editProgram": "Dasturni tahrirlash",
     "deleteProgram": "Dasturni o'chirish",
     "programName": "Dastur nomi",
-    "degreeType": "Daraja turi",
+    "degree_type": "Daraja turi",
     "duration": "Davomiyligi",
     "tuitionFee": "O'qish narxi",
     "deadline": "Ariza muddati",

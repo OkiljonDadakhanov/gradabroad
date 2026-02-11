@@ -37,7 +37,7 @@ export function UserDropdown() {
           const data = await res.json();
           setUniversity({
             name: data.university_name || "University",
-            email: data.university_admission_email_address || data.university_admission_representetive_email || "",
+            email: data.university_admission_email_address || data.university_admission_representative_email || "",
             logo_url: data.logo_url || null,
           });
         }

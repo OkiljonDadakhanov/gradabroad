@@ -2,7 +2,8 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://api.gradabr
 
 // Set accessToken cookie so middleware can read it (middleware can't access localStorage)
 export function setAuthCookie(token: string): void {
-  document.cookie = `accessToken=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax; Secure`;
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  document.cookie = `accessToken=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax${secure}`;
 }
 
 // Clear accessToken cookie on logout

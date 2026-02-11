@@ -36,7 +36,7 @@ export default function ProgramsPage() {
     try {
       const params = new URLSearchParams();
       if (filters.search) params.append("search", filters.search);
-      if (filters.degree_type) params.append("degreeType", filters.degree_type);
+      if (filters.degree_type) params.append("degree_type", filters.degree_type);
       if (filters.field_of_study) params.append("field_of_study", filters.field_of_study);
       if (filters.min_price) params.append("min_price", filters.min_price.toString());
       if (filters.max_price) params.append("max_price", filters.max_price.toString());
