@@ -119,7 +119,7 @@ export default function ApplyPage() {
           formData.append("document_type", doc.type);
           formData.append("application_id", application.id.toString());
 
-          await fetchWithAuth(ENDPOINTS.APPLICATION_DOCUMENTS, {
+          await fetchWithAuth(ENDPOINTS.APPLICATION_DOCS, {
             method: "POST",
             body: formData,
           });
@@ -232,7 +232,7 @@ export default function ApplyPage() {
                 <div className="flex flex-wrap gap-4 text-sm text-gray-500 mt-1">
                   <span className="flex items-center gap-1">
                     <Building size={14} />
-                    {program.university_name}
+                    {program.university.name}
                   </span>
                   <span className="flex items-center gap-1">
                     <Calendar size={14} />
@@ -240,8 +240,8 @@ export default function ApplyPage() {
                   </span>
                   <span className="flex items-center gap-1">
                     <DollarSign size={14} />
-                    {program.contract_price
-                      ? `$${program.contract_price.toLocaleString()}`
+                    {program.tuition_fee
+                      ? `$${parseFloat(program.tuition_fee).toLocaleString()}`
                       : "Contact for price"}
                   </span>
                 </div>

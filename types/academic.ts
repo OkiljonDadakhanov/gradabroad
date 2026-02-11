@@ -13,6 +13,7 @@ export interface AcademicProgram {
   application_form_url?: string | null;
   admissionEnd: string;
   documentTypes: DocumentRequirement[];
+  active?: boolean;
   description: {
     english: string;
     korean: string;
@@ -31,7 +32,19 @@ export interface DocumentRequirement {
   description: string;
 }
 
-export type AcademicProgramFormData = Omit<AcademicProgram, "id">;
+export interface AcademicProgramFormData extends Omit<AcademicProgram, "id" | "admissionStart" | "admissionEnd" | "results_announcement_date"> {
+  start_date: Date;
+  end_date: Date;
+  results_announcement_date: Date;
+  admissionStart: Date;
+  admissionEnd: Date;
+}
+
+export interface AcademicProgramEditFormData extends Omit<AcademicProgram, "admissionStart" | "admissionEnd" | "results_announcement_date"> {
+  admissionStart: Date;
+  admissionEnd: Date;
+  results_announcement_date: Date;
+}
 
 export const CATEGORIES = [
   "Administration Studies",

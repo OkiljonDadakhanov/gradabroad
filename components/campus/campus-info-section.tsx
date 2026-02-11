@@ -26,7 +26,7 @@ export function CampusInfoSection() {
     setLoading(true);
     try {
       const res = await fetchWithAuth(
-        "https://api.gradabroad.net/api/information-about-campus/"
+        "/api/information-about-campus/"
       );
 
       if (res.status === 404) {
@@ -53,7 +53,7 @@ export function CampusInfoSection() {
           },
         });
       }
-    } catch (err: any) {
+    } catch (err) {
       toast.error("Something went wrong while fetching campus info.");
       console.error(err);
     } finally {
@@ -82,7 +82,7 @@ export function CampusInfoSection() {
 
     try {
       const res = await fetchWithAuth(
-        "https://api.gradabroad.net/api/information-about-campus/",
+        "/api/information-about-campus/",
         {
           method: isEdit ? "PUT" : "POST",
           headers: {
@@ -102,7 +102,7 @@ export function CampusInfoSection() {
 
       toast.success(t("campusSaved"));
       await fetchCampusData();
-    } catch (err: any) {
+    } catch (err) {
       toast.error("Unexpected error occurred.");
       console.error(err);
     }

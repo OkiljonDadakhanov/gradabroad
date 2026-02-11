@@ -36,11 +36,11 @@ export function useForm<T>(initialValues: T) {
     }
   }
 
-  const handleNestedChange = (parent: keyof T, key: string, value: any) => {
+  const handleNestedChange = (parent: keyof T, key: string, value: unknown) => {
     setValues({
       ...values,
       [parent]: {
-        ...(values[parent] as any),
+        ...(values[parent] as Record<string, unknown>),
         [key]: value,
       },
     })

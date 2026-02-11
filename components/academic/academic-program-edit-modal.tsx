@@ -25,7 +25,7 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { LanguageRequirementInput } from "./LanguageRequirementInput";
 import { DocumentTypeInput } from "./DocumentTypeInput";
 import { useForm } from "@/hooks/use-form";
-import { AcademicProgram, CATEGORIES, DEGREE_TYPES } from "@/types/academic";
+import { AcademicProgram, AcademicProgramEditFormData, CATEGORIES, DEGREE_TYPES } from "@/types/academic";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
@@ -62,7 +62,7 @@ export function AcademicProgramEditModal({
     handleCheckboxChange,
     handleNestedChange,
     reset,
-  } = useForm<AcademicProgram>(transformedInitialData);
+  } = useForm<AcademicProgramEditFormData>(transformedInitialData);
 
   const [loading, setLoading] = useState(false);
   const [guideFile, setGuideFile] = useState<File | null>(null);
@@ -137,7 +137,7 @@ export function AcademicProgramEditModal({
 
     try {
       const res = await fetchWithAuth(
-        `https://api.gradabroad.net/api/programmes/with-requirements/${numericId}/`,
+        `/api/programmes/with-requirements/${numericId}/`,
         {
           method: "PATCH",
          

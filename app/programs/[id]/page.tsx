@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { PublicProgram } from "@/types/program";
 import { fetchPublic, fetchWithAuth, isAuthenticated } from "@/lib/fetchWithAuth";
 import { ENDPOINTS } from "@/lib/constants";
+import DOMPurify from "dompurify";
 
 // Type for readiness response
 interface RequirementStatus {
@@ -100,9 +101,9 @@ export default function ProgramDetailPage() {
 
       const data = await res.json();
       setProgram(data);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error fetching program:", err);
-      setError(err.message || "Failed to load program details");
+      setError(err instanceof Error ? err.message : "Failed to load program details");
     } finally {
       setLoading(false);
     }
@@ -319,7 +320,7 @@ export default function ProgramDetailPage() {
                   <TabsContent value="english">
                     <div
                       className="prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: program.about_program }}
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(program.about_program) }}
                     />
                   </TabsContent>
                   {program.about_program_korean && (
@@ -327,7 +328,7 @@ export default function ProgramDetailPage() {
                       <div
                         className="prose prose-sm max-w-none"
                         dangerouslySetInnerHTML={{
-                          __html: program.about_program_korean,
+                          __html: DOMPurify.sanitize(program.about_program_korean),
                         }}
                       />
                     </TabsContent>
@@ -337,7 +338,7 @@ export default function ProgramDetailPage() {
                       <div
                         className="prose prose-sm max-w-none"
                         dangerouslySetInnerHTML={{
-                          __html: program.about_program_russian,
+                          __html: DOMPurify.sanitize(program.about_program_russian),
                         }}
                       />
                     </TabsContent>
@@ -347,7 +348,7 @@ export default function ProgramDetailPage() {
                       <div
                         className="prose prose-sm max-w-none"
                         dangerouslySetInnerHTML={{
-                          __html: program.about_program_uzbek,
+                          __html: DOMPurify.sanitize(program.about_program_uzbek),
                         }}
                       />
                     </TabsContent>

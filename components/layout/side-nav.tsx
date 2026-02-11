@@ -79,7 +79,8 @@ export function SideNav() {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("universityId");
-    window.location.href = "https://www.gradabroad.net/login/university";
+    const loginUrl = process.env.NEXT_PUBLIC_LOGIN_URL || "https://www.gradabroad.net/login/university";
+    window.location.href = loginUrl;
   };
 
   const sidebarContent = (

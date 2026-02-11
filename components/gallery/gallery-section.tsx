@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import type { GalleryImage } from "@/types/gallery";
+import type { GalleryImage, GalleryImageFormData } from "@/types/gallery";
 import { GalleryGrid } from "./gallery-grid";
 import { GalleryDeleteDialog } from "./gallery-delete-dialog";
 import { GalleryImageModal } from "./gallery-image-modal";
@@ -37,15 +37,28 @@ export function GallerySection() {
 
     try {
       const res = await fetchWithAuth(
-        "https://api.gradabroad.net/api/media/gallery/categories/"
+        "/api/media/gallery/categories/"
       );
 
       const data = await res.json();
 
-      const mapped: CategoryGallery[] = data.map((cat: any) => ({
+      interface GalleryImageResponse {
+        id: number;
+        image_url: string;
+        alt_text?: string;
+        description?: string;
+      }
+
+      interface CategoryResponse {
+        id: number;
+        name: string;
+        images?: GalleryImageResponse[];
+      }
+
+      const mapped: CategoryGallery[] = data.map((cat: CategoryResponse) => ({
         id: cat.id,
         name: cat.name,
-        images: (cat.images || []).map((img: any) => ({
+        images: (cat.images || []).map((img: GalleryImageResponse) => ({
           id: img.id.toString(),
           imageUrl: img.image_url,
           altText: img.alt_text || cat.name,
@@ -84,7 +97,7 @@ export function GallerySection() {
 
       try {
         const res = await fetchWithAuth(
-          "https://api.gradabroad.net/api/media/gallery/images/",
+          "/api/media/gallery/images/",
           {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
@@ -116,7 +129,7 @@ export function GallerySection() {
     image: GalleryImage | GalleryImageFormData
   ) => {
     const token = localStorage.getItem("accessToken");
-    if (!token || !image.id || !selectedCategory) return;
+    if (!token || !("id" in image) || !image.id || !selectedCategory) return;
 
     const formData = new FormData();
     formData.append("category_id", selectedCategory.id.toString());
@@ -131,7 +144,7 @@ export function GallerySection() {
 
     try {
       const res = await fetchWithAuth(
-        `https://api.gradabroad.net/api/media/gallery/images/${image.id}/`,
+        `/api/media/gallery/images/${image.id}/`,
         {
           method: "PATCH", // PATCH is safer for partial updates
 
@@ -161,7 +174,7 @@ export function GallerySection() {
 
     try {
       const res = await fetchWithAuth(
-        `https://api.gradabroad.net/api/media/gallery/images/${currentImage.id}/`,
+        `/api/media/gallery/images/${currentImage.id}/`,
         {
           method: "DELETE",
         }
@@ -189,7 +202,7 @@ export function GallerySection() {
 
     try {
       const res = await fetchWithAuth(
-        "https://api.gradabroad.net/api/media/gallery/categories/",
+        "/api/media/gallery/categories/",
         {
           method: "POST",
          
@@ -264,7 +277,7 @@ export function GallerySection() {
       <GalleryImageModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onSave={handleAddImage}
+        onSave={(data) => handleAddImage(data as GalleryImageFormData[])}
         title={`${t("addImagesTo")} ${selectedCategory?.name}`}
         isMultiple
       />
@@ -274,7 +287,7 @@ export function GallerySection() {
           <GalleryImageModal
             isOpen={isEditModalOpen}
             onClose={() => setIsEditModalOpen(false)}
-            onSave={handleEditImage}
+            onSave={(data) => handleEditImage(data as GalleryImage)}
             initialData={currentImage}
             title={t("editImage")}
           />

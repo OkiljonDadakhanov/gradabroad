@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import type { AcademicProgram } from "@/types/academic";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
+import DOMPurify from "dompurify";
 
 interface AcademicProgramViewModalProps {
   isOpen: boolean;
@@ -193,14 +194,13 @@ export function AcademicProgramViewModal({
                 ))}
               </TabsList>
 
-              {["english", "korean", "russian", "uzbek"].map((lang) => (
+              {(["english", "korean", "russian", "uzbek"] as const).map((lang) => (
                 <TabsContent key={lang} value={lang} className="mt-4">
                   {program.description[lang] ? (
                     <div
                       dangerouslySetInnerHTML={{
-                        __html: program.description[lang].replace(
-                          /\n/g,
-                          "<br/>"
+                        __html: DOMPurify.sanitize(
+                          program.description[lang].replace(/\n/g, "<br/>")
                         ),
                       }}
                     />

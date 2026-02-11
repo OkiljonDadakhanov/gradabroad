@@ -1,16 +1,20 @@
 export interface Scholarship {
-  id: string;
-  degreeType: string;
-  academicProgram: string;
-  description: {
-    english: string;
-    korean: string;
-    russian: string;
-    uzbek: string;
-  };
+  id: number;
+  programme_id: number;
+  name: string;
+  coverage: string;
+  eligibility_criteria: string;
+  application_deadline: string;
+  is_active?: boolean;
 }
 
-export type ScholarshipFormData = Omit<Scholarship, "id">;
+export interface ScholarshipFormData {
+  programme_id: string;
+  name: string;
+  coverage: string;
+  eligibility_criteria: string;
+  application_deadline: Date;
+}
 
 export const DEGREE_TYPES = [
   "Vocational or Professional",

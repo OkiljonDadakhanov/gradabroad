@@ -8,8 +8,8 @@ export interface ProfileData {
   telephone: string;
   email: string;
   accreditationNumber: string;
-  signed_accreditation_document_url: string;
-  logo_url: string | null;
+  signed_accreditation_document_url: string | File | null;
+  logo_url: string | File | null;
   website: string;
   representativeName: string;
   representativeEmail: string;
@@ -33,5 +33,8 @@ export interface CampusInfoData {
   dormitoryFeeRangeMax: string;
   aboutUniversity: {
     english: string;
+    korean?: string;
+    russian?: string;
+    uzbek?: string;
   };
 }

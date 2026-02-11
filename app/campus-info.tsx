@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PenSquare } from "lucide-react";
+import DOMPurify from "dompurify";
 
 export default function CampusInfoPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -52,7 +53,7 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleAboutChange = (value) => {
+  const handleAboutChange = (value: string) => {
     setFormData({
       ...formData,
       aboutUniversity: {
@@ -267,9 +268,8 @@ Beyond its academic offerings, New Uzbekistan University is committed to becomin
               <div className="prose max-w-none">
                 <div
                   dangerouslySetInnerHTML={{
-                    __html: campusData.aboutUniversity.english.replace(
-                      /\n/g,
-                      "<br/>"
+                    __html: DOMPurify.sanitize(
+                      campusData.aboutUniversity.english.replace(/\n/g, "<br/>")
                     ),
                   }}
                 />

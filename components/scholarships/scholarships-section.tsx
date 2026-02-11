@@ -32,10 +32,10 @@ export function ScholarshipsSection() {
 
     try {
       const resPrograms = await fetchWithAuth(
-        "https://api.gradabroad.net/api/programmes/mine/"
+        "/api/programmes/mine/"
       );
       const resScholarships = await fetchWithAuth(
-        "https://api.gradabroad.net/api/scholarships/mine/"
+        "/api/scholarships/mine/"
       );
 
       if (!resPrograms.ok || !resScholarships.ok) {
@@ -60,14 +60,14 @@ export function ScholarshipsSection() {
   };
 
   const getProgramName = (id: number) =>
-    programs.find((p) => p.id === id)?.name || "Unknown";
+    programs.find((p) => String(p.id) === String(id))?.name || "Unknown";
 
   const handleDeleteScholarship = async () => {
     if (!modal.currentItem) return;
 
     try {
       const res = await fetchWithAuth(
-        `https://api.gradabroad.net/api/scholarships/${modal.currentItem.id}/`,
+        `/api/scholarships/${modal.currentItem.id}/`,
         { method: "DELETE" }
       );
       if (!res.ok) throw new Error("Delete failed");

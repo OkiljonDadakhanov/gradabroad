@@ -75,8 +75,8 @@ export function ScholarshipModal({
 
     const isEdit = Boolean(initialData?.id);
     const url = isEdit
-      ? `https://api.gradabroad.net/api/scholarships/${initialData!.id}/`
-      : "https://api.gradabroad.net/api/scholarships/";
+      ? `/api/scholarships/${initialData!.id}/`
+      : "/api/scholarships/";
 
     try {
       const res = await fetchWithAuth(url, {
@@ -168,8 +168,8 @@ export function ScholarshipModal({
             <Label>Application Deadline *</Label>
             <DatePicker
               selected={values.application_deadline}
-              onChange={(date: Date) =>
-                setValues({ ...values, application_deadline: date })
+              onChange={(date: Date | null) =>
+                setValues({ ...values, application_deadline: date ?? new Date() })
               }
               dateFormat="yyyy-MM-dd"
               className="w-full mt-1 border border-gray-300 rounded px-3 py-2"

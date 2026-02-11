@@ -90,7 +90,7 @@ export interface CandidateDetail extends CandidateListItem {
   financial_documents: CandidateFinancialDocument[];
   language_certificates: CandidateLanguageCertificate[];
   attachments: CandidateAttachment[];
-  application_documents: any[];
+  application_documents: { id: number; doc_type: string; signed_file_url: string; uploaded_at: string }[];
   acceptance_letter_url: string | null;
   acceptance_letter_uploaded_at: string | null;
 }

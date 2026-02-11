@@ -97,11 +97,11 @@ export function GalleryImageModal({
 
       const multipleImages: GalleryImageFormData[] = images.map(
         (file, index) => ({
-          // title: formValues.title || file.name,
+          title: formValues.title || file.name,
           description: formValues.description,
           imageUrl: "", // Will be set after upload
           altText: formValues.altText || file.name.split(".")[0],
-          // date: formValues.date,
+          date: formValues.date,
           imageFile: file,
         })
       );

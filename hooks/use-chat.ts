@@ -153,9 +153,10 @@ export function useChat({ applicationId, enabled = true }: UseChatOptions): UseC
           case "messages_read":
             // Update messages to show as read
             if (data.message_ids && data.message_ids.length > 0) {
+              const readIds = data.message_ids;
               setMessages((prev) =>
                 prev.map((msg) =>
-                  data.message_ids.includes(msg.id)
+                  readIds.includes(msg.id)
                     ? { ...msg, is_read: true }
                     : msg
                 )

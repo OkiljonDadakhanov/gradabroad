@@ -63,7 +63,7 @@ export function CampusEditModal({
 
     try {
       const res = await fetchWithAuth(
-        `https://api.gradabroad.net/api/information-about-campus/`,
+        `/api/information-about-campus/`,
         {
           method: "PUT",
           headers: {
@@ -105,9 +105,9 @@ export function CampusEditModal({
       toast.success("Campus information updated successfully!");
       if (onSuccess) onSuccess(updated);
       onClose();
-    } catch (err: any) {
+    } catch (err) {
       toast.error("Failed to update campus info.");
-      console.error("Update error:", err.message);
+      console.error("Update error:", err instanceof Error ? err.message : err);
     } finally {
       setLoading(false);
     }

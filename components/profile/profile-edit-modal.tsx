@@ -78,7 +78,7 @@ export function ProfileEditModal({
 
     try {
       const response = await fetchWithAuth(
-        "https://api.gradabroad.net/api/auth/universities/me/",
+        "/api/auth/universities/me/",
         {
           method: "PUT",
           body: formData,
@@ -104,7 +104,7 @@ export function ProfileEditModal({
       let accreditationDocUrl = "";
       try {
         const docRes = await fetchWithAuth(
-          "https://api.gradabroad.net/api/auth/universities/me/accreditation-url/"
+          "/api/auth/universities/me/accreditation-url/"
         );
 
         if (docRes.ok) {
@@ -315,10 +315,10 @@ export function ProfileEditModal({
             <FileUpload
               label="Accreditation document *"
               value={values.signed_accreditation_document_url}
-              onChange={(file: File) =>
+              onChange={(file: File | null) =>
                 setValues({
                   ...values,
-                  signed_accreditation_document_url: file,
+                  signed_accreditation_document_url: file ?? values.signed_accreditation_document_url,
                 })
               }
             />

@@ -109,9 +109,10 @@ export function CandidateStatisticsChart() {
         }
 
         setChartData(chartDataFormatted)
-      } catch (err: any) {
-        console.error("Error fetching statistics:", err?.message || err)
-        setError(`${tCommon("error")}: ${err?.message || "Unknown error"}`)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        console.error("Error fetching statistics:", message)
+        setError(`${tCommon("error")}: ${message}`)
       } finally {
         setLoading(false)
       }

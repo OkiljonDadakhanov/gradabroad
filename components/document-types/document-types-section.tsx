@@ -130,7 +130,7 @@ export function DocumentTypesSection() {
         <DocumentTypeModal
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
-          onSave={handleEditDocumentType}
+          onSave={(data) => handleEditDocumentType(data as DocumentType)}
           initialData={currentDocumentType}
           title={t("editType")}
         />

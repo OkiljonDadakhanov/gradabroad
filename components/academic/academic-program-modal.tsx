@@ -144,7 +144,7 @@ export function AcademicProgramModal({
 
     try {
       const res = await fetchWithAuth(
-        "https://api.gradabroad.net/api/programmes/with-requirements/",
+        "/api/programmes/with-requirements/",
         {
           method: "POST",
           body: formData,
@@ -158,15 +158,22 @@ export function AcademicProgramModal({
         return;
       }
 
-      onSave({ ...values, id: `api-${created.id}` });
+      onSave({
+        ...values,
+        id: `api-${created.id}`,
+        admissionStart: format(values.start_date, "yyyy-MM-dd"),
+        admissionEnd: format(values.end_date, "yyyy-MM-dd"),
+        results_announcement_date: format(values.results_announcement_date, "yyyy-MM-dd"),
+      });
       onClose();
       reset();
       setHasApplicationFee(false);
       setApplicationFee("");
       setPaymentInstructions("");
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown";
       console.error("POST error", err);
-      alert("Unexpected error: " + (err?.message || "Unknown"));
+      alert("Unexpected error: " + message);
     } finally {
       setLoading(false);
     }
@@ -339,8 +346,8 @@ export function AcademicProgramModal({
               <Label>Admission Start Date *</Label>
               <DatePicker
                 selected={values.start_date}
-                onChange={(date: Date) =>
-                  setValues({ ...values, start_date: date })
+                onChange={(date: Date | null) =>
+                  setValues({ ...values, start_date: date ?? new Date() })
                 }
                 dateFormat="yyyy-MM-dd"
                 className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
@@ -352,8 +359,8 @@ export function AcademicProgramModal({
               <Label>Admission End Date *</Label>
               <DatePicker
                 selected={values.end_date}
-                onChange={(date: Date) =>
-                  setValues({ ...values, end_date: date })
+                onChange={(date: Date | null) =>
+                  setValues({ ...values, end_date: date ?? new Date() })
                 }
                 dateFormat="yyyy-MM-dd"
                 className="w-full mt-1 border border-gray-300 rounded px-3 py-2"

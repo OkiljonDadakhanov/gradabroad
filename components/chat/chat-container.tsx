@@ -277,7 +277,7 @@ export function ChatContainer({
         <ChatInput
           onSend={sendMessage}
           onTyping={sendTyping}
-          disabled={showStartChat || (threadStatus && !threadStatus.can_send)}
+          disabled={showStartChat || !!(threadStatus && !threadStatus.can_send)}
           placeholder={
             showStartChat
               ? "Start a chat first..."

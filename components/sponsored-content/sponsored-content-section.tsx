@@ -181,7 +181,7 @@ export function SponsoredContentSection() {
         <SponsoredContentModal
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
-          onSave={handleEditContent}
+          onSave={(data) => handleEditContent(data as SponsoredContent)}
           initialData={currentContent}
           title="Edit Sponsored Content"
         />

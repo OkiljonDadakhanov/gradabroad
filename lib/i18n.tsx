@@ -43,13 +43,19 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     setMounted(true);
   }, []);
 
-  // Fetch user's language preference on mount
+  // Load language: first from localStorage, then from API
   useEffect(() => {
     if (!mounted) return;
 
+    // Immediately apply cached locale from localStorage
+    const cachedLocale = localStorage.getItem("preferredLanguage");
+    if (cachedLocale && messages[cachedLocale]) {
+      setLocaleState(cachedLocale);
+    }
+
     const fetchLanguage = async () => {
       try {
-        const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+        const token = localStorage.getItem("accessToken");
         if (!token) {
           setIsLoading(false);
           return;
@@ -60,6 +66,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
           const data = await res.json();
           if (data.preferred_language && messages[data.preferred_language]) {
             setLocaleState(data.preferred_language);
+            localStorage.setItem("preferredLanguage", data.preferred_language);
           }
         }
       } catch (err) {
@@ -76,6 +83,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     if (!messages[newLocale]) return;
 
     setLocaleState(newLocale);
+    localStorage.setItem("preferredLanguage", newLocale);
 
     // Save to API
     try {

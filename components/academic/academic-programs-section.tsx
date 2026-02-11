@@ -38,7 +38,7 @@ export function AcademicProgramsSection() {
 
     try {
       const res = await fetchWithAuth(
-        "https://api.gradabroad.net/api/programmes/mine/"
+        "/api/programmes/mine/"
       );
 
       if (!res.ok) {
@@ -48,14 +48,43 @@ export function AcademicProgramsSection() {
 
       const data = await res.json();
 
-      const mapped = data.map((p: any) => {
+      interface ProgramResponse {
+        id: number;
+        name?: string;
+        major?: string;
+        field_of_study?: string;
+        code?: string;
+        degreeType?: string;
+        degree_level?: string;
+        requirements?: RequirementResponse[];
+        contractPrice?: string;
+        tuition_fee?: string;
+        platformApplicationFee?: string;
+        payment_instructions?: string;
+        results_announcement_date?: string | null;
+        application_guide_url?: string | null;
+        application_form_url?: string | null;
+        start_date?: string;
+        end_date?: string;
+        about_program?: string;
+        active?: boolean;
+      }
+
+      interface RequirementResponse {
+        requirementType: string;
+        label: string;
+        min_score?: number | null;
+        note?: string;
+      }
+
+      const mapped = data.map((p: ProgramResponse) => {
         const languageRequirement = (p.requirements || [])
           .filter(
-            (r: any) =>
+            (r: RequirementResponse) =>
               r.requirementType === "english" ||
               r.requirementType === "language"
           )
-          .map((r: any) => ({
+          .map((r: RequirementResponse) => ({
             name: r.label,
             requirement:
               r.min_score !== null && r.min_score !== undefined
@@ -64,8 +93,8 @@ export function AcademicProgramsSection() {
           }));
 
         const documentTypes = (p.requirements || [])
-          .filter((r: any) => r.requirementType === "document")
-          .map((r: any) => ({ name: r.label, description: r.note || "" }));
+          .filter((r: RequirementResponse) => r.requirementType === "document")
+          .map((r: RequirementResponse) => ({ name: r.label, description: r.note || "" }));
 
         return {
           id: `api-${p.id}`,
@@ -109,7 +138,7 @@ export function AcademicProgramsSection() {
 
     try {
       const res = await fetchWithAuth(
-        `https://api.gradabroad.net/api/programmes/with-requirements/${numericId}/`,
+        `/api/programmes/with-requirements/${numericId}/`,
         {
           method: "DELETE",
         }

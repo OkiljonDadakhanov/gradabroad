@@ -47,6 +47,16 @@ body {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Semantic surface tokens */
+    --surface: 0 0% 100%;
+    --surface-elevated: 0 0% 98%;
+    --surface-muted: 0 0% 96%;
+    --text-primary: 0 0% 9%;
+    --text-secondary: 0 0% 25%;
+    --text-muted: 0 0% 45%;
+    --border-default: 0 0% 90%;
+    --border-subtle: 0 0% 94%;
   }
   .dark {
     --background: 222 35% 8%;
@@ -81,6 +91,16 @@ body {
     --sidebar-accent-foreground: 220 10% 72%;
     --sidebar-border: 222 25% 18%;
     --sidebar-ring: 263 50% 50%;
+
+    /* Semantic surface tokens - dark */
+    --surface: 222 35% 11%;
+    --surface-elevated: 222 35% 13%;
+    --surface-muted: 222 25% 16%;
+    --text-primary: 220 10% 85%;
+    --text-secondary: 220 10% 72%;
+    --text-muted: 220 8% 55%;
+    --border-default: 222 25% 20%;
+    --border-subtle: 222 25% 18%;
   }
 }
 
@@ -93,13 +113,13 @@ body {
   }
 }
 
-/* Add prose styling for terms and conditions */
+/* Prose styling for rich text content */
 .prose h3 {
   font-size: 1.5rem;
   font-weight: 600;
   margin-top: 1.5rem;
   margin-bottom: 1rem;
-  color: #581c87; /* purple-900 */
+  color: hsl(var(--primary));
 }
 
 .prose h4 {
@@ -107,12 +127,13 @@ body {
   font-weight: 600;
   margin-top: 1.25rem;
   margin-bottom: 0.75rem;
-  color: #6b21a8; /* purple-800 */
+  color: hsl(var(--primary));
 }
 
 .prose p {
   margin-bottom: 1rem;
   line-height: 1.6;
+  color: hsl(var(--foreground));
 }
 
 .prose ul {
@@ -124,53 +145,10 @@ body {
 
 .prose li {
   margin-bottom: 0.25rem;
+  color: hsl(var(--foreground));
 }
 
-/* Dark mode prose styles */
-.dark .prose h3,
-.dark .prose h4 {
-  color: #c4b5fd; /* purple-300 */
-}
-
-.dark .prose p,
-.dark .prose li {
-  color: #d1d5db; /* gray-300 */
-}
-
-/* Dark mode overrides for hardcoded bg-white elements */
-.dark .bg-white {
-  background-color: hsl(222 47% 11%) !important;
-}
-
-.dark .border-gray-200 {
-  border-color: hsl(222 30% 18%) !important;
-}
-
-.dark .border-gray-100 {
-  border-color: hsl(222 30% 16%) !important;
-}
-
-.dark .text-gray-900 {
-  color: hsl(220 10% 75%) !important;
-}
-
-.dark .text-gray-800 {
-  color: hsl(220 10% 72%) !important;
-}
-
-.dark .text-gray-700 {
-  color: hsl(220 8% 65%) !important;
-}
-
-.dark .text-gray-600 {
-  color: hsl(220 8% 60%) !important;
-}
-
-.dark .text-gray-500 {
-  color: hsl(220 8% 55%) !important;
-}
-
-/* Fix table backgrounds */
+/* Dark mode table fixes using semantic tokens */
 .dark table,
 .dark thead,
 .dark tbody,
@@ -179,81 +157,28 @@ body {
 }
 
 .dark th {
-  background-color: hsl(222 25% 16%);
-  color: hsl(220 10% 72%);
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
 }
 
 .dark td {
-  border-color: hsl(222 30% 16%);
+  border-color: hsl(var(--border));
 }
 
-/* Fix input backgrounds */
+/* Dark mode form element fixes using semantic tokens */
 .dark input,
 .dark textarea,
 .dark select {
-  background-color: hsl(222 25% 14%);
-  border-color: hsl(222 25% 22%);
-  color: hsl(220 10% 75%);
+  background-color: hsl(var(--input));
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
 }
 
 .dark input::placeholder,
 .dark textarea::placeholder {
-  color: hsl(220 8% 50%);
+  color: hsl(var(--muted-foreground));
 }
 
-/* Fix select dropdown */
 .dark select option {
-  background-color: hsl(222 35% 13%);
-}
-
-/* Fix purple backgrounds in dark mode */
-.dark .bg-purple-50 {
-  background-color: hsl(263 30% 15%) !important;
-}
-
-.dark .bg-purple-100 {
-  background-color: hsl(263 30% 18%) !important;
-}
-
-.dark .bg-purple-200 {
-  background-color: hsl(263 35% 25%) !important;
-}
-
-.dark .text-purple-900 {
-  color: hsl(263 50% 70%) !important;
-}
-
-.dark .text-purple-800 {
-  color: hsl(263 50% 68%) !important;
-}
-
-.dark .text-purple-700 {
-  color: hsl(263 45% 65%) !important;
-}
-
-/* Fix gray backgrounds in dark mode */
-.dark .bg-gray-50 {
-  background-color: hsl(222 25% 14%) !important;
-}
-
-.dark .bg-gray-100 {
-  background-color: hsl(222 25% 16%) !important;
-}
-
-/* Fix blue backgrounds in dark mode */
-.dark .bg-blue-50 {
-  background-color: hsl(220 30% 15%) !important;
-}
-
-.dark .bg-blue-100 {
-  background-color: hsl(220 30% 18%) !important;
-}
-
-/* Fix slate backgrounds in dark mode */
-.dark .bg-slate-50 {
-  background-color: hsl(222 25% 14%) !important;
-}
-
-.dark .bg-slate-100 {
-  background-color: hsl(222 25% 16%) !important;
+  background-color: hsl(var(--popover));
 }
