@@ -24,7 +24,7 @@ export function middleware(request: NextRequest) {
   // Check for access token in cookies (middleware can't read localStorage)
   // The token is stored in localStorage on the client, so middleware checks
   // if the user has visited before via a cookie marker
-  const accessToken = request.cookies.get("hasSession")?.value;
+  const accessToken = request.cookies.get("accessToken")?.value;
 
   // For the root page, let it through (it handles its own redirect)
   if (pathname === "/") {

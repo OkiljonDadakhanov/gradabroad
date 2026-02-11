@@ -7,7 +7,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { InfoCard } from "@/components/ui/info-card";
 import { ProfileEditModal } from "./profile-edit-modal";
 import type { ProfileData } from "@/types/profile";
-import { fetchWithAuth } from "@/lib/fetchWithAuth";
+import { fetchWithAuth, setAuthCookie, clearAuthCookie } from "@/lib/fetchWithAuth";
 import { useTranslations } from "@/lib/i18n";
 import { API_BASE } from "@/lib/constants";
 
@@ -28,12 +28,12 @@ export function ProfileSection() {
 
     if (queryToken) {
       localStorage.setItem("accessToken", queryToken);
+      setAuthCookie(queryToken);
       if (queryRefresh) {
         localStorage.setItem("refreshToken", queryRefresh);
       }
-      const cleanUrl = window.location.origin + window.location.pathname;
       document.title = "GradAbroad – University Application";
-      window.history.replaceState({}, document.title, cleanUrl);
+      router.replace("/profile");
     } else {
       document.title = "GradAbroad – University Application";
     }
@@ -58,6 +58,7 @@ export function ProfileSection() {
           toast.error("Session expired. Please log in again.");
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
+          clearAuthCookie();
           router.push("/login");
           return;
         }

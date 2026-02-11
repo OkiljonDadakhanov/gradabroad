@@ -22,7 +22,7 @@ import {
   User,
   Building2,
 } from "lucide-react";
-import { fetchWithAuth } from "@/lib/fetchWithAuth";
+import { fetchWithAuth, clearAuthCookie } from "@/lib/fetchWithAuth";
 import { API_BASE } from "@/lib/constants";
 import { ContactSupportModal } from "./contact-support-modal";
 
@@ -79,6 +79,7 @@ export function SideNav() {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("universityId");
+    clearAuthCookie();
     const loginUrl = process.env.NEXT_PUBLIC_LOGIN_URL || "https://www.gradabroad.net/login/university";
     window.location.href = loginUrl;
   };

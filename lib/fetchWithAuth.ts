@@ -1,5 +1,15 @@
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://api.gradabroad.net";
 
+// Set accessToken cookie so middleware can read it (middleware can't access localStorage)
+export function setAuthCookie(token: string): void {
+  document.cookie = `accessToken=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax; Secure`;
+}
+
+// Clear accessToken cookie on logout
+export function clearAuthCookie(): void {
+  document.cookie = "accessToken=; path=/; max-age=0";
+}
+
 // Check if user is authenticated (has valid access token)
 export function isAuthenticated(): boolean {
   if (typeof window === "undefined") return false;
@@ -13,6 +23,7 @@ export function logout(): void {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
   localStorage.removeItem("universityId");
+  clearAuthCookie();
   window.location.href = "/";
 }
 
@@ -56,6 +67,7 @@ export async function refreshToken(): Promise<boolean> {
     const data = await res.json();
     if (data.access) {
       localStorage.setItem("accessToken", data.access);
+      setAuthCookie(data.access);
       return true;
     }
 

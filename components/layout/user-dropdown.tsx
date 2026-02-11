@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { fetchWithAuth } from "@/lib/fetchWithAuth";
+import { fetchWithAuth, clearAuthCookie } from "@/lib/fetchWithAuth";
 import { useTranslations } from "@/lib/i18n";
 import { API_BASE } from "@/lib/constants";
 
@@ -52,6 +52,7 @@ export function UserDropdown() {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("universityId");
+    clearAuthCookie();
     window.location.href = "https://www.gradabroad.net/login/university";
   };
 
