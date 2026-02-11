@@ -52,8 +52,8 @@ const defaultFormData: AcademicProgramFormData = {
   degree_type: "",
   languageRequirement: [],
   documentTypes: [],
-  contractPrice: "",
-  tuitionPeriod: "Per Semester",
+  contract_price: "",
+  tuition_period: "Per Semester",
   description: { english: "", korean: "", russian: "", uzbek: "" },
   active: true,
   start_date: new Date(),
@@ -109,9 +109,9 @@ export function AcademicProgramModal({
 
     formData.append("name", values.name);
     formData.append("field_of_study", values.category);
-    formData.append("degreeType", values.degreeType);
-    formData.append("contractPrice", values.contractPrice);
-    formData.append("tuition_period", values.tuitionPeriod || "Per Semester");
+    formData.append("degreeType", values.degree_type);
+    formData.append("contractPrice", values.contract_price);
+    formData.append("tuition_period", values.tuition_period || "Per Semester");
     formData.append("platformApplicationFee", hasApplicationFee ? applicationFee : "0.00");
     if (hasApplicationFee && paymentInstructions) {
       formData.append("payment_instructions", paymentInstructions);
@@ -303,13 +303,13 @@ export function AcademicProgramModal({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="degreeType" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="degree_type" className="text-sm font-medium text-gray-700">
                     Degree Type
                   </Label>
                   <Select
-                    value={values.degreeType}
+                    value={values.degree_type}
                     onValueChange={(value) =>
-                      handleSelectChange("degreeType", value)
+                      handleSelectChange("degree_type", value)
                     }
                   >
                     <SelectTrigger className="mt-1">
@@ -354,7 +354,7 @@ export function AcademicProgramModal({
 
             <div className="space-y-4">
               <div>
-                <Label htmlFor="contractPrice" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="contract_price" className="text-sm font-medium text-gray-700">
                   Tuition Fee (USD) <span className="text-red-500">*</span>
                 </Label>
                 <div className="flex items-center gap-2 mt-1">
@@ -363,9 +363,9 @@ export function AcademicProgramModal({
                       $
                     </span>
                     <Input
-                      id="contractPrice"
-                      name="contractPrice"
-                      value={values.contractPrice}
+                      id="contract_price"
+                      name="contract_price"
+                      value={values.contract_price}
                       onChange={handleChange}
                       className="rounded-l-none rounded-r-none border-r-0"
                       type="number"
@@ -374,8 +374,8 @@ export function AcademicProgramModal({
                     />
                   </div>
                   <Select
-                    value={values.tuitionPeriod}
-                    onValueChange={(value) => handleSelectChange("tuitionPeriod", value)}
+                    value={values.tuition_period}
+                    onValueChange={(value) => handleSelectChange("tuition_period", value)}
                   >
                     <SelectTrigger className="w-[140px]">
                       <SelectValue placeholder="Period" />
@@ -463,8 +463,8 @@ export function AcademicProgramModal({
                 </Label>
                 <DatePicker
                   selected={values.start_date}
-                  onChange={(date: Date) =>
-                    setValues({ ...values, start_date: date })
+                  onChange={(date: Date | null) =>
+                    setValues({ ...values, start_date: date ?? new Date() })
                   }
                   dateFormat="yyyy-MM-dd"
                   className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500"
@@ -478,8 +478,8 @@ export function AcademicProgramModal({
                 </Label>
                 <DatePicker
                   selected={values.end_date}
-                  onChange={(date: Date) =>
-                    setValues({ ...values, end_date: date })
+                  onChange={(date: Date | null) =>
+                    setValues({ ...values, end_date: date ?? new Date() })
                   }
                   dateFormat="yyyy-MM-dd"
                   className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500"

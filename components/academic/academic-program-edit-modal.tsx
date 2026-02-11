@@ -55,8 +55,9 @@ export function AcademicProgramEditModal({
 }: AcademicProgramEditModalProps) {
   const [activeTab, setActiveTab] = useState("english");
 
-  const transformedInitialData = {
+  const transformedInitialData: AcademicProgramEditFormData = {
     ...initialData,
+    active: initialData.active ?? true,
     admissionStart: parseISO(initialData.admissionStart),
     admissionEnd: parseISO(initialData.admissionEnd),
     results_announcement_date: initialData.results_announcement_date
@@ -103,9 +104,9 @@ export function AcademicProgramEditModal({
 
     formData.append("name", values.name);
     formData.append("field_of_study", values.category);
-    formData.append("degreeType", values.degreeType);
-    formData.append("contractPrice", values.contractPrice);
-    formData.append("tuition_period", values.tuitionPeriod || "Per Semester");
+    formData.append("degreeType", values.degree_type);
+    formData.append("contractPrice", values.contract_price);
+    formData.append("tuition_period", values.tuition_period || "Per Semester");
     formData.append(
       "platform_application_fee",
       hasApplicationFee ? applicationFee : "0.00"
@@ -278,8 +279,8 @@ export function AcademicProgramEditModal({
                 <div>
                   <Label className="text-sm font-medium text-gray-700">Degree Type</Label>
                   <Select
-                    value={values.degreeType}
-                    onValueChange={(val) => handleSelectChange("degreeType", val)}
+                    value={values.degree_type}
+                    onValueChange={(val) => handleSelectChange("degree_type", val)}
                   >
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Select degree type" />
@@ -332,8 +333,8 @@ export function AcademicProgramEditModal({
                       $
                     </span>
                     <Input
-                      name="contractPrice"
-                      value={values.contractPrice}
+                      name="contract_price"
+                      value={values.contract_price}
                       onChange={handleChange}
                       className="rounded-l-none rounded-r-none border-r-0"
                       type="number"
@@ -341,8 +342,8 @@ export function AcademicProgramEditModal({
                     />
                   </div>
                   <Select
-                    value={values.tuitionPeriod || "Per Semester"}
-                    onValueChange={(val) => handleSelectChange("tuitionPeriod", val)}
+                    value={values.tuition_period || "Per Semester"}
+                    onValueChange={(val) => handleSelectChange("tuition_period", val)}
                   >
                     <SelectTrigger className="w-[140px]">
                       <SelectValue placeholder="Period" />

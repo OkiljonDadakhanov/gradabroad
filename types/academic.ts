@@ -4,9 +4,9 @@ export interface AcademicProgram {
   category: string;
   degree_type: string;
   languageRequirement: LanguageRequirement[];
-  contractPrice: string;
-  tuitionPeriod?: string;
-  platformApplicationFee?: string;
+  contract_price: string;
+  tuition_period?: string;
+  platform_application_fee?: string;
   paymentInstructions?: string;
   admissionStart: string;
   results_announcement_date?: string | null;
@@ -41,12 +41,14 @@ export interface AcademicProgramFormData extends Omit<AcademicProgram, "id" | "a
   results_announcement_date: Date;
   admissionStart: Date;
   admissionEnd: Date;
+  active: boolean;
 }
 
 export interface AcademicProgramEditFormData extends Omit<AcademicProgram, "admissionStart" | "admissionEnd" | "results_announcement_date"> {
   admissionStart: Date;
   admissionEnd: Date;
   results_announcement_date: Date;
+  active: boolean;
 }
 
 export const CATEGORIES = [
