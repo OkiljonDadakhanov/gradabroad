@@ -5,6 +5,7 @@ export interface AcademicProgram {
   degreeType: string;
   languageRequirement: LanguageRequirement[];
   contractPrice: string;
+  tuitionPeriod?: string;
   platformApplicationFee?: string;
   paymentInstructions?: string;
   admissionStart: string;
@@ -29,6 +30,8 @@ export interface LanguageRequirement {
 export interface DocumentRequirement {
   name: string;
   description: string;
+  sampleFile?: File | null;
+  sampleFileUrl?: string;
 }
 
 export type AcademicProgramFormData = Omit<AcademicProgram, "id">;
@@ -80,6 +83,11 @@ export const DEGREE_TYPES = [
   "PhD",
   "Certificate",
   "Diploma",
+];
+
+export const TUITION_PERIODS = [
+  "Per Semester",
+  "Per Year",
 ];
 
 export const DOCUMENT_TYPES = [

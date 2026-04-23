@@ -68,7 +68,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
             </button>
             <Link href="/dashboard" className="flex items-center gap-2">
               <GraduationCap className="h-8 w-8 text-purple-700" />
-              <span className="font-bold text-xl text-gray-900">GradAbroad</span>
+              <span className="font-bold text-xl text-gray-900">K-GradAbroad</span>
             </Link>
           </div>
           <nav className="flex items-center gap-4">
