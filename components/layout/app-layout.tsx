@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { SideNav } from "./side-nav";
 import { SidebarProvider, useSidebar } from "./sidebar-context";
 import { NotificationDropdown } from "./notification-dropdown";
@@ -16,6 +16,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useI18n, SUPPORTED_LOCALES } from "@/lib/i18n";
+
+const LOGIN_URL = "https://www.gradabroad.net/login/university";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -102,6 +104,23 @@ function AppLayoutContent({ children }: AppLayoutProps) {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
+  const [authState, setAuthState] = useState<"checking" | "authed">("checking");
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      window.location.replace(LOGIN_URL);
+      return;
+    }
+    setAuthState("authed");
+  }, []);
+
+  if (authState === "checking") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-gray-950" />
+    );
+  }
+
   return (
     <SidebarProvider>
       <AppLayoutContent>{children}</AppLayoutContent>

@@ -1,14 +1,15 @@
 export type ApplicationStatus =
-  | "draft"
   | "document_saved"
   | "submitted"
   | "under_review"
+  | "resend"
   | "interview"
   | "accepted"
-  | "rejected"
   | "confirmed"
   | "visa_taken"
-  | "studying";
+  | "studying"
+  | "waitlisted"
+  | "rejected";
 
 export interface ApplicationDocument {
   id: number;

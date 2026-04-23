@@ -155,6 +155,46 @@ const STATUS_ACTIONS: Record<string, {
     reasonLabel: "Notes (optional)",
     reasonPlaceholder: "e.g., Student arrived and started classes..."
   },
+  confirmed: {
+    label: "Confirm Enrollment",
+    icon: <CheckCircle className="h-4 w-4 mr-2" />,
+    variant: "default",
+    confirmTitle: "Confirm Enrollment",
+    description: "Record that the student has confirmed they will attend.",
+    requiresReason: false,
+    reasonLabel: "Notes (optional)",
+    reasonPlaceholder: "e.g., Student confirmed enrollment and paid deposit...",
+  },
+  visa_taken: {
+    label: "Mark Visa Approved",
+    icon: <CheckCircle className="h-4 w-4 mr-2" />,
+    variant: "default",
+    confirmTitle: "Mark Visa Approved",
+    description: "Record that the student has obtained their visa.",
+    requiresReason: false,
+    reasonLabel: "Notes (optional)",
+    reasonPlaceholder: "e.g., Visa issued on...",
+  },
+  resend: {
+    label: "Request Resubmit",
+    icon: <Clock className="h-4 w-4 mr-2" />,
+    variant: "outline",
+    confirmTitle: "Request Resubmission",
+    description: "Ask the student to resubmit or update their documents.",
+    requiresReason: true,
+    reasonLabel: "What to fix *",
+    reasonPlaceholder: "e.g., Please upload a clearer passport scan and an updated transcript...",
+  },
+  waitlisted: {
+    label: "Waitlist",
+    icon: <Clock className="h-4 w-4 mr-2" />,
+    variant: "outline",
+    confirmTitle: "Move to Waitlist",
+    description: "Place this candidate on the waitlist.",
+    requiresReason: false,
+    reasonLabel: "Notes (optional)",
+    reasonPlaceholder: "e.g., Strong candidate, will reconsider if seats open up...",
+  },
 }
 
 export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdated }: CandidateViewModalProps) {
@@ -194,16 +234,6 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
   const [uploadingAcceptanceLetter, setUploadingAcceptanceLetter] = useState(false)
   const [downloadingAcceptanceLetter, setDownloadingAcceptanceLetter] = useState(false)
   const [chatModalOpen, setChatModalOpen] = useState(false)
-
-  // All available statuses for manual override
-  const ALL_STATUSES = [
-    "submitted",
-    "under_review",
-    "interview",
-    "accepted",
-    "rejected",
-    "studying",
-  ]
 
   useEffect(() => {
     if (isOpen && candidateId) {
@@ -574,8 +604,13 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
                     <Button
                       variant="outline"
                       onClick={handleManualOverride}
-                      disabled={updating}
+                      disabled={updating || availableActions.length === 0}
                       className="text-gray-600 dark:text-gray-300"
+                      title={
+                        availableActions.length === 0
+                          ? `No status changes allowed from ${STATUS_LABELS[candidate.status] || candidate.status}`
+                          : undefined
+                      }
                     >
                       <Settings className="h-4 w-4 mr-2" />
                       Change Status
@@ -1140,11 +1175,16 @@ export function CandidateViewModal({ isOpen, onClose, candidateId, onStatusUpdat
                     <SelectValue placeholder="Select new status" />
                   </SelectTrigger>
                   <SelectContent>
-                    {ALL_STATUSES.filter(s => s !== candidate?.status).map((status) => (
+                    {availableActions.map((status) => (
                       <SelectItem key={status} value={status}>
                         {STATUS_LABELS[status] || status}
                       </SelectItem>
                     ))}
+                    {availableActions.length === 0 && (
+                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                        No further status changes allowed from {STATUS_LABELS[candidate?.status || ""] || candidate?.status}.
+                      </div>
+                    )}
                   </SelectContent>
                 </Select>
               </div>

@@ -45,7 +45,7 @@ export function ProfileSection() {
       const token = localStorage.getItem("accessToken");
 
       if (!token) {
-        router.push("/login");
+        window.location.replace("https://www.gradabroad.net/login/university");
         return;
       }
 
@@ -58,7 +58,7 @@ export function ProfileSection() {
           toast.error("Session expired. Please log in again.");
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
-          router.push("/login");
+          window.location.replace("https://www.gradabroad.net/login/university");
           return;
         }
 
