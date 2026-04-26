@@ -107,6 +107,19 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [authState, setAuthState] = useState<"checking" | "authed">("checking");
 
   useEffect(() => {
+    // Accept tokens passed via URL query (post-login handoff from main-grad).
+    // Must run before the localStorage check below — otherwise the gate
+    // bounces to login before any child component can extract them.
+    const params = new URLSearchParams(window.location.search);
+    const queryToken = params.get("token");
+    const queryRefresh = params.get("refresh");
+    if (queryToken) {
+      localStorage.setItem("accessToken", queryToken);
+      if (queryRefresh) localStorage.setItem("refreshToken", queryRefresh);
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, "", cleanUrl);
+    }
+
     const token = localStorage.getItem("accessToken");
     if (!token) {
       window.location.replace(LOGIN_URL);
