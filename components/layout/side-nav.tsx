@@ -23,7 +23,7 @@ import {
   Building2,
 } from "lucide-react";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
-import { API_BASE } from "@/lib/constants";
+import { API_BASE, STUDENT_APP_URL } from "@/lib/constants";
 import { ContactSupportModal } from "./contact-support-modal";
 
 interface NavItem {
@@ -79,7 +79,7 @@ export function SideNav() {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("universityId");
-    window.location.href = "https://www.gradabroad.net/login/university";
+    window.location.href = `${STUDENT_APP_URL}/login/university`;
   };
 
   const sidebarContent = (

@@ -75,8 +75,8 @@ export function ScholarshipModal({
 
     const isEdit = Boolean(initialData?.id);
     const url = isEdit
-      ? `https://api.gradabroad.net/api/scholarships/${initialData!.id}/`
-      : "https://api.gradabroad.net/api/scholarships/";
+      ? `/api/scholarships/${initialData!.id}/`
+      : "/api/scholarships/";
 
     try {
       const res = await fetchWithAuth(url, {

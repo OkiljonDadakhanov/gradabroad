@@ -63,7 +63,7 @@ export function CampusEditModal({
 
     try {
       const res = await fetchWithAuth(
-        `https://api.gradabroad.net/api/information-about-campus/`,
+        "/api/information-about-campus/",
         {
           method: "PUT",
           headers: {

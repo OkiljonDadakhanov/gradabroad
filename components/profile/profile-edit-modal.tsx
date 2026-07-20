@@ -78,7 +78,7 @@ export function ProfileEditModal({
 
     try {
       const response = await fetchWithAuth(
-        "https://api.gradabroad.net/api/auth/universities/me/",
+        "/api/auth/universities/me/",
         {
           method: "PUT",
           body: formData,
@@ -104,7 +104,7 @@ export function ProfileEditModal({
       let accreditationDocUrl = "";
       try {
         const docRes = await fetchWithAuth(
-          "https://api.gradabroad.net/api/auth/universities/me/accreditation-url/"
+          "/api/auth/universities/me/accreditation-url/"
         );
 
         if (docRes.ok) {
