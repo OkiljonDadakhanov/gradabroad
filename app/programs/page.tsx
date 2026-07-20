@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { PublicProgram, ProgramFilters, ProgramsResponse } from "@/types/program";
 import { fetchPublic } from "@/lib/fetchWithAuth";
-import { ENDPOINTS } from "@/lib/constants";
+import { ENDPOINTS, STUDENT_APP_URL } from "@/lib/constants";
 import { ProgramCard } from "@/components/programs/program-card";
 import { ProgramFiltersPanel } from "@/components/programs/program-filters";
 import { Input } from "@/components/ui/input";
@@ -78,10 +78,10 @@ export default function ProgramsPage() {
               <Link href="/programs" className="text-purple-700 font-medium">
                 Programs
               </Link>
-              <Link href="https://www.gradabroad.net/login" className="text-gray-600 hover:text-gray-900">
+              <Link href={`${STUDENT_APP_URL}/login`} className="text-gray-600 hover:text-gray-900">
                 Login
               </Link>
-              <Link href="https://www.gradabroad.net/register">
+              <Link href={`${STUDENT_APP_URL}/register`}>
                 <Button>Sign Up</Button>
               </Link>
             </nav>

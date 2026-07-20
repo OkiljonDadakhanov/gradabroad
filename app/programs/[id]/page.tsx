@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { PublicProgram } from "@/types/program";
 import { fetchPublic, fetchWithAuth, isAuthenticated } from "@/lib/fetchWithAuth";
-import { ENDPOINTS } from "@/lib/constants";
+import { ENDPOINTS, STUDENT_APP_URL } from "@/lib/constants";
 
 // Type for readiness response
 interface RequirementStatus {
@@ -110,7 +110,7 @@ export default function ProgramDetailPage() {
 
   const handleApply = () => {
     if (!isAuthenticated()) {
-      window.location.href = `https://www.gradabroad.net/login?redirect=/programs/${params.id}/apply`;
+      window.location.href = `${STUDENT_APP_URL}/login?redirect=/programs/${params.id}/apply`;
       return;
     }
     router.push(`/programs/${params.id}/apply`);
@@ -525,7 +525,7 @@ export default function ProgramDetailPage() {
                 {/* Link to profile when requirements missing */}
                 {isAuthenticated() && readiness?.can_apply === false && (
                   <a
-                    href="https://www.gradabroad.net/profile"
+                    href={`${STUDENT_APP_URL}/profile`}
                     className="block text-center text-sm text-purple-600 hover:text-purple-800 mb-4"
                   >
                     Go to Profile to upload documents →

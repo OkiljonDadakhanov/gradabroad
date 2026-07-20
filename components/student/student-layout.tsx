@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { isAuthenticated, logout } from "@/lib/fetchWithAuth";
+import { STUDENT_APP_URL } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import {
   GraduationCap,
@@ -45,13 +46,13 @@ export function StudentLayout({ children }: StudentLayoutProps) {
 
   useEffect(() => {
     if (!isAuthenticated()) {
-      window.location.href = "https://www.gradabroad.net/login";
+      window.location.href = `${STUDENT_APP_URL}/login`;
     }
   }, []);
 
   const handleLogout = () => {
     logout();
-    window.location.href = "https://www.gradabroad.net/login";
+    window.location.href = `${STUDENT_APP_URL}/login`;
   };
 
   return (

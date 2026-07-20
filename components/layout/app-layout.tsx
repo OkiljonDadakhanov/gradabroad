@@ -16,8 +16,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useI18n, SUPPORTED_LOCALES } from "@/lib/i18n";
+import { STUDENT_APP_URL } from "@/lib/constants";
 
-const LOGIN_URL = "https://www.gradabroad.net/login/university";
+const LOGIN_URL = `${STUDENT_APP_URL}/login/university`;
 
 interface AppLayoutProps {
   children: ReactNode;
