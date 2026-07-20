@@ -160,7 +160,7 @@ export function AcademicProgramModal({
 
     try {
       const res = await fetchWithAuth(
-        "https://api.gradabroad.net/api/programmes/with-requirements/",
+        "/api/programmes/with-requirements/",
         {
           method: "POST",
           body: formData,

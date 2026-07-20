@@ -38,7 +38,7 @@ export function AcademicProgramsSection() {
 
     try {
       const res = await fetchWithAuth(
-        "https://api.gradabroad.net/api/programmes/mine/"
+        "/api/programmes/mine/"
       );
 
       if (!res.ok) {
@@ -109,7 +109,7 @@ export function AcademicProgramsSection() {
 
     try {
       const res = await fetchWithAuth(
-        `https://api.gradabroad.net/api/programmes/with-requirements/${numericId}/`,
+        `/api/programmes/with-requirements/${numericId}/`,
         {
           method: "DELETE",
         }

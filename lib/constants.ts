@@ -1,6 +1,9 @@
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE || "https://api.gradabroad.net";
 
+export const STUDENT_APP_URL =
+  process.env.NEXT_PUBLIC_STUDENT_APP_URL || "https://gradabroad.net";
+
 // API Endpoints
 export const ENDPOINTS = {
   // Authentication

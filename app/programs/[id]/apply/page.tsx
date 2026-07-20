@@ -12,7 +12,7 @@ import { EducationStep, EducationData } from "@/components/application/education
 import { DocumentsStep, DocumentFile } from "@/components/application/documents-step";
 import { ReviewStep } from "@/components/application/review-step";
 import { fetchWithAuth, fetchPublic, isAuthenticated } from "@/lib/fetchWithAuth";
-import { ENDPOINTS } from "@/lib/constants";
+import { ENDPOINTS, STUDENT_APP_URL } from "@/lib/constants";
 import { PublicProgram } from "@/types/program";
 import { toast } from "sonner";
 import {
@@ -52,7 +52,7 @@ export default function ApplyPage() {
   useEffect(() => {
     if (!isAuthenticated()) {
       toast.error("Please login to apply");
-      window.location.href = "https://www.gradabroad.net/login";
+      window.location.href = `${STUDENT_APP_URL}/login`;
       return;
     }
     fetchProgram();

@@ -37,7 +37,7 @@ export function GallerySection() {
 
     try {
       const res = await fetchWithAuth(
-        "https://api.gradabroad.net/api/media/gallery/categories/"
+        "/api/media/gallery/categories/"
       );
 
       const data = await res.json();
@@ -84,7 +84,7 @@ export function GallerySection() {
 
       try {
         const res = await fetchWithAuth(
-          "https://api.gradabroad.net/api/media/gallery/images/",
+          "/api/media/gallery/images/",
           {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
@@ -131,7 +131,7 @@ export function GallerySection() {
 
     try {
       const res = await fetchWithAuth(
-        `https://api.gradabroad.net/api/media/gallery/images/${image.id}/`,
+        `/api/media/gallery/images/${image.id}/`,
         {
           method: "PATCH", // PATCH is safer for partial updates
 
@@ -161,7 +161,7 @@ export function GallerySection() {
 
     try {
       const res = await fetchWithAuth(
-        `https://api.gradabroad.net/api/media/gallery/images/${currentImage.id}/`,
+        `/api/media/gallery/images/${currentImage.id}/`,
         {
           method: "DELETE",
         }
@@ -189,7 +189,7 @@ export function GallerySection() {
 
     try {
       const res = await fetchWithAuth(
-        "https://api.gradabroad.net/api/media/gallery/categories/",
+        "/api/media/gallery/categories/",
         {
           method: "POST",
          

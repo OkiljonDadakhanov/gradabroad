@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
 import { useTranslations } from "@/lib/i18n";
-import { API_BASE } from "@/lib/constants";
+import { API_BASE, STUDENT_APP_URL } from "@/lib/constants";
 
 interface UniversityData {
   name: string;
@@ -52,7 +52,7 @@ export function UserDropdown() {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("universityId");
-    window.location.href = "https://www.gradabroad.net/login/university";
+    window.location.href = `${STUDENT_APP_URL}/login/university`;
   };
 
   const getInitials = (name: string) => {

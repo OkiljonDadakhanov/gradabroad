@@ -7,7 +7,7 @@ import { ProfileEditModal } from "./profile-edit-modal";
 import type { ProfileData } from "@/types/profile";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
 import { useTranslations } from "@/lib/i18n";
-import { API_BASE } from "@/lib/constants";
+import { API_BASE, STUDENT_APP_URL } from "@/lib/constants";
 import {
   Building2,
   MapPin,
@@ -58,7 +58,7 @@ export function ProfileSection() {
       const token = localStorage.getItem("accessToken");
 
       if (!token) {
-        window.location.replace("https://www.gradabroad.net/login/university");
+        window.location.replace(`${STUDENT_APP_URL}/login/university`);
         return;
       }
 
@@ -71,7 +71,7 @@ export function ProfileSection() {
           toast.error("Session expired. Please log in again.");
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
-          window.location.replace("https://www.gradabroad.net/login/university");
+          window.location.replace(`${STUDENT_APP_URL}/login/university`);
           return;
         }
 

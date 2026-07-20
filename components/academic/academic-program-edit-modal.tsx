@@ -151,7 +151,7 @@ export function AcademicProgramEditModal({
 
     try {
       const res = await fetchWithAuth(
-        `https://api.gradabroad.net/api/programmes/with-requirements/${numericId}/`,
+        `/api/programmes/with-requirements/${numericId}/`,
         {
           method: "PATCH",
          
