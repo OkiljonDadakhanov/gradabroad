@@ -43,7 +43,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && vars.ENABLE_PRODUCTION_DEPLOY == 'true'
     needs: build
     runs-on: ubuntu-latest
     environment: production
@@ -60,4 +60,3 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
           ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "deploy university sha-${GITHUB_SHA}"
-
