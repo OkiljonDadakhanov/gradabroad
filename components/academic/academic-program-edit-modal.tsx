@@ -129,6 +129,9 @@ export function AcademicProgramEditModal({
 
     values.languageRequirement.forEach((req, index) => {
       formData.append(`requirements[${index}][requirementType]`, "language");
+      if (req.id !== undefined) {
+        formData.append(`requirements[${index}][id]`, String(req.id));
+      }
       formData.append(`requirements[${index}][label]`, req.name);
       formData.append(`requirements[${index}][required]`, "true");
       if (req.requirement) {
@@ -139,6 +142,9 @@ export function AcademicProgramEditModal({
     values.documentTypes.forEach((doc, index) => {
       const idx = values.languageRequirement.length + index;
       formData.append(`requirements[${idx}][requirementType]`, "document");
+      if (doc.id !== undefined) {
+        formData.append(`requirements[${idx}][id]`, String(doc.id));
+      }
       formData.append(`requirements[${idx}][label]`, doc.name);
       formData.append(`requirements[${idx}][note]`, doc.description || "");
       formData.append(`requirements[${idx}][required]`, "true");

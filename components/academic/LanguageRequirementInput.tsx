@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 
 interface LanguageRequirement {
+  id?: number;
   name: string;
   requirement: string;
 }
@@ -38,17 +39,31 @@ const DROPDOWN_OPTIONS: Record<string, string[]> = {
 export function LanguageRequirementInput({ value, onChange }: Props) {
   const [customName, setCustomName] = useState("");
   const [customReq, setCustomReq] = useState("");
+  const rememberedRequirements = useRef<Record<string, LanguageRequirement>>({});
+
+  useEffect(() => {
+    for (const requirement of value) {
+      if (requirement.id !== undefined) {
+        rememberedRequirements.current[requirement.name.toLowerCase()] = requirement;
+      }
+    }
+  }, [value]);
 
   const handleSelectChange = (category: string, selected: string) => {
+    const existing =
+      value.find((v) => v.name === category) ||
+      rememberedRequirements.current[category.toLowerCase()];
     const updated = value.filter((v) => v.name !== category);
-    updated.push({ name: category, requirement: selected });
+    updated.push({ id: existing?.id, name: category, requirement: selected });
     onChange(updated);
   };
 
   const handleCustomAdd = () => {
     if (!customName || !customReq) return;
 
+    const remembered = rememberedRequirements.current[customName.trim().toLowerCase()];
     const newEntry = {
+      id: remembered?.id,
       name: customName.trim(),
       requirement: customReq.trim(),
     };

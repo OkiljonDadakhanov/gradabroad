@@ -23,11 +23,13 @@ export interface AcademicProgram {
 }
 
 export interface LanguageRequirement {
+  id?: number;
   name: string; // e.g., "IELTS"
   requirement: string; // e.g., "Minimum Score: 6.5"
 }
 
 export interface DocumentRequirement {
+  id?: number;
   name: string;
   description: string;
   sampleFile?: File | null;

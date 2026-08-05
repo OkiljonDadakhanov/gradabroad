@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import type { GalleryImage } from "@/types/gallery";
+import type { GalleryImage, GalleryImageFormData } from "@/types/gallery";
 import { GalleryGrid } from "./gallery-grid";
 import { GalleryDeleteDialog } from "./gallery-delete-dialog";
 import { GalleryImageModal } from "./gallery-image-modal";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
 import { useTranslations } from "@/lib/i18n";
+import { createGalleryCategory } from "@/lib/gallery-categories";
 
 interface CategoryGallery {
   id: number;
@@ -31,9 +32,9 @@ export function GallerySection() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (): Promise<boolean> => {
     const token = localStorage.getItem("accessToken");
-    if (!token) return;
+    if (!token) return false;
 
     try {
       const res = await fetchWithAuth(
@@ -49,19 +50,21 @@ export function GallerySection() {
           id: img.id.toString(),
           imageUrl: img.image_url,
           altText: img.alt_text || cat.name,
-          // title: img.title || "Untitled",
+          title: img.title || "Untitled",
           description: img.description || "",
-          // date: img.uploaded_at,
+          date: img.uploaded_at || "",
         })),
       }));
 
       setCategories(mapped);
+      return true;
     } catch (error) {
       toast({
         title: tCommon("error"),
         description: "Failed to fetch gallery categories",
         variant: "destructive",
       });
+      return false;
     }
   };
 
@@ -69,15 +72,21 @@ export function GallerySection() {
     fetchCategories();
   }, []);
 
-  const handleAddImage = async (images: GalleryImageFormData[]) => {
-    if (!selectedCategory) return;
+  const handleAddImage = async (
+    data: GalleryImage | GalleryImageFormData | GalleryImageFormData[]
+  ): Promise<boolean> => {
+    if (!Array.isArray(data)) return false;
+    const images = data;
+    if (!selectedCategory) return false;
     const token = localStorage.getItem("accessToken");
-    if (!token) return;
+    if (!token) return false;
+
+    const failures: string[] = [];
 
     for (const img of images) {
       const formData = new FormData();
       formData.append("category_id", selectedCategory.id.toString());
-      formData.append("image", img.imageFile!);
+      if (img.imageFile) formData.append("image", img.imageFile);
       formData.append("description", img.description);
       formData.append("alt_text", img.altText);
       formData.append("title", img.title);
@@ -92,15 +101,33 @@ export function GallerySection() {
           }
         );
 
-        if (!res.ok) throw new Error("Upload failed");
-      } catch (err) {
-        toast({
-          title: "Upload failed",
-          description: (err as Error).message,
-          variant: "destructive",
-        });
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(
+            errorData.detail || errorData.image?.[0] || `Upload failed (${res.status})`
+          );
+        }
+      } catch (error) {
+        failures.push(
+          `${img.title || "image"}: ${
+            error instanceof Error ? error.message : "Upload failed"
+          }`
+        );
       }
     }
+
+    const refreshed = await fetchCategories();
+
+    if (failures.length > 0) {
+      toast({
+        title: "Upload failed",
+        description: `Could not upload: ${failures.join(", ")}`,
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!refreshed) return false;
 
     toast({
       title: t("uploadSuccessful"),
@@ -108,15 +135,15 @@ export function GallerySection() {
       variant: "success",
     });
 
-    setIsAddModalOpen(false);
-    await fetchCategories();
+    return true;
   };
 
   const handleEditImage = async (
-    image: GalleryImage | GalleryImageFormData
-  ) => {
+    image: GalleryImage | GalleryImageFormData | GalleryImageFormData[]
+  ): Promise<boolean> => {
+    if (Array.isArray(image)) return false;
     const token = localStorage.getItem("accessToken");
-    if (!token || !image.id || !selectedCategory) return;
+    if (!token || !("id" in image) || !image.id || !selectedCategory) return false;
 
     const formData = new FormData();
     formData.append("category_id", selectedCategory.id.toString());
@@ -143,15 +170,15 @@ export function GallerySection() {
 
       toast({ title: t("imageUpdated"), variant: "success" });
       await fetchCategories();
+      return true;
     } catch (err) {
       toast({
         title: "Error",
         description: (err as Error).message,
         variant: "destructive",
       });
+      return false;
     }
-
-    setIsEditModalOpen(false);
   };
 
   const handleDeleteImage = async () => {
@@ -183,31 +210,21 @@ export function GallerySection() {
   };
 
   const handleAddCategory = async () => {
-    if (!newCategoryName.trim()) return;
+    const categoryName = newCategoryName.trim();
+    if (!categoryName) return;
     const token = localStorage.getItem("accessToken");
     if (!token) return;
 
     try {
-      const res = await fetchWithAuth(
-        "/api/media/gallery/categories/",
-        {
-          method: "POST",
-         
-          body: JSON.stringify({ name: newCategoryName.trim() }),
-        }
-      );
-
-      const data = await res.json();
-      setCategories((prev) => [
-        ...prev,
-        { id: data.id, name: data.name, images: [] },
-      ]);
+      await createGalleryCategory(fetchWithAuth, categoryName);
+      if (!(await fetchCategories())) return;
       setNewCategoryName("");
       toast({ title: t("categoryAdded"), variant: "success" });
-    } catch {
+    } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to add new category",
+        description:
+          error instanceof Error ? error.message : "Failed to add new category",
         variant: "destructive",
       });
     }

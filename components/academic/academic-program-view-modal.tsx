@@ -121,6 +121,16 @@ export function AcademicProgramViewModal({
                         {doc.description}
                       </p>
                     )}
+                    {doc.sampleFileUrl && (
+                      <a
+                        href={doc.sampleFileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-purple-600 hover:underline mt-2 inline-block"
+                      >
+                        View sample document
+                      </a>
+                    )}
                   </div>
                 ))
               ) : (

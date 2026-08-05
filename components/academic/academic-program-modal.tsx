@@ -133,8 +133,6 @@ export function AcademicProgramModal({
       "description",
       JSON.stringify({ en: values.description.english })
     );
-    formData.append("documentTypes", JSON.stringify(values.documentTypes));
-
     if (guideFile) formData.append("application_guide", guideFile);
     if (formFile) formData.append("application_form", formFile);
 

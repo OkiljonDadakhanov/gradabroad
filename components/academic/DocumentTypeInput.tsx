@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -93,6 +93,15 @@ export function DocumentTypeInput({ value, onChange }: Props) {
   const [customDoc, setCustomDoc] = useState("");
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const rememberedDocuments = useRef<Record<string, DocumentRequirement>>({});
+
+  useEffect(() => {
+    for (const document of value) {
+      if (document.id !== undefined) {
+        rememberedDocuments.current[document.name.toLowerCase()] = document;
+      }
+    }
+  }, [value]);
 
   const findDocument = (name: string) =>
     value.find((v) => v.name.toLowerCase() === name.toLowerCase());
@@ -104,7 +113,13 @@ export function DocumentTypeInput({ value, onChange }: Props) {
       onChange(value.filter((v) => v.name.toLowerCase() !== name.toLowerCase()));
       if (expandedDoc === name) setExpandedDoc(null);
     } else {
-      onChange([...value, { name, description: "", sampleFile: null }]);
+      const remembered = rememberedDocuments.current[name.toLowerCase()];
+      onChange([
+        ...value,
+        remembered
+          ? { ...remembered, sampleFile: null }
+          : { name, description: "", sampleFile: null },
+      ]);
       setExpandedDoc(name);
     }
   };
@@ -132,7 +147,13 @@ export function DocumentTypeInput({ value, onChange }: Props) {
   const handleAddCustom = () => {
     const trimmed = customDoc.trim();
     if (!trimmed || isSelected(trimmed)) return;
-    onChange([...value, { name: trimmed, description: "", sampleFile: null }]);
+    const remembered = rememberedDocuments.current[trimmed.toLowerCase()];
+    onChange([
+      ...value,
+      remembered
+        ? { ...remembered, sampleFile: null }
+        : { name: trimmed, description: "", sampleFile: null },
+    ]);
     setCustomDoc("");
     setExpandedDoc(trimmed);
   };

@@ -20,7 +20,7 @@ interface GalleryImageModalProps {
   onClose: () => void;
   onSave: (
     data: GalleryImage | GalleryImageFormData | GalleryImageFormData[]
-  ) => void;
+  ) => Promise<boolean | void> | boolean | void;
   initialData?: GalleryImage;
   title: string;
   isMultiple?: boolean;
@@ -88,7 +88,7 @@ export function GalleryImageModal({
     setFormValues((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (isMultiple) {
       if (!images.length) {
         setError("Please upload at least one image.");
@@ -97,31 +97,31 @@ export function GalleryImageModal({
 
       const multipleImages: GalleryImageFormData[] = images.map(
         (file, index) => ({
-          // title: formValues.title || file.name,
+          title: formValues.title || file.name,
           description: formValues.description,
           imageUrl: "", // Will be set after upload
           altText: formValues.altText || file.name.split(".")[0],
-          // date: formValues.date,
+          date: formValues.date,
           imageFile: file,
         })
       );
 
-      onSave(multipleImages);
+      const saved = await onSave(multipleImages);
+      if (saved !== false) handleCancel();
     } else {
       if (!images[0] && !initialData) {
         setError("Please upload an image.");
         return;
       }
 
-      onSave({
+      const saved = await onSave({
         ...formValues,
         id: initialData?.id,
         imageUrl: initialData?.imageUrl || images[0]?.name || "",
         imageFile: images[0],
       });
+      if (saved !== false) handleCancel();
     }
-
-    handleCancel(); // Clean up
   };
 
   const handleCancel = () => {

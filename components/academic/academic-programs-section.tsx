@@ -56,16 +56,22 @@ export function AcademicProgramsSection() {
               r.requirementType === "language"
           )
           .map((r: any) => ({
+            id: typeof r.id === "number" ? r.id : undefined,
             name: r.label,
             requirement:
               r.min_score !== null && r.min_score !== undefined
                 ? String(r.min_score)
-                : r.note || "",
+                : String(r.note || "").replace(/^min_score:\s*/i, ""),
           }));
 
         const documentTypes = (p.requirements || [])
           .filter((r: any) => r.requirementType === "document")
-          .map((r: any) => ({ name: r.label, description: r.note || "" }));
+          .map((r: any) => ({
+            id: typeof r.id === "number" ? r.id : undefined,
+            name: r.label,
+            description: r.note || "",
+            sampleFileUrl: r.sample_document_url || undefined,
+          }));
 
         return {
           id: `api-${p.id}`,
@@ -225,6 +231,7 @@ export function AcademicProgramsSection() {
       {/* EDIT MODAL */}
       {currentProgram && (
         <AcademicProgramEditModal
+          key={currentProgram.id}
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           initialData={currentProgram}
